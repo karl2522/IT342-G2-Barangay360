@@ -1,0 +1,50 @@
+# Gradle build files
+.gradle/
+build/
+
+# Kotlin compiled files
+*.class
+*.kotlin_metadata
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+
+# Android Studio files (if you're working on an Android project)
+*.apk
+*.ap_ 
+*.dex
+*.class
+.gradle/
+.idea/
+local.properties
+
+# Eclipse files (if you use Eclipse IDE)
+.settings/
+.project
+.classpath
+
+# Log files
+*.log
+
+# Operating System files
+.DS_Store        # macOS
+Thumbs.db         # Windows
+ehthumbs.db       # Windows
+
+# Maven build files (if applicable)
+target/
+
+# JetBrains IDE (including Android Studio) specific files
+*.iml
+.idea/
+
+# .env and configuration files (useful for environment variables and config files)
+.env
+
+# Node.js (if using Node.js in a Kotlin/JS project)
+node_modules/
+
+# Other Kotlin-related files that should be ignored (if needed)
+*.bak
+*.swp
