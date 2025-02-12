@@ -1,44 +1,77 @@
-# README.md
+<div align="center">
 
-# Barangay360
-A community-centric platform designed to strengthen communication and engagement between barangay officials and residents.
+  # Barangay360
 
-# Features
-1.1 Dashboard for Admins or Officials
-	Overview of announcements, requests, and statistics. Use Case Diagram
+  🏘️ Empowering communities through digital connection
+</div>
 
-1.2 Community Announcements with Search Filter
-	Create, edit, and filter announcements.
+---
 
-1.3 Request Approval System
-	Approve/reject requests for documents and permits.
+## 🌟 About Barangay360
 
-1.4 Data Analytics
-	Monitor residents, services, and event participation.
+Barangay360 is a cutting-edge, community-centric platform designed to revolutionize communication and engagement between barangay officials and residents. Our mission is to create stronger, more connected communities through innovative digital solutions.
 
-1.5 Resident Management
-	Register, edit, and search resident profiles.
+## 🚀 Key Features
 
-1.5 Event Management
-    Create events, track attendees, and upload materials.
+<table>
+  <tr>
+    <td>🎛️ Admin Dashboard</td>
+    <td>📢 Community Announcements</td>
+    <td>✅ Request Approval System</td>
+  </tr>
+  <tr>
+    <td>📊 Data Analytics</td>
+    <td>👥 Resident Management</td>
+    <td>🎉 Event Management</td>
+  </tr>
+  <tr>
+    <td>🔔 Push Notifications</td>
+    <td>📱 QR Code Scanning</td>
+    <td>📄 Document Requests</td>
+  </tr>
+</table>
 
-1.6 Push Notifications
-    Real-time alerts for emergencies, events, and requests.
+## 🛠️ Technical Details
 
-1.7 QR Code Scanning
-	Scan codes for event check-ins and service access.
-
-1.8 Request Downloadable Documents
-  Request, download, and track barangay documents.
+- **Frontend**: React with Next.js
+- **Backend**: Node.js with Express
+- **Authentication**: JWT
+- **Mobile App**: Kotlin
 
 
-# Links
-Figma:
-Diagrams:
+## 🔗 Important Links
 
-# Developer Profiles
+- [Figma Designs](your-figma-link)
+- [System Diagrams](your-diagrams-link)
+- [Project Board](your-project-board-link)
 
-Jared Karl A. Omen
-Achilles Niño V. Castañeda
-Mikhail James P. Navarro
+## 👨‍💻 Meet the Team
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/jaredomen">
+        <img src="https://github.com/jaredomen.png" width="100px;" alt="Jared Karl A. Omen"/><br />
+        <sub><b>Jared Karl A. Omen</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/achillescasta">
+        <img src="https://github.com/achillescasta.png" width="100px;" alt="Achilles Niño V. Castañeda"/><br />
+        <sub><b>Achilles Niño V. Castañeda</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/mikhailnavarro">
+        <img src="https://github.com/mikhailnavarro.png" width="100px;" alt="Mikhail James P. Navarro"/><br />
+        <sub><b>Mikhail James P. Navarro</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
+
+
+<div align="center">
+  Made with ❤️ by the Barangay360 Team
+</div>
 
