@@ -1,5 +1,9 @@
+@tailwind base;
+@tailwind utilities;
+@tailwind components;
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Inter, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
