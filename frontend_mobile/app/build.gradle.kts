@@ -9,7 +9,9 @@ android {
 
     defaultConfig {
         applicationId = "com.example.barangay360_mobile"
-        minSdk = 26
+        
+        minSdk = 27
+
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -67,11 +69,13 @@ dependencies {
     implementation("androidx.camera:camera-extensions:1.0.0-alpha31")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.zxing:core:3.3.3")
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("androidx.compose.animation:animation:1.5.1")
+    implementation("androidx.compose.animation:animation-core:1.5.1")
+    implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+    implementation("androidx.compose.ui:ui:1.5.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
+    implementation("androidx.compose.material3:material3:1.1.1")
+    implementation("androidx.compose.ui:ui-viewbinding:1.5.1")
+
+
 }

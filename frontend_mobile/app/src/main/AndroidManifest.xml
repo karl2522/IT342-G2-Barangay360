@@ -24,6 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".QRCodeScannerActivity"
             android:theme="@style/Theme.Barangay360Mobile.Scanner" />
