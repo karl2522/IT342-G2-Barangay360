@@ -3,9 +3,11 @@ package com.example.barangay360_mobile
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.AnimationDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -25,6 +27,7 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var imageAnalysis: ImageAnalysis
     private var isScanning = false
+    private lateinit var scannerAnimation: AnimationDrawable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,10 +43,16 @@ class CameraActivity : AppCompatActivity() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        findViewById<Button>(R.id.scanButton).setOnClickListener {
+        val scanButton = findViewById<Button>(R.id.scanButton)
+        scanButton.setOnClickListener {
             isScanning = true
             Toast.makeText(this, "Scanning for QR Code...", Toast.LENGTH_SHORT).show()
+            startScannerAnimation()
         }
+
+        val scannerOverlay = findViewById<View>(R.id.scannerOverlay)
+        scannerOverlay.setBackgroundResource(R.drawable.scanner_animation)
+        scannerAnimation = scannerOverlay.background as AnimationDrawable
     }
 
     private fun startCamera() {
@@ -72,6 +81,7 @@ class CameraActivity : AppCompatActivity() {
                         runOnUiThread {
                             if (isScanning) {
                                 isScanning = false
+                                stopScannerAnimation()
                                 openUrl(result)
                             }
                         }
@@ -93,6 +103,14 @@ class CameraActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
+    private fun startScannerAnimation() {
+        scannerAnimation.start()
+    }
+
+    private fun stopScannerAnimation() {
+        scannerAnimation.stop()
+    }
+
     private fun openUrl(url: String) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -105,6 +123,21 @@ class CameraActivity : AppCompatActivity() {
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
             baseContext, it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                startCamera()
+            } else {
+                Toast.makeText(this,
+                    "Permissions not granted by the user.",
+                    Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
     }
 
     override fun onDestroy() {
