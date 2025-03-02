@@ -12,4 +12,11 @@
         android:textSize="18sp"
         android:layout_marginBottom="16dp"/>
 
+    <View
+        android:id="@+id/scannerOverlay"
+        android:layout_width="350dp"
+        android:layout_height="450dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/scanner_animation" />
+
 </LinearLayout>
