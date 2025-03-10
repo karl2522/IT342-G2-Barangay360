@@ -9,7 +9,9 @@ android {
 
     defaultConfig {
         applicationId = "com.example.barangay360_mobile"
+        
         minSdk = 27
+
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -75,7 +77,6 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
     implementation("androidx.compose.material3:material3:1.1.1")
     implementation("androidx.compose.ui:ui-viewbinding:1.5.1")
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -83,4 +84,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+
 }
