@@ -40,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -62,13 +63,13 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
-    implementation("androidx.camera:camera-core:1.1.0")
-    implementation("androidx.camera:camera-camera2:1.1.0")
-    implementation("androidx.camera:camera-lifecycle:1.1.0")
-    implementation("androidx.camera:camera-view:1.0.0-alpha31")
+    implementation("androidx.camera:camera-core:1.4.1")
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+    implementation("androidx.camera:camera-view:1.4.1-alpha31")
     implementation("androidx.camera:camera-extensions:1.0.0-alpha31")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
-    implementation("com.google.zxing:core:3.3.3")
+    implementation("com.google.zxing:core:3.5.0")
     implementation("androidx.compose.animation:animation:1.5.1")
     implementation("androidx.compose.animation:animation-core:1.5.1")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
@@ -76,6 +77,13 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
     implementation("androidx.compose.material3:material3:1.1.1")
     implementation("androidx.compose.ui:ui-viewbinding:1.5.1")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 
 
 }
