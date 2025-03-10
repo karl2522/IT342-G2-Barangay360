@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
@@ -8,21 +7,23 @@
         android:icon="@drawable/home_icon"/>
 
     <item
-        android:id="@+id/shorts"
-        android:title="Shorts"
-        android:icon="@drawable/home_icon"
-        />
+        android:id="@+id/announcements"
+        android:title="Announcements"
+        android:icon="@drawable/home_icon"/>
 
     <item
-        android:title=""/>
+        android:id="@+id/camera"
+        android:title=""
+        android:icon="@drawable/camera_icon"
+        app:showAsAction="always"/>
 
     <item
-        android:id="@+id/subscriptions"
-        android:title="Subscriptions"
+        android:id="@+id/services"
+        android:title="Services"
         android:icon="@drawable/home_icon" />
     <item
-        android:id="@+id/library"
-        android:title="Library"
+        android:id="@+id/profile"
+        android:title="Profile"
         android:icon="@drawable/home_icon" />
 
 </menu>
