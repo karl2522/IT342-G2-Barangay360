@@ -2,6 +2,8 @@ package com.example.barangay360_mobile
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -91,31 +93,42 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     // Handle navigation item selection from the navigation drawer
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.nav_home -> {
-                // Navigate to HomeFragment
-                replaceFragment(HomeFragment())
-                bottomNavigationView.selectedItemId = R.id.home
+        // Highlight the selected item immediately for visual feedback
+        item.isChecked = true
+
+        // Create handler for delayed operations
+        val handler = Handler(Looper.getMainLooper())
+
+        // Wait 1 second before executing navigation
+        handler.postDelayed({
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    // Navigate to HomeFragment
+                    replaceFragment(HomeFragment())
+                    bottomNavigationView.selectedItemId = R.id.home
+                }
+                R.id.nav_settings -> {
+                    // Navigate to SettingsFragment
+                    replaceFragment(SettingsFragment())
+                }
+                R.id.nav_share -> {
+                    // Navigate to ShareFragment
+                    replaceFragment(ShareFragment())
+                }
+                R.id.nav_about -> {
+                    // Navigate to AboutFragment
+                    replaceFragment(AboutFragment())
+                }
+                R.id.nav_logout -> {
+                    // Handle logout action
+                    Toast.makeText(this, "Logout!", Toast.LENGTH_SHORT).show()
+                }
             }
-            R.id.nav_settings -> {
-                // Navigate to SettingsFragment
-                replaceFragment(SettingsFragment())
-            }
-            R.id.nav_share -> {
-                // Navigate to ShareFragment
-                replaceFragment(ShareFragment())
-            }
-            R.id.nav_about -> {
-                // Navigate to AboutFragment
-                replaceFragment(AboutFragment())
-            }
-            R.id.nav_logout -> {
-                // Handle logout action
-                Toast.makeText(this, "Logout!", Toast.LENGTH_SHORT).show()
-            }
-        }
-        // Close the navigation drawer
-        drawerLayout.closeDrawer(GravityCompat.START)
+            // Close the navigation drawer after the delay
+            drawerLayout.closeDrawer(GravityCompat.START)
+        }, 300) // 3 millisecond delay (300ms)
+
+        // Don't close the drawer immediately - it will close after delay
         return true
     }
 

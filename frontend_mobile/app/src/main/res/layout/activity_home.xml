@@ -10,41 +10,32 @@
     tools:openDrawer="start"
     tools:context=".HomeActivity">
 
-    <!-- Main content layout -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <!-- Toolbar -->
-        <androidx.appcompat.widget.Toolbar
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:id="@+id/toolbar"
-            android:elevation="4dp"
-            android:background="?attr/colorPrimary"/>
-
-        <!-- Fragment container -->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:id="@+id/fragment_container"/>
-    </LinearLayout>
-
-    <!-- Navigation drawer -->
-    <com.google.android.material.navigation.NavigationView
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:id="@+id/nav_view"
-        android:layout_gravity="start"
-        app:headerLayout="@layout/nav_header"
-        app:menu="@menu/nav_menu"/>
-
-    <!-- Bottom App Navigation -->
+    <!-- Main content layout - MUST BE FIRST CHILD -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
+        <!-- Main content with toolbar and fragment container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Toolbar -->
+            <androidx.appcompat.widget.Toolbar
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:id="@+id/toolbar"
+                android:elevation="4dp"
+                android:background="?attr/colorPrimary"/>
+
+            <!-- Fragment container -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:id="@+id/fragment_container"/>
+        </LinearLayout>
 
         <!-- Bottom app bar -->
         <com.google.android.material.bottomappbar.BottomAppBar
@@ -68,7 +59,6 @@
         </com.google.android.material.bottomappbar.BottomAppBar>
 
         <!-- Floating action button for camera -->
-        <!-- Inside your CoordinatorLayout in activity_home.xml -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="wrap_content"
@@ -80,4 +70,14 @@
             app:maxImageSize="24dp"
             app:tint="@color/lavender" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <!-- Navigation drawer - MUST BE SECOND CHILD -->
+    <com.google.android.material.navigation.NavigationView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:id="@+id/nav_view"
+        android:layout_gravity="start"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/nav_menu"/>
+
 </androidx.drawerlayout.widget.DrawerLayout>
