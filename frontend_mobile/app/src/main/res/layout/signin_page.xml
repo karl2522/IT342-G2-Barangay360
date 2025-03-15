@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/mattegray">
+
+    <!-- PH Flag vector image -->
+    <ImageView
+        android:id="@+id/phflag_vector"
+        android:layout_width="363dp"
+        android:layout_height="306dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="42dp"
+        android:src="@drawable/signup_phflag_vector" />
+
+    <!-- Welcome Back text -->
+    <TextView
+        android:id="@+id/signin_welcome_back_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="144dp"
+        android:layout_marginTop="182dp"
+        android:fontFamily="@font/poppins_semibold"
+        android:text="Welcome Back!"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- Filipino character image -->
+    <ImageView
+        android:id="@+id/chibi_filipino_guy"
+        android:layout_width="264dp"
+        android:layout_height="302dp"
+        android:layout_marginStart="73dp"
+        android:layout_marginTop="170dp"
+        android:src="@drawable/chibi_filipino_guy" />
+
+    <!-- Email input field -->
+    <EditText
+        android:id="@+id/signin_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="437dp"
+        android:background="@drawable/rounded"
+        android:ems="10"
+        android:fontFamily="@font/poppins"
+        android:hint="Enter your email"
+        android:inputType="textEmailAddress"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:textColor="@color/black" />
+
+    <!-- Password input field -->
+    <EditText
+        android:id="@+id/signin_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="504dp"
+        android:background="@drawable/rounded"
+        android:ems="10"
+        android:fontFamily="@font/poppins"
+        android:hint="Enter password"
+        android:inputType="textPassword"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:textColor="@color/black" />
+
+    <!-- Forget password text -->
+    <TextView
+        android:id="@+id/forget_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="149dp"
+        android:layout_marginTop="567dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:fontFamily="@font/poppins"
+        android:text="Forget Password"
+        android:textColor="@color/maroon"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <!-- Sign In button -->
+    <Button
+        android:id="@+id/signin_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="105dp"
+        android:layout_marginTop="607dp"
+        android:minWidth="200dp"
+        android:paddingVertical="10dp"
+        android:text="Sign in" />
+
+    <!-- Don't have account text -->
+    <TextView
+        android:id="@+id/dont_have_account_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="99dp"
+        android:layout_marginTop="675dp"
+        android:fontFamily="@font/poppins"
+        android:text="Don't have an account?"
+        android:textColor="@color/black"
+        android:textSize="15dp" />
+
+    <!-- Sign Up text -->
+    <TextView
+        android:id="@+id/dont_have_account_signup_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="261dp"
+        android:layout_marginTop="675dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:fontFamily="@font/poppins"
+        android:text="Sign up"
+        android:textColor="@color/maroon"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>

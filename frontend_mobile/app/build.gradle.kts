@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    //Dependencies for the QR Code Scanner and Camera
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
     implementation("androidx.camera:camera-core:1.4.1")
@@ -70,6 +71,7 @@ dependencies {
     implementation("androidx.camera:camera-extensions:1.0.0-alpha31")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.zxing:core:3.5.0")
+    //Dependencies for the Composer and Animation
     implementation("androidx.compose.animation:animation:1.5.1")
     implementation("androidx.compose.animation:animation-core:1.5.1")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
@@ -77,6 +79,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
     implementation("androidx.compose.material3:material3:1.1.1")
     implementation("androidx.compose.ui:ui-viewbinding:1.5.1")
+    //Dependencies for the Fonts
+    implementation ("androidx.core:core-ktx:1.9.0")
+    implementation ("androidx.appcompat:appcompat:1.6.1")
+    implementation ("com.google.android.material:material:1.8.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

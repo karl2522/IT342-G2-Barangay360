@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Shadow Effect -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="25dp"/> <!-- Rounded corners -->
+            <solid android:color="#70000000"/> <!-- Shadow color (semi-transparent black) -->
+        </shape>
+    </item>
+
+    <!-- Main EditText Background -->
+    <item android:bottom="3.5dp" >
+        <shape android:shape="rectangle">
+            <corners android:radius="25dp"/> <!-- Same rounding -->
+            <solid android:color="@color/white"/> <!-- EditText background -->
+
+        </shape>
+    </item>
+
+</layer-list>
