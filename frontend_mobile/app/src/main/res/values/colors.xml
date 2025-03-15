@@ -10,4 +10,6 @@
     <color name="red">#FF0000</color>
     <color name="lavender">#8692f7</color>
     <color name="maroon">#861A2D</color>
+    <color name="gray">#B0B0B0</color> <!-- Border color -->
+    <color name="mattegray">#EEEEEE</color> <!-- Border color -->
 </resources>
