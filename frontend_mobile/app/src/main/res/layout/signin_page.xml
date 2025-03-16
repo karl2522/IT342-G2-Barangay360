@@ -6,6 +6,8 @@
     android:background="@color/mattegray">
 
     <!-- PH Flag vector image -->
+
+    <!-- Welcome Back text -->
     <ImageView
         android:id="@+id/phflag_vector"
         android:layout_width="363dp"
@@ -14,7 +16,6 @@
         android:layout_marginTop="42dp"
         android:src="@drawable/signup_phflag_vector" />
 
-    <!-- Welcome Back text -->
     <TextView
         android:id="@+id/signin_welcome_back_text"
         android:layout_width="wrap_content"
@@ -84,6 +85,9 @@
         android:textStyle="bold" />
 
     <!-- Sign In button -->
+
+    <!-- Don't have account text -->
+
     <Button
         android:id="@+id/signin_button"
         android:layout_width="wrap_content"
@@ -94,7 +98,7 @@
         android:paddingVertical="10dp"
         android:text="Sign in" />
 
-    <!-- Don't have account text -->
+    <!-- Sign Up text -->
     <TextView
         android:id="@+id/dont_have_account_text"
         android:layout_width="wrap_content"
@@ -106,7 +110,6 @@
         android:textColor="@color/black"
         android:textSize="15dp" />
 
-    <!-- Sign Up text -->
     <TextView
         android:id="@+id/dont_have_account_signup_text"
         android:layout_width="wrap_content"
