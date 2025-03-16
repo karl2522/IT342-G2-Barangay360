@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/relativeLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/register_background">
+
+    <!-- Logo centered at the top with margin -->
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="170dp"
+        android:layout_height="150dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="80dp"
+        android:src="@drawable/barangay360_logo" />
+
+    <!-- Welcome text below logo -->
+    <TextView
+        android:id="@+id/signup_welcome_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/logo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:fontFamily="@font/poppins_semibold"
+        android:text="Welcome to Barangay360"
+        android:textColor="@color/black"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <!-- Subtitle below welcome text -->
+    <TextView
+        android:id="@+id/signup_here_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/signup_welcome_text"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/poppins"
+        android:text="Sign up your account here"
+        android:textColor="@color/black"
+        android:textSize="15dp" />
+
+    <!-- Name input field -->
+    <EditText
+        android:id="@+id/signup_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/signup_here_text"
+        android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/rounded"
+        android:ems="10"
+        android:fontFamily="@font/poppins"
+        android:hint="Name"
+        android:inputType="text"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:textColor="@color/black" />
+
+    <!-- Email input field -->
+    <EditText
+        android:id="@+id/signup_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/signup_name"
+        android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/rounded"
+        android:ems="10"
+        android:fontFamily="@font/poppins"
+        android:hint="Email"
+        android:inputType="textEmailAddress"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:textColor="@color/black" />
+
+    <!-- Password input field -->
+    <EditText
+        android:id="@+id/signup_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/signup_email"
+        android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/rounded"
+        android:ems="10"
+        android:fontFamily="@font/poppins"
+        android:hint="Password"
+        android:inputType="textPassword"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:textColor="@color/black" />
+
+    <!-- Confirm Password input field -->
+    <EditText
+        android:id="@+id/signup_confirmpassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/signup_password"
+        android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/rounded"
+        android:ems="10"
+        android:fontFamily="@font/poppins"
+        android:hint="Confirm Password"
+        android:inputType="textPassword"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:textColor="@color/black" />
+
+    <!-- Signup button -->
+    <Button
+        android:id="@+id/signup_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/signup_confirmpassword"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:minWidth="200dp"
+        android:paddingVertical="10dp"
+        android:text="Sign up" />
+
+    <!-- Already have account text -->
+    <TextView
+        android:id="@+id/already_account_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/signup_button"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="4dp"
+        android:layout_toStartOf="@id/already_account_signin_text"
+        android:fontFamily="@font/poppins"
+        android:text="Already have an account?"
+        android:textColor="@color/black"
+        android:textSize="15dp" />
+
+    <!-- Sign In text button -->
+    <TextView
+        android:id="@+id/already_account_signin_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/signup_button"
+        android:layout_alignBaseline="@id/already_account_text"
+        android:layout_marginLeft="10dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:fontFamily="@font/poppins"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="93dp"
+        android:text="Sign In"
+        android:textColor="@color/maroon"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>
