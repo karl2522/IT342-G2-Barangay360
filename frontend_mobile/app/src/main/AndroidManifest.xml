@@ -13,6 +13,7 @@
         android:roundIcon="@mipmap/barangay360_logo_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Barangay360Mobile"
+        android:largeHeap="true"
         tools:targetApi="31">
 
         <activity

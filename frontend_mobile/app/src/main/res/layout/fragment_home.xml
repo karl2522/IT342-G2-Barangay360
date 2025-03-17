@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,16 +12,12 @@
         android:layout_height="wrap_content"
         android:text="Home Fragment"
         android:textColor="@color/black"
-        android:textSize="30sp"
-        tools:layout_editor_absoluteX="88dp"
-        tools:layout_editor_absoluteY="32dp" />
+        android:textSize="30sp" />
 
 
     <ScrollView
         android:layout_width="412dp"
-        android:layout_height="921dp"
-        tools:layout_editor_absoluteX="-1dp"
-        tools:layout_editor_absoluteY="83dp">
+        android:layout_height="921dp">
 
 
         <LinearLayout
@@ -105,493 +101,78 @@
                     tools:layout_editor_absoluteY="14dp" />
 
             </androidx.cardview.widget.CardView>
-
             <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
-                <TextView
+                android:layout_width="410dp"
+                android:layout_height="300dp">
+
+
+                <ImageButton
 
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
+                    android:src="@drawable/barangay360_logo" />
             </androidx.cardview.widget.CardView>
-
             <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
-                <TextView
+                android:layout_width="410dp"
+                android:layout_height="300dp">
+
+
+                <ImageButton
 
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
+                    android:src="@drawable/barangay360_logo" />
             </androidx.cardview.widget.CardView>
-
             <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
-                <TextView
+                android:layout_width="410dp"
+                android:layout_height="300dp">
+
+
+                <ImageButton
 
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
+                    android:src="@drawable/barangay360_logo" />
             </androidx.cardview.widget.CardView>
-
             <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
-                <TextView
+                android:layout_width="410dp"
+                android:layout_height="300dp">
+
+
+                <ImageButton
 
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
+                    android:src="@drawable/barangay360_logo" />
             </androidx.cardview.widget.CardView>
-
             <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
-                <TextView
+                android:layout_width="410dp"
+                android:layout_height="300dp">
+
+
+                <ImageButton
 
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
+                    android:src="@drawable/barangay360_logo" />
             </androidx.cardview.widget.CardView>
-
             <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
-                <TextView
+                android:layout_width="410dp"
+                android:layout_height="300dp">
+
+
+                <ImageButton
 
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
+                    android:src="@drawable/barangay360_logo" />
             </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView"
-                    android:textSize="25dp"
-                    tools:layout_editor_absoluteX="25dp"
-                    tools:layout_editor_absoluteY="14dp" />
-
-            </androidx.cardview.widget.CardView>
-
-
-
-
-
-
-
-
-
-
 
 
         </LinearLayout>
@@ -599,6 +180,4 @@
     </ScrollView>
 
 
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</RelativeLayout>
