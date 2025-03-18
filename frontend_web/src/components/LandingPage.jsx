@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom"
-import { facebook } from "../assets"
 
 function LandingPage() {
     return (
@@ -8,27 +7,22 @@ function LandingPage() {
             <nav className="w-full px-12 py-6">
                 <div className="flex items-center justify-between">
                     <div className="flex justify-center items-center">
-                        <img 
-                            src={facebook}
-                            alt="logo" 
-                            className="h-20 w-auto"
-                        />
-                        <h1 className="text-3xl font-bold text-black pl-5">Barangay360</h1>
+                        <h1 className="text-3xl font-bold text-black">Barangay360</h1>
                     </div>
 
                     <div className="flex items-center space-x-12">
-                        <Link href="#announcements" className="text-black hover:text-[#9A031E] text-base">
+                        <a href="#announcements" className="text-black hover:text-[#9A031E] text-base">
                             Announcements
-                        </Link>
-                        <Link href="#projects" className="text-black hover:text-[#9A031E] text-base">
+                        </a>
+                        <a href="#projects" className="text-black hover:text-[#9A031E] text-base">
                             Projects
-                        </Link>
-                        <Link href="#events" className="text-black hover:text-[#9A031E] text-base">
+                        </a>
+                        <a href="#events" className="text-black hover:text-[#9A031E] text-base">
                             Events
-                        </Link>
+                        </a>
                     </div>
 
-                    <div className="felx items-center space-x-6">
+                    <div className="flex items-center space-x-6">
                         <Link
                             to="/login"
                             className="px-6 py-2 text-base border-2 border-[#9A031E] text-black rounded-xl box-border hover:bg-[#9A031E] hover:text-white transition-all duration-300 ease-in-out"
@@ -45,12 +39,27 @@ function LandingPage() {
                 </div>
             </nav>
 
-            <div className="flex flex-col items-center justify-center">
-                <h2 className="text-5xl font-bold text-black">Bringing Your Barangay Closer to You</h2>
+            <div className="flex-1 flex flex-col items-center justify-center">
+                <h2 className="text-5xl font-bold text-black mb-8">Bringing Your Barangay Closer to You</h2>
+                <p className="text-xl text-center max-w-3xl mb-8 text-gray-600">
+                    A community-centric platform designed to strengthen communication and engagement 
+                    between barangay officials and residents.
+                </p>
+                <div className="flex space-x-6">
+                    <Link
+                        to="/signup"
+                        className="px-8 py-3 text-lg border-2 border-[#9A031E] bg-[#9A031E] text-white rounded-xl box-border hover:bg-[#83061C] hover:text-white transition-all duration-300 ease-in-out"
+                    >
+                        Get Started
+                    </Link>
+                    <a
+                        href="#learn-more"
+                        className="px-8 py-3 text-lg border-2 border-[#9A031E] text-black rounded-xl box-border hover:bg-[#9A031E] hover:text-white transition-all duration-300 ease-in-out"
+                    >
+                        Learn More
+                    </a>
+                </div>
             </div>
-
-
-            
         </div>
     )
 }
