@@ -1,45 +1,35 @@
-import { createContext, useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
+import { createContext, useState } from 'react';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [loading, setLoading] = useState(true);
+  // Initialize state from localStorage
+  const getUserFromStorage = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (e) {
+      console.error('Error getting user from storage:', e);
+      return null;
+    }
+  };
 
-  useEffect(() => {
-    // Check if token exists and validate user
-    const validateToken = async () => {
-      if (token) {
-        try {
-          // Fetch user data with token
-          const response = await fetch('http://localhost:8080/api/test/user', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (response.ok) {
-            // Get user data from localStorage
-            const userData = JSON.parse(localStorage.getItem('user'));
-            setUser(userData);
-          } else {
-            // Token invalid, clear everything
-            logout();
-          }
-        } catch (error) {
-          console.error('Token validation error:', error);
-          logout();
-        }
-      }
-      setLoading(false);
-    };
+  const getTokenFromStorage = () => {
+    try {
+      return localStorage.getItem('token');
+    } catch (e) {
+      console.error('Error getting token from storage:', e);
+      return null;
+    }
+  };
 
-    validateToken();
-  }, [token]);
+  const [user, setUser] = useState(getUserFromStorage());
+  const [token, setToken] = useState(getTokenFromStorage());
 
   const login = async (username, password) => {
     try {
+      console.log('Attempting login for:', username);
       const response = await fetch('http://localhost:8080/api/auth/signin', {
         method: 'POST',
         headers: {
@@ -50,26 +40,35 @@ export const AuthProvider = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setToken(data.accessToken);
-        setUser({
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          roles: data.roles
-        });
+        console.log('Login successful');
         
-        // Save to local storage
-        localStorage.setItem('token', data.accessToken);
-        localStorage.setItem('user', JSON.stringify({
+        if (!data.accessToken) {
+          console.error('No access token received from server');
+          return { success: false, message: 'No access token received from server' };
+        }
+        
+        // Store the token
+        const accessToken = data.accessToken;
+        localStorage.setItem('token', accessToken);
+        
+        // Store user data
+        const userData = {
           id: data.id,
           username: data.username,
           email: data.email,
           roles: data.roles
-        }));
+        };
+        
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Update state
+        setToken(accessToken);
+        setUser(userData);
         
         return { success: true };
       } else {
         const errorData = await response.json();
+        console.error('Login failed:', errorData);
         return { success: false, message: errorData.message || 'Login failed' };
       }
     } catch (error) {
@@ -102,13 +101,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    // Clear state
     setUser(null);
     setToken(null);
+    
+    // Clear storage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    
+    console.log('Logged out successfully');
   };
 
-  const isAuthenticated = () => !!user;
+  const isAuthenticated = () => {
+    return !!token && !!user;
+  };
 
   const hasRole = (role) => {
     return user && user.roles && user.roles.includes(role);
@@ -117,14 +123,20 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{ 
       user, 
+      setUser,
+      token,
+      setToken,
       login, 
       logout, 
       register, 
       isAuthenticated, 
-      hasRole,
-      loading
+      hasRole
     }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired
 }; 

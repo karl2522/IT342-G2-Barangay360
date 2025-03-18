@@ -7,8 +7,8 @@ const Dashboard = () => {
   const { user, logout, hasRole } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 

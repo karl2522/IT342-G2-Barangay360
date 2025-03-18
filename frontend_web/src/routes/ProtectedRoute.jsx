@@ -1,13 +1,10 @@
+import PropTypes from 'prop-types';
 import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext.jsx';
 
 const ProtectedRoute = ({ children, requiredRoles = [] }) => {
-  const { isAuthenticated, hasRole, user, loading } = useContext(AuthContext);
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
-  }
+  const { isAuthenticated, hasRole } = useContext(AuthContext);
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
@@ -22,6 +19,11 @@ const ProtectedRoute = ({ children, requiredRoles = [] }) => {
   }
 
   return children;
+};
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requiredRoles: PropTypes.arrayOf(PropTypes.string)
 };
 
 export default ProtectedRoute; 
