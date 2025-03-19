@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -10,8 +10,22 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login } = useContext(AuthContext);
+  const { login, hasRole, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    if (isAuthenticated()) {
+      // If already logged in, check user roles directly from localStorage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (userData && userData.roles && userData.roles.includes('official')) {
+        navigate('/official-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [isAuthenticated, navigate]);
   
   const handleChange = (e) => {
     setFormData({
@@ -32,7 +46,16 @@ const Login = () => {
       
       if (result.success) {
         console.log('Login successful');
-        navigate('/dashboard');
+        
+        // Check user roles directly from localStorage as state may not be updated yet
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        console.log('User data after login:', userData);
+        
+        if (userData && userData.roles && userData.roles.includes('official')) {
+          navigate('/official-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(result.message || 'Login failed. Please check your credentials.');
       }
@@ -111,7 +134,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200"
               >
                 {loading ? 'Signing in...' : 'Sign in'}
               </button>

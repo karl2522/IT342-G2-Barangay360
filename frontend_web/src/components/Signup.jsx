@@ -11,6 +11,7 @@ const Signup = () => {
     lastName: '',
     address: '',
     phone: '',
+    role: 'resident', // Default role is resident
   });
   
   const [error, setError] = useState('');
@@ -183,6 +184,30 @@ const Signup = () => {
             </div>
             
             <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                Account Type
+              </label>
+              <div className="mt-1">
+                <select
+                  id="role"
+                  name="role"
+                  required
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#861A2D] focus:border-[#861A2D] sm:text-sm bg-white text-gray-900"
+                >
+                  <option value="resident">Resident</option>
+                  <option value="official">Official</option>
+                </select>
+              </div>
+              {formData.role === 'official' && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Note: Official accounts require verification by the Barangay administration.
+                </p>
+              )}
+            </div>
+            
+            <div>
               <label htmlFor="address" className="block text-sm font-medium text-gray-700">
                 Address
               </label>
@@ -216,14 +241,31 @@ const Signup = () => {
               </div>
             </div>
             
-            <div>
+            <div className="space-y-3">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200"
               >
                 {loading ? 'Registering...' : 'Register'}
               </button>
+              
+              {formData.role === 'official' && (
+                <div className="px-4 py-3 bg-blue-50 rounded-md">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-blue-700">
+                        Officials have access to an enhanced dashboard with additional administrative features.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </form>
           

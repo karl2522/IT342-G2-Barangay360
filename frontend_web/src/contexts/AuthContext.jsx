@@ -79,12 +79,18 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
+      // Transform the role field to match backend expectations
+      const formattedData = {
+        ...userData,
+        roles: userData.role === 'official' ? ['official'] : ['resident']
+      };
+      
       const response = await fetch('http://localhost:8080/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(userData)
+        body: JSON.stringify(formattedData)
       });
 
       const data = await response.json();
@@ -117,6 +123,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasRole = (role) => {
+    console.log(`Checking for role: ${role}`, user?.roles);
     return user && user.roles && user.roles.includes(role);
   };
 
