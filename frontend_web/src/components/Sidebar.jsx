@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useContext, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 
 // Import icons
 const DashboardIcon = () => (
@@ -58,54 +59,155 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
-const Sidebar = ({ hasRole }) => {
+const RequestsIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+  </svg>
+);
+
+const ResidentsIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+  </svg>
+);
+
+const ReportsIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+  </svg>
+);
+
+const LogoutIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+  </svg>
+);
+
+const Sidebar = ({ isOfficial }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { hasRole, logout, user } = useContext(AuthContext);
+  
+  // Check if the user is actually an official from localStorage
+  const [actualIsOfficial, setActualIsOfficial] = useState(isOfficial);
+  
+  useEffect(() => {
+    // If isOfficial prop doesn't match the role check, use localStorage as source of truth
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userHasOfficialRole = userData?.roles?.includes('official') || userData?.roles?.includes('ROLE_OFFICIAL');
+    
+    // Only update if there's a mismatch
+    if (isOfficial !== userHasOfficialRole) {
+      console.log('Role mismatch detected in Sidebar', { propIsOfficial: isOfficial, userHasOfficialRole });
+      setActualIsOfficial(userHasOfficialRole);
+    }
+  }, [isOfficial]);
 
-  const navItems = [
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  // Determine user's role for display
+  const userRole = actualIsOfficial ? 'Official' : 'Resident';
+  const roleColor = actualIsOfficial ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+
+  // Define navigation items for regular residents
+  const residentNavItems = [
     { 
       name: 'Dashboard', 
       path: '/dashboard', 
-      icon: <DashboardIcon />, 
-      roles: [] 
-    },
-    { 
-      name: 'Announcements', 
-      path: '/announcements', 
-      icon: <AnnouncementIcon />, 
-      roles: ['ROLE_OFFICIAL', 'ROLE_ADMIN'] 
+      icon: <DashboardIcon />
     },
     { 
       name: 'Services', 
       path: '/services', 
-      icon: <ServicesIcon />, 
-      roles: [] 
+      icon: <ServicesIcon />
+    },
+    { 
+      name: 'Announcements', 
+      path: '/announcements', 
+      icon: <AnnouncementIcon />
     },
     { 
       name: 'Community', 
       path: '/community', 
-      icon: <CommunityIcon />, 
-      roles: [] 
+      icon: <CommunityIcon />
     },
     { 
       name: 'Profile', 
       path: '/profile', 
-      icon: <ProfileIcon />, 
-      roles: [] 
-    },
-    { 
-      name: 'Admin Panel', 
-      path: '/admin', 
-      icon: <AdminIcon />, 
-      roles: ['ROLE_ADMIN'] 
+      icon: <ProfileIcon />
     },
     { 
       name: 'Settings', 
       path: '/settings', 
-      icon: <SettingsIcon />, 
-      roles: [] 
+      icon: <SettingsIcon />
     },
   ];
+
+  // Define navigation items for officials
+  const officialNavItems = [
+    { 
+      name: 'Dashboard', 
+      path: '/official-dashboard', 
+      icon: <DashboardIcon />
+    },
+    { 
+      name: 'Manage Requests', 
+      path: '/requests', 
+      icon: <RequestsIcon />
+    },
+    { 
+      name: 'Announcements', 
+      path: '/manage-announcements', 
+      icon: <AnnouncementIcon />
+    },
+    { 
+      name: 'Residents', 
+      path: '/residents', 
+      icon: <ResidentsIcon />
+    },
+    { 
+      name: 'Reports', 
+      path: '/reports', 
+      icon: <ReportsIcon />
+    },
+    { 
+      name: 'Events Calendar', 
+      path: '/events', 
+      icon: <CalendarIcon />
+    },
+    { 
+      name: 'Profile', 
+      path: '/profile', 
+      icon: <ProfileIcon />
+    },
+    { 
+      name: 'Settings', 
+      path: '/settings', 
+      icon: <SettingsIcon />
+    }
+  ];
+
+  // Add admin panel if user has admin role
+  if (hasRole('ROLE_ADMIN')) {
+    officialNavItems.push({ 
+      name: 'Admin Panel', 
+      path: '/admin', 
+      icon: <AdminIcon />
+    });
+  }
+
+  // Choose which navigation items to display based on user role
+  const navItems = actualIsOfficial ? officialNavItems : residentNavItems;
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -129,14 +231,29 @@ const Sidebar = ({ hasRole }) => {
         </button>
       </div>
 
-      <nav className="mt-6">
-        <ul className="space-y-2 px-2">
+      {!isCollapsed && (
+        <div className="px-4 py-3 border-b border-[#9b3747]">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="h-10 w-10 rounded-full bg-[#9b3747] flex items-center justify-center text-lg font-bold">
+                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || "U"}
+              </div>
+            </div>
+            <div className="ml-3 overflow-hidden">
+              <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+              <p className="text-xs truncate">
+                <span className={`px-1.5 py-0.5 rounded-full ${roleColor}`}>
+                  {userRole}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <nav className="mt-6 px-2">
+        <ul className="space-y-2">
           {navItems.map((item) => {
-            // Check if user has required role (if any)
-            if (item.roles.length > 0 && !item.roles.some(role => hasRole(role))) {
-              return null;
-            }
-            
             const isActive = location.pathname === item.path;
             
             return (
@@ -157,6 +274,19 @@ const Sidebar = ({ hasRole }) => {
               </li>
             );
           })}
+          
+          {/* Logout item at the bottom */}
+          <li className="absolute bottom-4 left-0 right-0 px-2">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center p-3 rounded-lg transition-colors hover:bg-[#9b3747]"
+            >
+              <span className="flex-shrink-0"><LogoutIcon /></span>
+              {!isCollapsed && (
+                <span className="ml-3">Logout</span>
+              )}
+            </button>
+          </li>
         </ul>
       </nav>
     </div>
@@ -164,7 +294,11 @@ const Sidebar = ({ hasRole }) => {
 };
 
 Sidebar.propTypes = {
-  hasRole: PropTypes.func.isRequired
+  isOfficial: PropTypes.bool
+};
+
+Sidebar.defaultProps = {
+  isOfficial: false
 };
 
 export default Sidebar; 
