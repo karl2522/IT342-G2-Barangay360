@@ -1,12 +1,11 @@
 import { useContext, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import { webSocketService } from '../../services/WebSocketService';
 
 const OfficialDashboard = () => {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     // Connect to WebSocket
@@ -17,11 +16,6 @@ const OfficialDashboard = () => {
       webSocketService.disconnect();
     };
   }, []);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
-  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex w-full">
@@ -40,12 +34,16 @@ const OfficialDashboard = () => {
                 <span className="text-sm font-medium text-[#861A2D]">{user?.username}</span>
                 <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Official</span>
               </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-md text-sm text-white bg-[#861A2D] hover:bg-[#9b3747] transition-colors"
-              >
-                Logout
-              </button>
+              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border-2 border-[#861A2D]">
+                <img 
+                  src="/images/default-profile.png" 
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = `https://ui-avatars.com/api/?name=${user?.firstName || 'User'}&background=861A2D&color=fff`;
+                  }}
+                />
+              </div>
             </div>
           </div>
         </nav>

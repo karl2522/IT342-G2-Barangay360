@@ -9,6 +9,7 @@ import Unauthorized from './contexts/Unauthorized.jsx';
 import { AuthProvider } from './contexts/AuthContext';
 import Services from './pages/resident/Services.jsx';
 import RequestsManagement from './pages/official/RequestsManagement.jsx';
+import AnnouncementsManagement from './pages/official/AnnouncementsManagement.jsx';
 import './index.css';
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import { ToastProvider } from './contexts/ToastContext';
@@ -110,7 +111,7 @@ function App() {
               path="/manage-announcements" 
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
-                  <PlaceholderPage title="Manage Announcements" />
+                  <AnnouncementsManagement />
                 </ProtectedRoute>
               } 
             />

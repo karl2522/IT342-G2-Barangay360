@@ -91,6 +91,7 @@ const LogoutIcon = () => (
 
 const Sidebar = ({ isOfficial }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { hasRole, logout, user } = useContext(AuthContext);
@@ -98,6 +99,14 @@ const Sidebar = ({ isOfficial }) => {
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+  
+  const openLogoutModal = () => {
+    setShowLogoutModal(true);
+  };
+  
+  const closeLogoutModal = () => {
+    setShowLogoutModal(false);
   };
 
   // Determine user's role for display
@@ -199,82 +208,108 @@ const Sidebar = ({ isOfficial }) => {
   };
 
   return (
-    <div 
-      className={`h-screen fixed left-0 top-0 transition-all duration-300 ease-in-out bg-[#861A2D] text-white shadow-lg ${
-        isCollapsed ? 'w-20' : 'w-64'
-      }`}
-    >
-      <div className="flex items-center justify-between p-4 border-b border-[#9b3747]">
-        {!isCollapsed && (
-          <h1 className="text-xl font-bold">Barangay360</h1>
-        )}
-        <button 
-          onClick={toggleSidebar} 
-          className={`p-2 rounded-full hover:bg-[#9b3747] transition-colors ${isCollapsed ? 'mx-auto' : ''}`}
-        >
-          {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-        </button>
-      </div>
+    <>
+      <div 
+        className={`h-screen fixed left-0 top-0 transition-all duration-300 ease-in-out bg-[#861A2D] text-white shadow-lg ${
+          isCollapsed ? 'w-20' : 'w-64'
+        }`}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-[#9b3747]">
+          {!isCollapsed && (
+            <h1 className="text-xl font-bold">Barangay360</h1>
+          )}
+          <button 
+            onClick={toggleSidebar} 
+            className={`p-2 rounded-full hover:bg-[#9b3747] transition-colors ${isCollapsed ? 'mx-auto' : ''}`}
+          >
+            {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </button>
+        </div>
 
-      {!isCollapsed && (
-        <div className="px-4 py-3 border-b border-[#9b3747]">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="h-10 w-10 rounded-full bg-[#9b3747] flex items-center justify-center text-lg font-bold">
-                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || "U"}
+        {!isCollapsed && (
+          <div className="px-4 py-3 border-b border-[#9b3747]">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="h-10 w-10 rounded-full bg-[#9b3747] flex items-center justify-center text-lg font-bold">
+                  {user?.firstName?.charAt(0) || user?.username?.charAt(0) || "U"}
+                </div>
+              </div>
+              <div className="ml-3 overflow-hidden">
+                <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+                <p className="text-xs truncate">
+                  <span className={`px-1.5 py-0.5 rounded-full ${roleColor}`}>
+                    {userRole}
+                  </span>
+                </p>
               </div>
             </div>
-            <div className="ml-3 overflow-hidden">
-              <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs truncate">
-                <span className={`px-1.5 py-0.5 rounded-full ${roleColor}`}>
-                  {userRole}
-                </span>
-              </p>
+          </div>
+        )}
+
+        <nav className="mt-6 px-2">
+          <ul className="space-y-2">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              
+              return (
+                <li key={item.name}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center p-3 rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-white text-[#861A2D] font-medium' 
+                        : 'hover:bg-[#9b3747]'
+                    }`}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    {!isCollapsed && (
+                      <span className="ml-3">{item.name}</span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+            
+            {/* Logout item at the bottom */}
+            <li className="absolute bottom-4 left-0 right-0 px-2">
+              <button
+                onClick={openLogoutModal}
+                className="w-full flex items-center p-3 rounded-lg transition-colors hover:bg-[#9b3747]"
+              >
+                <span className="flex-shrink-0"><LogoutIcon /></span>
+                {!isCollapsed && (
+                  <span className="ml-3">Logout</span>
+                )}
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Confirm Logout</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to log out from your account?</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={closeLogoutModal}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-[#861A2D] text-white rounded-md text-sm font-medium hover:bg-[#9b3747] transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
       )}
-
-      <nav className="mt-6 px-2">
-        <ul className="space-y-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <li key={item.name}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center p-3 rounded-lg transition-colors ${
-                    isActive 
-                      ? 'bg-white text-[#861A2D] font-medium' 
-                      : 'hover:bg-[#9b3747]'
-                  }`}
-                >
-                  <span className="flex-shrink-0">{item.icon}</span>
-                  {!isCollapsed && (
-                    <span className="ml-3">{item.name}</span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-          
-          {/* Logout item at the bottom */}
-          <li className="absolute bottom-4 left-0 right-0 px-2">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center p-3 rounded-lg transition-colors hover:bg-[#9b3747]"
-            >
-              <span className="flex-shrink-0"><LogoutIcon /></span>
-              {!isCollapsed && (
-                <span className="ml-3">Logout</span>
-              )}
-            </button>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    </>
   );
 };
 
