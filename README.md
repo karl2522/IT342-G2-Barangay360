@@ -15,7 +15,7 @@ Barangay360 is a cutting-edge, community-centric platform designed to revolution
 
 <table>
   <tr>
-    <td>🎛️ Admin Dashboard</td>
+    <td>🎛️ Admin ResidentDashboard</td>
     <td>📢 Community Announcements</td>
     <td>✅ Request Approval System</td>
   </tr>

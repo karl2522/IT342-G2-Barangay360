@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
+import { AuthContext } from '../../contexts/AuthContext.jsx';
 
 // Import icons
 const DashboardIcon = () => (
@@ -94,21 +94,6 @@ const Sidebar = ({ isOfficial }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasRole, logout, user } = useContext(AuthContext);
-  
-  // Check if the user is actually an official from localStorage
-  const [actualIsOfficial, setActualIsOfficial] = useState(isOfficial);
-  
-  useEffect(() => {
-    // If isOfficial prop doesn't match the role check, use localStorage as source of truth
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    const userHasOfficialRole = userData?.roles?.includes('official') || userData?.roles?.includes('ROLE_OFFICIAL');
-    
-    // Only update if there's a mismatch
-    if (isOfficial !== userHasOfficialRole) {
-      console.log('Role mismatch detected in Sidebar', { propIsOfficial: isOfficial, userHasOfficialRole });
-      setActualIsOfficial(userHasOfficialRole);
-    }
-  }, [isOfficial]);
 
   const handleLogout = async () => {
     await logout();
@@ -116,14 +101,14 @@ const Sidebar = ({ isOfficial }) => {
   };
 
   // Determine user's role for display
-  const userRole = actualIsOfficial ? 'Official' : 'Resident';
-  const roleColor = actualIsOfficial ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+  const userRole = isOfficial ? 'Official' : 'Resident';
+  const roleColor = isOfficial ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
 
   // Define navigation items for regular residents
   const residentNavItems = [
     { 
       name: 'Dashboard', 
-      path: '/dashboard', 
+      path: '/resident-dashboard',
       icon: <DashboardIcon />
     },
     { 
@@ -207,7 +192,7 @@ const Sidebar = ({ isOfficial }) => {
   }
 
   // Choose which navigation items to display based on user role
-  const navItems = actualIsOfficial ? officialNavItems : residentNavItems;
+  const navItems = isOfficial ? officialNavItems : residentNavItems;
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);

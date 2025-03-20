@@ -5,10 +5,20 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",  
   ],
   theme: {
-    extend: {},
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      }
+    extend: {
+      keyframes: {
+        'slide-in': {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+      },
+      animation: {
+        'slide-in': 'slide-in 0.3s ease-out',
+      },
+    },
+    fontFamily: {
+      sans: ['Inter', 'sans-serif'],
+    }
   },
   plugins: [],
 };
