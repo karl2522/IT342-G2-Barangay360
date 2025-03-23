@@ -1,81 +1,87 @@
 package org.backend.security.jwt;
 
-import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
-import java.util.UUID;
 
-import javax.crypto.SecretKey;
-
-import org.backend.security.services.UserDetailsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.backend.security.services.UserDetailsImpl;
+import org.backend.payload.response.TokenDTO;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Component
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+    private static final String TOKEN_TYPE = "Bearer";
+    private static final String ISSUER = "Barangay360";
+    private static final String AUDIENCE = "Barangay360-Users";
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
     @Value("${app.jwt.expiration}")
     private int jwtExpirationMs;
-    
+
     @Value("${app.jwt.refresh-token.expiration}")
     private int refreshTokenExpirationMs;
 
-    public String generateJwtToken(Authentication authentication) {
+    public TokenDTO generateJwtToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Instant now = Instant.now();
+        Instant expiration = now.plusMillis(jwtExpirationMs);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setSubject(userPrincipal.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(expiration))
+                .setIssuer(ISSUER)
+                .setAudience(AUDIENCE)
+                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
                 .compact();
-    }
-    
-    public String generateTokenFromUsername(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-    
-    public String generateRefreshToken() {
-        return UUID.randomUUID().toString();
-    }
-    
-    public long getRefreshTokenExpirationMs() {
-        return refreshTokenExpirationMs;
+
+        return new TokenDTO(token, TOKEN_TYPE, now, expiration, ISSUER, AUDIENCE);
     }
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public TokenDTO generateRefreshToken(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Instant now = Instant.now();
+        Instant expiration = now.plusMillis(refreshTokenExpirationMs);
+
+        String token = Jwts.builder()
+                .setSubject(userPrincipal.getUsername())
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(expiration))
+                .setIssuer(ISSUER)
+                .setAudience(AUDIENCE)
+                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                .compact();
+
+        return new TokenDTO(token, TOKEN_TYPE, now, expiration, ISSUER, AUDIENCE);
     }
 
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build()
-                .parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(authToken);
+            Jwts.parserBuilder()
+                    .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                    .build()
+                    .parseClaimsJws(authToken);
             return true;
         } catch (SecurityException e) {
             logger.error("Invalid JWT signature: {}", e.getMessage());
@@ -91,6 +97,35 @@ public class JwtUtils {
 
         return false;
     }
+
+    public boolean validateRefreshToken(String refreshToken) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                    .build()
+                    .parseClaimsJws(refreshToken);
+            return true;
+        } catch (Exception e) {
+            logger.error("Invalid refresh token: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public TokenDTO generateTokenFromUsername(String username) {
+        Instant now = Instant.now();
+        Instant expiration = now.plusMillis(jwtExpirationMs);
+
+        String token = Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(expiration))
+                .setIssuer(ISSUER)
+                .setAudience(AUDIENCE)
+                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                .compact();
+
+        return new TokenDTO(token, TOKEN_TYPE, now, expiration, ISSUER, AUDIENCE);
+    }
     
     public String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
@@ -100,5 +135,9 @@ public class JwtUtils {
         }
 
         return null;
+    }
+
+    public long getRefreshTokenExpirationMs() {
+        return refreshTokenExpirationMs;
     }
 } 

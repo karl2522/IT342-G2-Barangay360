@@ -12,24 +12,19 @@ const ProtectedRoute = ({ children, requiredRoles = [] }) => {
 
   // If specific roles are required
   if (requiredRoles.length > 0) {
-    // Get roles directly from localStorage as a backup check
-    let hasRequiredRole = false;
+    // Convert all roles to ROLE_ prefixed format
+    const normalizedRequiredRoles = requiredRoles.map(role => 
+      role.startsWith('ROLE_') ? role : `ROLE_${role.toUpperCase()}`
+    );
     
-    try {
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      // First check using the context function
-      hasRequiredRole = requiredRoles.some(role => hasRole(role));
-      
-      // If that fails, check directly from localStorage data
-      if (!hasRequiredRole && userData && userData.roles) {
-        hasRequiredRole = requiredRoles.some(role => userData.roles.includes(role));
-      }
-      
-      console.log('Role check result:', { requiredRoles, hasRequiredRole, userRoles: userData?.roles });
-    } catch (error) {
-      console.error('Error checking roles:', error);
-    }
+    // Check if user has any of the required roles
+    const hasRequiredRole = normalizedRequiredRoles.some(role => hasRole(role));
+    
+    console.log('Role check:', { 
+      requiredRoles: normalizedRequiredRoles, 
+      hasRequiredRole,
+      userRoles: JSON.parse(localStorage.getItem('user') || '{}')?.roles 
+    });
     
     if (!hasRequiredRole) {
       return <Navigate to="/unauthorized" replace />;

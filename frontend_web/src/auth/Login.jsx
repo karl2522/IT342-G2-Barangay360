@@ -1,16 +1,17 @@
 import { useContext, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
+import { AuthContext } from '../contexts/AuthContext.jsx';
+import { useToast } from '../contexts/ToastContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login, hasRole, isAuthenticated } = useContext(AuthContext);
+  const { login, isAuthenticated } = useContext(AuthContext);
+  const { showToast } = useToast();
   const navigate = useNavigate();
   
   // Check if user is already logged in
@@ -19,49 +20,62 @@ const Login = () => {
       // If already logged in, check user roles directly from localStorage
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
       
-      if (userData && userData.roles && userData.roles.includes('official')) {
+      if (userData && userData.roles && userData.roles.includes('ROLE_OFFICIAL')) {
         navigate('/official-dashboard');
+      } else if (userData && userData.roles && userData.roles.includes('ROLE_USER')) {
+        navigate('/resident-dashboard');
       } else {
-        navigate('/dashboard');
+        // Default fallback
+        navigate('/resident-dashboard');
       }
     }
   }, [isAuthenticated, navigate]);
   
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
   };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.username.trim() || !formData.password.trim()) {
+      showToast('Please enter both username and password', 'error');
+      return;
+    }
+    
     setLoading(true);
-    setError('');
     
     try {
-      console.log('Logging in with credentials...');
-      
       const result = await login(formData.username, formData.password);
       
       if (result.success) {
-        console.log('Login successful');
+        // Success message
+        showToast('Login successful!', 'success');
         
-        // Check user roles directly from localStorage as state may not be updated yet
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        console.log('User data after login:', userData);
+        // Use the userData directly from the result if available
+        const userData = result.userData || JSON.parse(localStorage.getItem('user') || '{}');
         
-        if (userData && userData.roles && userData.roles.includes('official')) {
+        // Navigate based on user role with proper checks
+        if (userData && userData.roles && userData.roles.includes('ROLE_OFFICIAL')) {
           navigate('/official-dashboard');
+        } else if (userData && userData.roles && userData.roles.includes('ROLE_USER')) {
+          navigate('/resident-dashboard');
         } else {
-          navigate('/dashboard');
+          // Default fallback if roles are undefined or empty
+          navigate('/resident-dashboard');
         }
       } else {
-        setError(result.message || 'Login failed. Please check your credentials.');
+        // Show error message from the login result
+        showToast(result.message || 'Failed to login. Please check your credentials.', 'error');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('An error occurred during login. Please try again.');
+      showToast(error.message || 'Failed to login. Please check your credentials.', 'error');
     } finally {
       setLoading(false);
     }
@@ -80,21 +94,6 @@ const Login = () => {
         </div>
         
         <div className="mt-8 bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border-t-4 border-[#861A2D]">
-          {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">

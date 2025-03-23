@@ -28,7 +28,7 @@ const Unauthorized = () => {
         
         <div className="flex flex-col space-y-4">
           <Link
-            to="/dashboard"
+            to="/"
             className="w-full py-2 px-4 text-center text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
           >
             Go to Dashboard
