@@ -26,31 +26,39 @@ class WebSocketService {
             return;
         }
 
-        // Define a factory function that creates a SockJS instance with token
-        const socketFactory = () => new SockJS(`http://localhost:8080/ws?token=${token}`);
-        
-        // Create STOMP client with the factory function
-        this.stompClient = Stomp.over(socketFactory);
-        
-        // Set debug to a function instead of null
-        this.stompClient.debug = function() {};
+        // Close existing connections if any
+        this.disconnect();
 
-        // Connect with authorization header
-        const headers = {
-            'Authorization': `Bearer ${token}`
-        };
-        
-        this.stompClient.connect(
-            headers,
-            () => {
-                console.log('Connected to WebSocket');
-                this.subscribeToServiceRequests();
-            },
-            (error) => {
-                console.error('WebSocket connection error:', error);
-                // Reconnect handled by the factory function
-            }
-        );
+        try {
+            // Define a factory function that creates a SockJS instance with token
+            const socketFactory = () => new SockJS(`http://localhost:8080/ws?token=${token}`);
+            
+            // Create STOMP client with the factory function
+            this.stompClient = Stomp.over(socketFactory);
+            
+            // Set debug to a function instead of null
+            this.stompClient.debug = function() {};
+
+            // Connect with authorization header
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+            
+            this.stompClient.connect(
+                headers,
+                () => {
+                    console.log('Connected to WebSocket');
+                    this.subscribeToServiceRequests();
+                },
+                (error) => {
+                    console.error('WebSocket connection error:', error);
+                    // Don't attempt to reconnect automatically on auth errors
+                    // as it could cause an infinite loop
+                }
+            );
+        } catch (error) {
+            console.error('Error creating WebSocket connection:', error);
+        }
     }
 
     disconnect() {
@@ -65,6 +73,15 @@ class WebSocketService {
             this.stompClient.subscribe('/topic/service-requests', (message) => {
                 const serviceRequest = JSON.parse(message.body);
                 this.notifySubscribers('service-requests', serviceRequest);
+            });
+        }
+    }
+
+    subscribeToForumUpdates() {
+        if (this.stompClient && this.stompClient.connected) {
+            this.stompClient.subscribe('/topic/forum', (message) => {
+                const forumUpdate = JSON.parse(message.body);
+                this.notifySubscribers('forum', forumUpdate);
             });
         }
     }
@@ -85,6 +102,16 @@ class WebSocketService {
     notifySubscribers(topic, data) {
         if (this.subscribers.has(topic)) {
             this.subscribers.get(topic).forEach(callback => callback(data));
+        }
+    }
+
+    sendForumUpdate(destination, data) {
+        if (this.stompClient && this.stompClient.connected) {
+            this.stompClient.send(
+                destination,
+                { 'Authorization': `Bearer ${this.getToken()}` },
+                JSON.stringify(data)
+            );
         }
     }
 }

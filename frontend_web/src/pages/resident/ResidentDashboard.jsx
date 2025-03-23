@@ -1,13 +1,12 @@
 import { useContext, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import { serviceRequestService } from '../../services/ServiceRequestService';
 import { webSocketService } from '../../services/WebSocketService';
 
 const ResidentDashboard = () => {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [serviceType, setServiceType] = useState('');
   const [details, setDetails] = useState('');
@@ -41,11 +40,6 @@ const ResidentDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
   };
 
   const handleSubmitServiceRequest = async (e) => {
@@ -82,12 +76,16 @@ const ResidentDashboard = () => {
                 <span className="text-sm font-medium text-[#861A2D]">{user?.username}</span>
                 <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Resident</span>
               </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-md text-sm text-white bg-[#861A2D] hover:bg-[#9b3747] transition-colors"
-              >
-                Logout
-              </button>
+              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border-2 border-[#861A2D]">
+                <img 
+                  src="/images/default-profile.png" 
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = `https://ui-avatars.com/api/?name=${user?.firstName || 'User'}&background=861A2D&color=fff`;
+                  }}
+                />
+              </div>
             </div>
           </div>
         </nav>
@@ -135,8 +133,9 @@ const ResidentDashboard = () => {
                 <p className="text-gray-600 mb-4">Track the status of your service requests.</p>
 
                 {isLoading ? (
-                  <div className="flex justify-center items-center py-8">
+                  <div className="flex flex-col justify-center items-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
+                    <p className="mt-3 text-gray-600 font-medium">Loading requests...</p>
                   </div>
                 ) : myRequests.length > 0 ? (
                   <div className="space-y-3">

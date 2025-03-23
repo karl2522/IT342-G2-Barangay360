@@ -1,12 +1,11 @@
 import { useContext, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import { webSocketService } from '../../services/WebSocketService';
 
 const OfficialDashboard = () => {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     // Connect to WebSocket
@@ -17,11 +16,6 @@ const OfficialDashboard = () => {
       webSocketService.disconnect();
     };
   }, []);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
-  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex w-full">
@@ -40,12 +34,16 @@ const OfficialDashboard = () => {
                 <span className="text-sm font-medium text-[#861A2D]">{user?.username}</span>
                 <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Official</span>
               </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-md text-sm text-white bg-[#861A2D] hover:bg-[#9b3747] transition-colors"
-              >
-                Logout
-              </button>
+              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border-2 border-[#861A2D]">
+                <img 
+                  src="/images/default-profile.png" 
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = `https://ui-avatars.com/api/?name=${user?.firstName || 'User'}&background=861A2D&color=fff`;
+                  }}
+                />
+              </div>
             </div>
           </div>
         </nav>
@@ -58,6 +56,56 @@ const OfficialDashboard = () => {
               <p className="opacity-90">
                 As a barangay official, you have access to enhanced tools and management features to better serve the community.
               </p>
+            </div>
+
+            {/* New Forum Management Section */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Community Forum Management</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-full bg-[#861A2D] bg-opacity-10 mr-4">
+                      <svg className="h-6 w-6 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-[#861A2D]">Posts Management</h3>
+                      <p className="text-gray-600">Manage community forum posts and activity</p>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <Link to="/forum-management" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200">
+                      Manage Forum Posts
+                    </Link>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Monitor community discussions, review post metrics, and moderate content to ensure community guidelines are followed.</p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-full bg-[#861A2D] bg-opacity-10 mr-4">
+                      <svg className="h-6 w-6 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-[#861A2D]">Reports Management</h3>
+                      <p className="text-gray-600">Handle user reports and content moderation</p>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <Link to="/reports-management" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200">
+                      Manage Content Reports
+                    </Link>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Review and process user-submitted reports on inappropriate content, take action on violations, and maintain community standards.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
