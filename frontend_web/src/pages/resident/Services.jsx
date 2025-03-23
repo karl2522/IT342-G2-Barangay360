@@ -364,8 +364,9 @@ const Services = () => {
           {/* Requests Table */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
             {isLoading ? (
-              <div className="flex justify-center items-center py-16">
+              <div className="flex flex-col justify-center items-center py-16">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#861A2D]"></div>
+                <p className="mt-3 text-gray-600 font-medium">Loading service requests...</p>
               </div>
             ) : activeRequests.length === 0 ? (
               <div className="text-center py-16">

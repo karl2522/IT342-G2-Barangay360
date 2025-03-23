@@ -58,6 +58,56 @@ const OfficialDashboard = () => {
               </p>
             </div>
 
+            {/* New Forum Management Section */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Community Forum Management</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-full bg-[#861A2D] bg-opacity-10 mr-4">
+                      <svg className="h-6 w-6 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-[#861A2D]">Posts Management</h3>
+                      <p className="text-gray-600">Manage community forum posts and activity</p>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <Link to="/forum-management" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200">
+                      Manage Forum Posts
+                    </Link>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Monitor community discussions, review post metrics, and moderate content to ensure community guidelines are followed.</p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-full bg-[#861A2D] bg-opacity-10 mr-4">
+                      <svg className="h-6 w-6 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-[#861A2D]">Reports Management</h3>
+                      <p className="text-gray-600">Handle user reports and content moderation</p>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <Link to="/reports-management" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200">
+                      Manage Content Reports
+                    </Link>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Review and process user-submitted reports on inappropriate content, take action on violations, and maintain community standards.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
                 <div className="flex items-center mb-4">

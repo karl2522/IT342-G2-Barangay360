@@ -83,6 +83,18 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const ForumIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+  </svg>
+);
+
+const ContentReportIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+  </svg>
+);
+
 const LogoutIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
@@ -127,7 +139,7 @@ const Sidebar = ({ isOfficial }) => {
     },
     { 
       name: 'Announcements', 
-      path: '/announcements', 
+      path: '/resident-announcements', 
       icon: <AnnouncementIcon />
     },
     { 
@@ -163,6 +175,16 @@ const Sidebar = ({ isOfficial }) => {
       name: 'Announcements', 
       path: '/manage-announcements', 
       icon: <AnnouncementIcon />
+    },
+    { 
+      name: 'Forum Posts', 
+      path: '/forum-management', 
+      icon: <ForumIcon />
+    },
+    { 
+      name: 'Content Reports', 
+      path: '/reports-management', 
+      icon: <ContentReportIcon />
     },
     { 
       name: 'Residents', 

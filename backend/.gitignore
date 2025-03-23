@@ -31,3 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment Variables ###
+.env
+.env.local
+.env.*.local
+
+### Google Cloud Credentials ###
+src/main/resources/gcp-credentials.json
+**/gcp-credentials.json
+**/*.p12
+**/*.pem
+**/*.key

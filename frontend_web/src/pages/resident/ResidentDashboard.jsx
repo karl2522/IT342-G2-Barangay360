@@ -133,8 +133,9 @@ const ResidentDashboard = () => {
                 <p className="text-gray-600 mb-4">Track the status of your service requests.</p>
 
                 {isLoading ? (
-                  <div className="flex justify-center items-center py-8">
+                  <div className="flex flex-col justify-center items-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
+                    <p className="mt-3 text-gray-600 font-medium">Loading requests...</p>
                   </div>
                 ) : myRequests.length > 0 ? (
                   <div className="space-y-3">

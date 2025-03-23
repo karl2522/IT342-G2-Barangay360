@@ -10,9 +10,13 @@ import { AuthProvider } from './contexts/AuthContext';
 import Services from './pages/resident/Services.jsx';
 import RequestsManagement from './pages/official/RequestsManagement.jsx';
 import AnnouncementsManagement from './pages/official/AnnouncementsManagement.jsx';
+import ForumManagement from './pages/official/ForumManagement.jsx';
+import ReportManagement from './pages/official/ReportManagement.jsx';
 import './index.css';
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import { ToastProvider } from './contexts/ToastContext';
+import ResidentAnnouncements from './pages/resident/Announcements';
+import CommunityForum from './pages/resident/CommunityForum.jsx';
 
 // Define a placeholder component for routes that haven't been fully implemented
 const PlaceholderPage = ({ title }) => (
@@ -58,10 +62,10 @@ function App() {
               } 
             />
             <Route 
-              path="/announcements" 
+              path="/resident-announcements" 
               element={
-                <ProtectedRoute requiredRoles={['ROLE_USER']}>
-                  <PlaceholderPage title="Announcements" />
+                <ProtectedRoute allowedRoles={['ROLE_USER']}>
+                  <ResidentAnnouncements />
                 </ProtectedRoute>
               } 
             />
@@ -69,7 +73,7 @@ function App() {
               path="/community" 
               element={
                 <ProtectedRoute requiredRoles={['ROLE_USER']}>
-                  <PlaceholderPage title="Community Forum" />
+                  <CommunityForum />
                 </ProtectedRoute>
               } 
             />
@@ -112,6 +116,22 @@ function App() {
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
                   <AnnouncementsManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/forum-management" 
+              element={
+                <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
+                  <ForumManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports-management" 
+              element={
+                <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
+                  <ReportManagement />
                 </ProtectedRoute>
               } 
             />
