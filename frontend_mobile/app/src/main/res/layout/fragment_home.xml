@@ -14,7 +14,10 @@
         android:textColor="@color/black"
         android:textSize="30sp" />
 
-
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <ScrollView
         android:layout_width="412dp"
         android:layout_height="921dp">
@@ -178,6 +181,7 @@
         </LinearLayout>
 
     </ScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 
 </RelativeLayout>
