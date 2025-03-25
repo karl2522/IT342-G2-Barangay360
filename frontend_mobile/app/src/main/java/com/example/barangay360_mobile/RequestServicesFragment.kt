@@ -39,27 +39,25 @@ class RequestServicesFragment : Fragment() {
         }
     }
 
+    // Update setupDropdowns method to include all service types
     private fun setupDropdowns(view: View) {
-        // Sample data for dropdowns
+        // Service type options
         val serviceTypes = arrayOf(
+            "Barangay Certificate",
             "Barangay Clearance",
+            "Barangay ID Card",
             "Business Permit",
-            "Certificate of Indigency",
             "Certificate of Residency",
-            "Burial Assistance"
+            "Certificate of Indigency"
         )
 
-        // Setup first dropdown
-        val dropdown1 = view.findViewById<AutoCompleteTextView>(R.id.service_type_dropdown)
-        val adapter1 = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, serviceTypes)
-        dropdown1.setAdapter(adapter1)
-
-        // Setup second dropdown
-        val dropdown2 = view.findViewById<AutoCompleteTextView>(R.id.service_type_dropdown2)
-        val adapter2 = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, serviceTypes)
-        dropdown2.setAdapter(adapter2)
+        // Setup service type dropdown
+        val dropdown = view.findViewById<AutoCompleteTextView>(R.id.service_type_dropdown)
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, serviceTypes)
+        dropdown.setAdapter(adapter)
     }
 
+    // Update validateInputs method to validate all required fields
     private fun validateInputs(view: View): Boolean {
         var isValid = true
 
@@ -73,41 +71,54 @@ class RequestServicesFragment : Fragment() {
             serviceTypeLayout.error = null
         }
 
-        // Validate description
-        val descriptionLayout = view.findViewById<TextInputLayout>(R.id.description_layout)
-        val description = descriptionLayout.editText?.text.toString().trim()
-        if (description.isEmpty()) {
-            descriptionLayout.error = "Description is required"
+        // Validate purpose
+        val purposeLayout = view.findViewById<TextInputLayout>(R.id.purpose_layout)
+        val purpose = purposeLayout.editText?.text.toString().trim()
+        if (purpose.isEmpty()) {
+            purposeLayout.error = "Purpose is required"
             isValid = false
         } else {
-            descriptionLayout.error = null
+            purposeLayout.error = null
         }
 
-        // Validate location
-        val locationLayout = view.findViewById<TextInputLayout>(R.id.location_layout)
-        val location = locationLayout.editText?.text.toString().trim()
-        if (location.isEmpty()) {
-            locationLayout.error = "Location is required"
+        // Validate contact number
+        val contactLayout = view.findViewById<TextInputLayout>(R.id.contact_number_layout)
+        val contact = contactLayout.editText?.text.toString().trim()
+        if (contact.isEmpty()) {
+            contactLayout.error = "Contact number is required"
             isValid = false
         } else {
-            locationLayout.error = null
+            contactLayout.error = null
+        }
+
+        // Validate address
+        val addressLayout = view.findViewById<TextInputLayout>(R.id.address_layout)
+        val address = addressLayout.editText?.text.toString().trim()
+        if (address.isEmpty()) {
+            addressLayout.error = "Address is required"
+            isValid = false
+        } else {
+            addressLayout.error = null
         }
 
         return isValid
     }
 
+    // Update clearForm method to clear all fields
     private fun clearForm(view: View) {
         // Clear all input fields
-        view.findViewById<TextInputLayout>(R.id.service_type_layout).editText?.setText("")
-        view.findViewById<TextInputLayout>(R.id.description_layout).editText?.setText("")
-        view.findViewById<TextInputLayout>(R.id.location_layout).editText?.setText("")
         view.findViewById<AutoCompleteTextView>(R.id.service_type_dropdown).setText("")
-        view.findViewById<AutoCompleteTextView>(R.id.service_type_dropdown2).setText("")
+        view.findViewById<TextInputLayout>(R.id.purpose_layout).editText?.setText("")
+        view.findViewById<TextInputLayout>(R.id.additional_details_layout).editText?.setText("")
+        view.findViewById<TextInputLayout>(R.id.contact_number_layout).editText?.setText("")
+        view.findViewById<TextInputLayout>(R.id.address_layout).editText?.setText("")
 
         // Clear all errors
         view.findViewById<TextInputLayout>(R.id.service_type_layout).error = null
-        view.findViewById<TextInputLayout>(R.id.description_layout).error = null
-        view.findViewById<TextInputLayout>(R.id.location_layout).error = null
+        view.findViewById<TextInputLayout>(R.id.purpose_layout).error = null
+        view.findViewById<TextInputLayout>(R.id.additional_details_layout).error = null
+        view.findViewById<TextInputLayout>(R.id.contact_number_layout).error = null
+        view.findViewById<TextInputLayout>(R.id.address_layout).error = null
     }
 
     private fun submitServiceRequest() {

@@ -202,5 +202,7 @@
 
             </RelativeLayout>
         </ScrollView>
+
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
 </RelativeLayout>

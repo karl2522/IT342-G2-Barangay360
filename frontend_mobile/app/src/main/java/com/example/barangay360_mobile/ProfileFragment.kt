@@ -5,7 +5,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.navigation.fragment.findNavController
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
 class ProfileFragment : Fragment() {
@@ -33,7 +36,37 @@ class ProfileFragment : Fragment() {
             refreshHomeContent()
         }
 
+        // Set up Edit Profile button click listener
+        val editProfileButton: Button = view.findViewById(R.id.profile_btn_edit_profile)
+        editProfileButton.setOnClickListener {
+            navigateToEditProfile()
+        }
+
+        // Setup back button
+        view.findViewById<ImageView>(R.id.profile_btn_back).setOnClickListener {
+            // Show bottom navigation before going back
+
+            // Navigate back to profile screen
+            requireActivity().onBackPressed()
+        }
+
         return view
+    }
+
+    private fun navigateToEditProfile() {
+        // Create a ProfileEditFragment
+        val profileEditFragment = ProfileEditFragment()
+
+        // Option 1: Using Navigation Component
+        try {
+            findNavController().navigate(R.id.action_profileFragment_to_profileEditFragment)
+        } catch (e: Exception) {
+            // Option 2: Manual fragment transaction if Navigation Component isn't set up
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, profileEditFragment)
+                .addToBackStack("profile")
+                .commit()
+        }
     }
 
     private fun refreshHomeContent() {

@@ -11,86 +11,20 @@
         android:layout_height="wrap_content"
         android:padding="24dp">
 
-        <!-- Service Type -->
+        <!-- Service Type Dropdown -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/service_type_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Service Type"
-            app:boxStrokeColor="#E0E0E0"
-            app:errorTextColor="#C62828"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/service_type_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:padding="12dp"
-                android:textColor="#212121"
-                android:textSize="14sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Description -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/description_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Description"
-            app:boxStrokeColor="#E0E0E0"
-            app:counterEnabled="true"
-            app:counterMaxLength="250"
-            app:errorTextColor="#C62828"
-            app:layout_constraintTop_toBottomOf="@id/service_type_layout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/description_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android:inputType="textMultiLine"
-                android:lines="5"
-                android:padding="12dp"
-                android:textColor="#212121"
-                android:textSize="14sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Location -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/location_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Location"
-            app:boxStrokeColor="#E0E0E0"
-            app:errorTextColor="#C62828"
-            app:layout_constraintTop_toBottomOf="@id/description_layout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/location_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:padding="12dp"
-                android:textColor="#212121"
-                android:textSize="14sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Service Type Dropdown 1 -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/service_type_dropdown_layout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Service Type"
+            android:hint="Service Type *"
             app:boxStrokeColor="#E0E0E0"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
             app:errorTextColor="#C62828"
-            app:layout_constraintTop_toBottomOf="@id/location_layout">
+            app:layout_constraintTop_toTopOf="parent">
 
             <AutoCompleteTextView
                 android:id="@+id/service_type_dropdown"
@@ -102,23 +36,109 @@
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Service Type Dropdown 2 -->
+        <!-- Purpose -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/service_type_dropdown2_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:id="@+id/purpose_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Service Type"
+            android:hint="Purpose"
             app:boxStrokeColor="#E0E0E0"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
             app:errorTextColor="#C62828"
-            app:layout_constraintTop_toBottomOf="@id/service_type_dropdown_layout">
+            app:layout_constraintTop_toBottomOf="@id/service_type_layout">
 
-            <AutoCompleteTextView
-                android:id="@+id/service_type_dropdown2"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/purpose_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="none"
+                android:inputType="text"
+                android:padding="12dp"
+                android:textColor="#212121"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Additional Details -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/additional_details_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Additional Details"
+            app:boxStrokeColor="#E0E0E0"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:counterEnabled="true"
+            app:counterMaxLength="250"
+            app:errorTextColor="#C62828"
+            app:layout_constraintTop_toBottomOf="@id/purpose_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/additional_details_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:lines="5"
+                android:padding="12dp"
+                android:textColor="#212121"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Contact Number -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/contact_number_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Contact Number"
+            app:boxStrokeColor="#E0E0E0"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:errorTextColor="#C62828"
+            app:layout_constraintTop_toBottomOf="@id/additional_details_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/contact_number_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone"
+                android:padding="12dp"
+                android:textColor="#212121"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Address -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/address_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Address"
+            app:boxStrokeColor="#E0E0E0"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:errorTextColor="#C62828"
+            app:layout_constraintTop_toBottomOf="@id/contact_number_layout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/address_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPostalAddress"
                 android:padding="12dp"
                 android:textColor="#212121"
                 android:textSize="14sp" />
@@ -130,15 +150,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/service_type_dropdown2_layout">
-
-
+            app:layout_constraintTop_toBottomOf="@id/address_layout">
 
             <Button
                 android:id="@+id/btn_submit"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:background="@drawable/btn_submit_background"
                 android:paddingTop="12dp"
@@ -152,7 +170,7 @@
                 android:id="@+id/btn_cancel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:background="@drawable/btn_cancel_background"
                 android:paddingTop="12dp"
