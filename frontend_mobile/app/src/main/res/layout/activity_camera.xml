@@ -19,7 +19,7 @@
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:background="@drawable/circular_button_background"
-        android:drawable="@drawable/qr_scan"
+        android:drawable="@drawable/bottom_qr_scan_icon"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="16dp"
