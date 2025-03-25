@@ -13,6 +13,7 @@ const ReportManagement = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [selectedReport, setSelectedReport] = useState(null);
   const [selectedReportPost, setSelectedReportPost] = useState(null);
+  const [selectedReportComment, setSelectedReportComment] = useState(null);
   const [reportToAction, setReportToAction] = useState(null);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -20,6 +21,7 @@ const ReportManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('PENDING'); // PENDING, APPROVED, REJECTED, ALL
   const [rejectionReason, setRejectionReason] = useState('');
+  const [reportTypeFilter, setReportTypeFilter] = useState('ALL'); // ALL, POST, COMMENT
   
   // Function to get reports data from backend with proper authentication
   const getReports = async () => {
@@ -33,8 +35,15 @@ const ReportManagement = () => {
       }
       
       let url = `http://localhost:8080/api/reports?page=${currentPage}&size=10`;
+      
+      // Apply status filter if not ALL
       if (statusFilter !== 'ALL') {
         url = `http://localhost:8080/api/reports/status/${statusFilter}?page=${currentPage}&size=10`;
+      }
+      
+      // Apply report type filter if not ALL
+      if (reportTypeFilter !== 'ALL') {
+        url = `${url}&type=${reportTypeFilter.toLowerCase()}`;
       }
       
       const response = await axios.get(url, {
@@ -53,22 +62,62 @@ const ReportManagement = () => {
     }
   };
   
-  // Load reports when component mounts or filter changes
+  // Load reports when component mounts or filters change
   useEffect(() => {
     getReports();
-  }, [currentPage, statusFilter]);
+  }, [currentPage, statusFilter, reportTypeFilter]);
   
   // Function to handle viewing a report details
   const handleViewReport = async (report) => {
     setSelectedReport(report);
+    setSelectedReportPost(null);
+    setSelectedReportComment(null);
     
     try {
-      // Fetch the post details
-      const post = await forumService.getPostById(report.post.id);
-      setSelectedReportPost(post);
+      // Determine report type and fetch corresponding content
+      if (report.post) {
+        // This is a post report
+        const post = await forumService.getPostById(report.post.id);
+        setSelectedReportPost(post);
+      } else if (report.comment) {
+        // This is a comment report
+        // Fetch the comment and its parent post
+        const comment = await getCommentDetails(report.comment.id);
+        setSelectedReportComment(comment);
+        
+        // If we have a parent post ID, fetch the post too for context
+        if (comment && comment.postId) {
+          const post = await forumService.getPostById(comment.postId);
+          setSelectedReportPost(post);
+        }
+      }
     } catch (error) {
-      console.error('Error fetching post details:', error);
-      showToast('Error loading post details', 'error');
+      console.error('Error fetching report content details:', error);
+      showToast('Error loading content details', 'error');
+    }
+  };
+  
+  // Helper function to get comment details
+  const getCommentDetails = async (commentId) => {
+    try {
+      const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).token : null;
+      
+      if (!token) {
+        showToast('Authentication token not found', 'error');
+        return null;
+      }
+      
+      const response = await axios.get(`http://localhost:8080/api/comments/${commentId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching comment with id ${commentId}:`, error);
+      showToast('Error loading comment details', 'error');
+      return null;
     }
   };
   
@@ -76,6 +125,7 @@ const ReportManagement = () => {
   const handleCloseReportModal = () => {
     setSelectedReport(null);
     setSelectedReportPost(null);
+    setSelectedReportComment(null);
   };
   
   // Function to show approve confirmation modal
@@ -91,7 +141,7 @@ const ReportManagement = () => {
     setShowRejectModal(true);
   };
   
-  // Function to show delete post confirmation modal
+  // Function to show delete post/comment confirmation modal
   const handleShowDeleteModal = (report) => {
     setReportToAction(report);
     setShowDeleteModal(true);
@@ -180,13 +230,20 @@ const ReportManagement = () => {
     updateReportStatus(reportToAction.id, 'REJECTED', rejectionReason);
   };
   
-  // Function to delete a post based on an approved report
-  const handleDeletePost = async () => {
+  // Function to delete a post or comment based on an approved report
+  const handleDeleteContent = async () => {
     if (!reportToAction) return;
     
     try {
-      await forumService.deletePost(reportToAction.post.id);
-      showToast('Post deleted successfully', 'success');
+      if (reportToAction.post) {
+        // Delete a post
+        await forumService.deletePost(reportToAction.post.id);
+        showToast('Post deleted successfully', 'success');
+      } else if (reportToAction.comment) {
+        // Delete a comment
+        await forumService.deleteComment(reportToAction.comment.id);
+        showToast('Comment deleted successfully', 'success');
+      }
       
       // Close modals
       setShowDeleteModal(false);
@@ -196,13 +253,14 @@ const ReportManagement = () => {
       if (selectedReport && selectedReport.id === reportToAction.id) {
         setSelectedReport(null);
         setSelectedReportPost(null);
+        setSelectedReportComment(null);
       }
       
       // Refresh reports list
       getReports();
     } catch (error) {
-      console.error('Error deleting post:', error);
-      showToast('Error deleting post', 'error');
+      console.error('Error deleting content:', error);
+      showToast(`Error deleting ${reportToAction.post ? 'post' : 'comment'}`, 'error');
     }
   };
   
@@ -220,12 +278,24 @@ const ReportManagement = () => {
     const searchContent = 
       (report.reason || '').toLowerCase() + 
       (report.post?.title || '').toLowerCase() + 
+      (report.comment?.content || '').toLowerCase() + 
       (report.reporter?.firstName || '').toLowerCase() + 
       (report.reporter?.lastName || '').toLowerCase();
     
     return searchContent.includes(searchTerm.toLowerCase());
   });
   
+  // Helper function to get content type badge
+  const getContentTypeBadge = (report) => {
+    if (report.comment) {
+      return <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Comment</span>;
+    } else if (report.post) {
+      return <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Post</span>;
+    } else {
+      return <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>;
+    }
+  };
+
   // Helper function to get status badge
   const getStatusBadge = (status) => {
     switch (status) {
@@ -280,7 +350,7 @@ const ReportManagement = () => {
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="Search reports by reason, post title, or reporter..."
+                  placeholder="Search reports by reason, content, or reporter..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#861A2D] focus:border-[#861A2D]"
@@ -293,21 +363,39 @@ const ReportManagement = () => {
               </div>
 
               {/* Filter Buttons */}
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">Status:</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setCurrentPage(0); // Reset to first page when filter changes
-                  }}
-                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#861A2D] focus:border-[#861A2D]"
-                >
-                  <option value="ALL">All Reports</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center">
+                  <label className="text-sm font-medium text-gray-700 mr-2">Status:</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setCurrentPage(0); // Reset to first page when filter changes
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#861A2D] focus:border-[#861A2D]"
+                  >
+                    <option value="ALL">All Status</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="REJECTED">Rejected</option>
+                  </select>
+                </div>
+                
+                <div className="flex items-center">
+                  <label className="text-sm font-medium text-gray-700 mr-2">Type:</label>
+                  <select
+                    value={reportTypeFilter}
+                    onChange={(e) => {
+                      setReportTypeFilter(e.target.value);
+                      setCurrentPage(0); // Reset to first page when filter changes
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#861A2D] focus:border-[#861A2D]"
+                  >
+                    <option value="ALL">All Types</option>
+                    <option value="POST">Posts</option>
+                    <option value="COMMENT">Comments</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -332,7 +420,8 @@ const ReportManagement = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Post Title</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reporter</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -347,8 +436,11 @@ const ReportManagement = () => {
                           {report.id}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          {getContentTypeBadge(report)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 truncate max-w-xs">
-                            {report.post?.title || 'Unknown post'}
+                            {report.post?.title || (report.comment ? 'Comment on post' : 'Unknown content')}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -376,6 +468,16 @@ const ReportManagement = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center justify-center space-x-2">
+                            <button
+                              onClick={() => handleViewReport(report)}
+                              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-[#861A2D] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                              </svg>
+                              View
+                            </button>
                             {report.status === 'PENDING' && (
                               <>
                                 <button
@@ -395,16 +497,6 @@ const ReportManagement = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                                   </svg>
                                   Reject
-                                </button>
-                                <button
-                                    onClick={() => handleViewReport(report)}
-                                    className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-[#861A2D] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
-                                >
-                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                  </svg>
-                                  View
                                 </button>
                               </>
                             )}
@@ -512,6 +604,10 @@ const ReportManagement = () => {
                         <p className="text-sm font-medium text-gray-900">{selectedReport.id}</p>
                       </div>
                       <div>
+                        <p className="text-sm text-gray-500">Report Type</p>
+                        <div>{getContentTypeBadge(selectedReport)}</div>
+                      </div>
+                      <div>
                         <p className="text-sm text-gray-500">Status</p>
                         <div>{getStatusBadge(selectedReport.status)}</div>
                       </div>
@@ -552,7 +648,7 @@ const ReportManagement = () => {
                         <svg className="h-5 w-5 text-[#861A2D] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                         </svg>
-                        Reported Post
+                        {selectedReport.comment ? 'Parent Post' : 'Reported Post'}
                       </h4>
                       <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                         <div className="flex items-center mb-4">
@@ -597,6 +693,43 @@ const ReportManagement = () => {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Comment Content - Only shown for comment reports */}
+                  {selectedReport.comment && selectedReportComment && (
+                    <div className="mb-6">
+                      <h4 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                        <svg className="h-5 w-5 text-[#861A2D] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                        Reported Comment
+                      </h4>
+                      <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm border-l-4 border-l-purple-500">
+                        <div className="flex items-center mb-3">
+                          <div className="h-8 w-8 rounded-full bg-[#861A2D] text-white flex items-center justify-center font-bold mr-2">
+                            {selectedReportComment.author?.firstName?.charAt(0) || 'U'}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {selectedReportComment.author?.firstName} {selectedReportComment.author?.lastName}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formatDate(selectedReportComment.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-gray-700 whitespace-pre-line">{selectedReportComment.content}</p>
+                        
+                        <div className="mt-3 flex items-center space-x-4 text-xs text-gray-500">
+                          <div className="flex items-center">
+                            <svg className="h-4 w-4 text-red-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                            </svg>
+                            <span>{selectedReportComment.likes?.length || 0} likes</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg flex justify-between">
@@ -609,7 +742,7 @@ const ReportManagement = () => {
                         <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        Delete Post
+                        Delete {selectedReport.comment ? 'Comment' : 'Post'}
                       </button>
                     )}
                   </div>
@@ -736,7 +869,7 @@ const ReportManagement = () => {
             </div>
           )}
           
-          {/* Delete Post Confirmation Modal */}
+          {/* Delete Content Confirmation Modal */}
           {showDeleteModal && reportToAction && (
             <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
               <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -745,11 +878,11 @@ const ReportManagement = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                   
-                  <h3 className="text-lg font-medium text-gray-900 mt-4">Delete Post</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mt-4">Delete {reportToAction.comment ? 'Comment' : 'Post'}</h3>
                   
                   <div className="mt-2">
                     <p className="text-sm text-gray-600">
-                      Are you sure you want to delete this post? This action cannot be undone and all associated data will be permanently removed.
+                      Are you sure you want to delete this {reportToAction.comment ? 'comment' : 'post'}? This action cannot be undone and all associated data will be permanently removed.
                     </p>
                   </div>
                   
@@ -761,7 +894,7 @@ const ReportManagement = () => {
                       Cancel
                     </button>
                     <button
-                      onClick={handleDeletePost}
+                      onClick={handleDeleteContent}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
                       Delete

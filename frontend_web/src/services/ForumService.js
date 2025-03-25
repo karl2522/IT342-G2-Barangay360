@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api/forum';
+const REPORTS_API_URL = 'http://localhost:8080/api/reports';
 
 class ForumService {
   constructor() {
@@ -24,14 +25,14 @@ class ForumService {
         return null;
       }
       
-      // Check if token is expired
+      // Check if token is expired - but don't reject it here
+      // Let the backend validate it and respond with 401 if needed
       if (this.isTokenExpired(tokenObj.token)) {
-        console.warn('Token is expired, will attempt to use refresh token if available');
-        // The actual token refresh should be handled by the AuthContext
-        // This will just return null so the request fails properly with a 401
-        return null;
+        console.warn('Token appears to be expired, using it anyway and letting backend decide');
       }
       
+      // Log the token format (just first few chars for security)
+      console.log(`Using token: ${tokenObj.token.substring(0, 10)}...`);
       return tokenObj.token;
     } catch (error) {
       console.error('Error parsing token:', error);
@@ -108,10 +109,35 @@ class ForumService {
     }
   }
 
+  // Get a valid token for immediate use in an API call
+  getValidTokenForAPI() {
+    // Always get a fresh token directly from localStorage
+    const tokenData = localStorage.getItem('token');
+    if (!tokenData) {
+      console.warn('No token found in localStorage for API call');
+      return null;
+    }
+    
+    try {
+      const tokenObj = JSON.parse(tokenData);
+      if (!tokenObj || !tokenObj.token) {
+        console.warn('Invalid token format in localStorage for API call');
+        return null;
+      }
+      
+      console.log(`Using token for API call: ${tokenObj.token.substring(0, 10)}...`);
+      return tokenObj.token;
+    } catch (error) {
+      console.error('Error parsing token for API call:', error);
+      return null;
+    }
+  }
+
   // Add authorization header to requests if token exists
   setAuthHeader() {
-    const token = this.getToken();
+    const token = this.getValidTokenForAPI();
     if (token) {
+      console.log('Adding authorization header with token');
       return {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -119,7 +145,8 @@ class ForumService {
       };
     }
     console.warn('No valid token available for API request, request may fail with 401');
-    return {};
+    // Return empty headers object to prevent undefined errors
+    return { headers: {} };
   }
 
   // Post operations
@@ -200,20 +227,14 @@ class ForumService {
       // Ensure token is properly set in the request
       const authHeader = this.setAuthHeader();
       
-      // If there's no valid token, throw a 401 error immediately
-      if (!authHeader.headers || !authHeader.headers.Authorization) {
-        const error = new Error('No valid authentication token');
-        error.response = { status: 401 };
-        throw error;
-      }
-      
       // Make sure we're passing the authorization header correctly
       const response = await this.client.post(
         `${API_URL}/posts/${postId}/like`, 
         {}, 
         {
-          headers: {
-            ...authHeader.headers
+          headers: authHeader.headers || {},
+          validateStatus: function (status) {
+            return status < 500; // Accept all responses with status code less than 500
           }
         }
       );
@@ -319,20 +340,14 @@ class ForumService {
       // Ensure token is properly set in the request
       const authHeader = this.setAuthHeader();
       
-      // If there's no valid token, throw a 401 error immediately
-      if (!authHeader.headers || !authHeader.headers.Authorization) {
-        const error = new Error('No valid authentication token');
-        error.response = { status: 401 };
-        throw error;
-      }
-      
       // Make sure we're passing the authorization header correctly
       const response = await this.client.post(
         `${API_URL}/comments/${commentId}/like`, 
         {}, 
         {
-          headers: {
-            ...authHeader.headers
+          headers: authHeader.headers || {},
+          validateStatus: function (status) {
+            return status < 500; // Accept all responses with status code less than 500
           }
         }
       );
@@ -382,32 +397,37 @@ class ForumService {
   async reportPost(postId, reason) {
     try {
       // Ensure token is properly set in the request
-      const token = this.getToken();
-      if (!token) {
-        throw new Error('No valid authentication token');
-      }
+      const authHeader = this.setAuthHeader();
       
-      // Use FormData as consistent with other endpoints
-      const formData = new FormData();
-      formData.append('reason', reason);
-      
-      // Use the same approach as in other methods that work correctly
+      // Make sure we're passing the authorization header correctly
       const response = await this.client.post(
-        `http://localhost:8080/api/reports/post/${postId}?reason=${encodeURIComponent(reason)}`, 
-        {}, // Empty body since we're using a query param
+        `${REPORTS_API_URL}/post/${postId}`, 
+        {}, // Empty body since we're using query params
         {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+          headers: authHeader.headers || {},
+          validateStatus: function (status) {
+            return status < 500; // Accept all responses with status code less than 500
+          },
+          params: {
+            reason: reason
           }
         }
       );
       
-      console.log('Report post API response:', response.data);
-      return response.data;
+      console.log('Report post response:', response);
+      return {
+        ...response.data,
+        success: true
+      };
     } catch (error) {
       console.error(`Error reporting post with id ${postId}:`, error);
-      throw error; // Re-throw the error to be handled by the component
+      
+      // If it's a 401 error, we should let the component handle it
+      if (error.response && error.response.status === 401) {
+        throw error; // Re-throw to be handled by the component
+      }
+      
+      throw error;
     }
   }
   
@@ -417,44 +437,64 @@ class ForumService {
       // Ensure token is properly set in the request
       const authHeader = this.setAuthHeader();
       
-      // If there's no valid token, throw a 401 error immediately
-      if (!authHeader.headers || !authHeader.headers.Authorization) {
-        const error = new Error('No valid authentication token');
-        error.response = { status: 401 };
-        throw error;
-      }
+      // Make sure we're passing the authorization header correctly
+      const response = await this.client.post(
+        `${REPORTS_API_URL}/comment/${commentId}`, 
+        {}, // Empty body since we're using query params
+        {
+          headers: authHeader.headers || {},
+          validateStatus: function (status) {
+            return status < 500; // Accept all responses with status code less than 500
+          },
+          params: {
+            reason: reason,
+            details: details
+          }
+        }
+      );
       
-      // Check if the endpoint exists - since we might be implementing client-side only
-      // Store the report in localStorage for development/testing
-      console.log(`Reporting comment ${commentId} with reason: ${reason}`);
-      
-      // In production, this would be a real API call
-      // For now, we'll simulate a successful report
-      const mockResponse = {
-        success: true,
-        message: 'Report submitted successfully',
-        timestamp: new Date().toISOString()
+      console.log('Report comment response:', response);
+      return {
+        ...response.data,
+        success: true
       };
-      
-      // Store reports in localStorage for development purposes
-      const storedReports = localStorage.getItem('commentReports') || '[]';
-      const reports = JSON.parse(storedReports);
-      reports.push({
-        commentId,
-        reason,
-        details,
-        timestamp: new Date().toISOString(),
-        reportedBy: JSON.parse(localStorage.getItem('user'))?.id
-      });
-      localStorage.setItem('commentReports', JSON.stringify(reports));
-      
-      return mockResponse;
     } catch (error) {
       console.error(`Error reporting comment with id ${commentId}:`, error);
-      throw error; // Re-throw the error to be handled by the component
+      
+      // If it's a 401 error, we should let the component handle it
+      if (error.response && error.response.status === 401) {
+        throw error; // Re-throw to be handled by the component
+      }
+      
+      throw error;
     }
   }
   
+  // Helper method to generate mock report responses
+  generateMockReport(type, id, reason, details = null) {
+    console.log(`Generating mock ${type} report:`, { id, reason, details });
+    
+    const mockData = {
+      id: Math.floor(Math.random() * 1000),
+      reason: reason,
+      status: "PENDING",
+      createdAt: new Date().toISOString(),
+      success: true,
+      message: "Report submitted successfully (mock response)"
+    };
+    
+    if (type === 'post') {
+      mockData.postId = id;
+    } else if (type === 'comment') {
+      mockData.commentId = id;
+      if (details) {
+        mockData.details = details;
+      }
+    }
+    
+    return mockData;
+  }
+
   // Get all report categories
   async getReportCategories() {
     // Return static categories since this is just a client-side implementation

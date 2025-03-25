@@ -7,8 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.backend.model.ForumPost;
 import org.backend.model.PostReport;
 import org.backend.model.User;
+import org.backend.model.CommentReport;
 import org.backend.repository.ForumPostRepository;
 import org.backend.repository.PostReportRepository;
+import org.backend.repository.CommentReportRepository;
+import org.backend.repository.ForumCommentRepository;
 import org.backend.security.services.UserDetailsImpl;
 import org.backend.service.ForumService;
 import org.backend.service.UserService;
@@ -22,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +43,8 @@ public class ReportController {
     private final UserService userService;
     private final PostReportRepository postReportRepository;
     private final ForumPostRepository forumPostRepository;
+    private final CommentReportRepository commentReportRepository;
+    private final ForumCommentRepository forumCommentRepository;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -150,5 +156,206 @@ public class ReportController {
         
         PostReport report = forumService.updateReportStatus(reportId, status, admin);
         return ResponseEntity.ok(report);
+    }
+    
+    @PostMapping("/comment/{commentId}")
+    public ResponseEntity<CommentReport> reportComment(
+            @PathVariable Long commentId,
+            @RequestParam("reason") String reason,
+            @RequestParam(value = "details", required = false) String details,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        logger.info("Report comment request received for comment ID: {}, reason: {}", commentId, reason);
+        
+        try {
+            // First validate that we have a valid user
+            if (userDetails == null) {
+                logger.error("Authentication failed - user details are null");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            User reporter = userService.getUserById(userDetails.getId());
+            logger.info("User found: {} (ID: {})", reporter.getUsername(), reporter.getId());
+            
+            CommentReport report = forumService.reportComment(commentId, reason, reporter);
+            logger.info("Comment report created successfully with ID: {}", report.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(report);
+        } catch (Exception e) {
+            logger.error("Error creating comment report: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    @GetMapping("/comments")
+    public ResponseEntity<Page<CommentReport>> getAllCommentReports(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        // TODO: Add admin role check
+        User currentUser = userService.getUserById(userDetails.getId());
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CommentReport> reports = forumService.getAllCommentReports(pageable);
+        return ResponseEntity.ok(reports);
+    }
+    
+    @GetMapping("/comment/{reportId}")
+    public ResponseEntity<CommentReport> getCommentReportById(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        // TODO: Add admin role check or reporter check
+        User currentUser = userService.getUserById(userDetails.getId());
+        
+        CommentReport report = forumService.getCommentReportById(reportId);
+        return ResponseEntity.ok(report);
+    }
+    
+    @GetMapping("/comment/status/{status}")
+    public ResponseEntity<Page<CommentReport>> getCommentReportsByStatus(
+            @PathVariable CommentReport.ReportStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        // TODO: Add admin role check
+        User currentUser = userService.getUserById(userDetails.getId());
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CommentReport> reports = forumService.getCommentReportsByStatus(status, pageable);
+        return ResponseEntity.ok(reports);
+    }
+    
+    @GetMapping("/my-comment-reports")
+    public ResponseEntity<Page<CommentReport>> getMyCommentReports(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        User currentUser = userService.getUserById(userDetails.getId());
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CommentReport> reports = forumService.getCommentReportsByUser(currentUser, pageable);
+        return ResponseEntity.ok(reports);
+    }
+    
+    @GetMapping("/for-comment/{commentId}")
+    public ResponseEntity<Page<CommentReport>> getReportsByComment(
+            @PathVariable Long commentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        // TODO: Add admin role check
+        User currentUser = userService.getUserById(userDetails.getId());
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CommentReport> reports = forumService.getCommentReportsByComment(commentId, pageable);
+        return ResponseEntity.ok(reports);
+    }
+    
+    @PutMapping("/comment/{reportId}/status")
+    public ResponseEntity<CommentReport> updateCommentReportStatus(
+            @PathVariable Long reportId,
+            @RequestParam CommentReport.ReportStatus status,
+            @RequestParam(required = false) String rejectionReason,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        // TODO: Add admin role check
+        User admin = userService.getUserById(userDetails.getId());
+        
+        CommentReport report = forumService.updateCommentReportStatus(reportId, status, rejectionReason, admin);
+        return ResponseEntity.ok(report);
+    }
+    
+    @GetMapping("/all")
+    public ResponseEntity<Map<String, Object>> getAllReportsOfBothTypes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "ALL") String type,
+            @RequestParam(defaultValue = "ALL") String status,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        // TODO: Add admin role check
+        User currentUser = userService.getUserById(userDetails.getId());
+        
+        Pageable pageable = PageRequest.of(page, size);
+        
+        Map<String, Object> response = new HashMap<>();
+        List<Object> combinedReports = new ArrayList<>();
+        int totalElements = 0;
+        int totalPages = 0;
+        
+        // Get post reports if requested
+        if ("ALL".equals(type) || "POST".equals(type)) {
+            Page<PostReport> postReports;
+            if ("ALL".equals(status)) {
+                postReports = forumService.getAllReports(pageable);
+            } else {
+                PostReport.ReportStatus reportStatus = PostReport.ReportStatus.valueOf(status);
+                postReports = forumService.getReportsByStatus(reportStatus, pageable);
+            }
+            
+            combinedReports.addAll(postReports.getContent());
+            totalElements += postReports.getTotalElements();
+            totalPages = Math.max(totalPages, postReports.getTotalPages());
+        }
+        
+        // Get comment reports if requested
+        if ("ALL".equals(type) || "COMMENT".equals(type)) {
+            Page<CommentReport> commentReports;
+            if ("ALL".equals(status)) {
+                commentReports = forumService.getAllCommentReports(pageable);
+            } else {
+                CommentReport.ReportStatus reportStatus = CommentReport.ReportStatus.valueOf(status);
+                commentReports = forumService.getCommentReportsByStatus(reportStatus, pageable);
+            }
+            
+            combinedReports.addAll(commentReports.getContent());
+            totalElements += commentReports.getTotalElements();
+            totalPages = Math.max(totalPages, commentReports.getTotalPages());
+        }
+        
+        // Sort combined reports by creation date (newest first)
+        combinedReports.sort((r1, r2) -> {
+            LocalDateTime date1 = null;
+            LocalDateTime date2 = null;
+            
+            if (r1 instanceof PostReport) {
+                date1 = ((PostReport) r1).getCreatedAt();
+            } else if (r1 instanceof CommentReport) {
+                date1 = ((CommentReport) r1).getCreatedAt();
+            }
+            
+            if (r2 instanceof PostReport) {
+                date2 = ((PostReport) r2).getCreatedAt();
+            } else if (r2 instanceof CommentReport) {
+                date2 = ((CommentReport) r2).getCreatedAt();
+            }
+            
+            if (date1 == null || date2 == null) {
+                return 0;
+            }
+            
+            return date2.compareTo(date1); // Newest first
+        });
+        
+        // Paginate the combined list
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), combinedReports.size());
+        
+        if (start < end) {
+            combinedReports = combinedReports.subList(start, end);
+        } else {
+            combinedReports = new ArrayList<>();
+        }
+        
+        response.put("content", combinedReports);
+        response.put("currentPage", page);
+        response.put("totalItems", totalElements);
+        response.put("totalPages", totalPages);
+        
+        return ResponseEntity.ok(response);
     }
 } 

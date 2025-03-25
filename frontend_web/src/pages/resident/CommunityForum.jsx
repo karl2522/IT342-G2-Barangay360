@@ -990,29 +990,55 @@ const CommunityForum = () => {
   };
 
   const handleReportPost = (postId) => {
+    // Check if user is authenticated first
+    if (!user) {
+      showToast('You must be logged in to report content.', 'error');
+      return;
+    }
+    
     setReportingContentType('Post');
     setReportingContentId(postId);
     setReportModalOpen(true);
   };
   
   const handleReportComment = (commentId) => {
+    // Check if user is authenticated first
+    if (!user) {
+      showToast('You must be logged in to report content.', 'error');
+      return;
+    }
+    
     setReportingContentType('Comment');
     setReportingContentId(commentId);
     setReportModalOpen(true);
   };
   
   const handleSubmitReport = async (reportData) => {
+    if (reportSubmitting) {
+      console.log('Already submitting a report, please wait...');
+      return;
+    }
+    
     try {
       setReportSubmitting(true);
       console.log(`Submitting report for ${reportingContentType} with ID ${reportingContentId}`);
       console.log('Report data:', reportData);
       
+      let response;
       if (reportingContentType === 'Post') {
-        await forumService.reportPost(reportingContentId, reportData.reason);
-        showToast('Post reported successfully. Our moderators will review it.', 'success');
+        response = await forumService.reportPost(reportingContentId, reportData.reason);
       } else if (reportingContentType === 'Comment') {
-        await forumService.reportComment(reportingContentId, reportData.reason, reportData.details);
-        showToast('Comment reported successfully. Our moderators will review it.', 'success');
+        response = await forumService.reportComment(reportingContentId, reportData.reason, reportData.details);
+      }
+      
+      console.log('Report response:', response);
+      
+      if (response && response.success) {
+        showToast(`${reportingContentType} reported successfully. Our moderators will review it.`, 'success');
+      } else {
+        // Handle error case
+        const errorMessage = response?.message || `Failed to report ${reportingContentType.toLowerCase()}.`;
+        showToast(errorMessage, 'error');
       }
       
       // Close the modal and reset state
@@ -1020,25 +1046,12 @@ const CommunityForum = () => {
       setReportingContentId(null);
       setReportingContentType('');
     } catch (error) {
-      console.error('Error submitting report:', error);
+      console.error('Error reporting content:', error);
+      showToast('Error reporting content. Please try again.', 'error');
       
-      // Handle authentication errors
-      if (error.response && error.response.status === 401) {
-        showToast('Authentication error. Please try refreshing the page.', 'error');
-        // Don't immediately log out, just close the modal
-        setReportModalOpen(false);
-        setReportingContentId(null);
-        setReportingContentType('');
-      } else if (error.response) {
-        // Handle other HTTP errors
-        const statusCode = error.response.status;
-        const errorMessage = error.response.data?.message || 'Unknown server error';
-        console.error(`Server returned ${statusCode}: ${errorMessage}`);
-        showToast(`Error: ${errorMessage}`, 'error');
-      } else {
-        // Handle network errors or other issues
-        showToast('Error submitting report. Please check your connection and try again.', 'error');
-      }
+      setReportModalOpen(false);
+      setReportingContentId(null);
+      setReportingContentType('');
     } finally {
       setReportSubmitting(false);
     }
