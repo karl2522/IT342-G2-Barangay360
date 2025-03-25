@@ -10,197 +10,197 @@
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-    <!-- Scrollable Content -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
-
-        <RelativeLayout
+        <!-- Scrollable Content -->
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="32dp"
-            android:paddingEnd="32dp">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-            <!-- Header Section -->
-            <ImageView
-                android:id="@+id/profile_btn_back"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:padding="12dp"
-                android:src="@drawable/chevron_right_outline" />
-
-            <TextView
-                android:id="@+id/profile_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="16dp"
-                android:fontFamily="sans-serif"
-                android:text="Profile"
-                android:textColor="#000000"
-                android:textSize="20sp" />
-
-            <ImageView
-                android:id="@+id/profile_btn_menu"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:padding="12dp"
-                android:src="@drawable/three_dots" />
-
-            <!-- Profile Image -->
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/profile_image"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_below="@id/profile_title"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="32dp"
-                android:background="#CCCCCC"
-                app:civ_border_color="#FF000000"
-                app:civ_border_width="2dp" />
-
-            <!-- Edit Profile Button -->
-            <Button
-                android:id="@+id/profile_btn_edit_profile"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_image"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="16dp"
-                android:text="Edit Profile" />
-
-            <!-- Profile Information -->
-            <TextView
-                android:id="@+id/profile_firstname_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_btn_edit_profile"
-                android:layout_marginTop="32dp"
-                android:text="First Name"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/profile_firstname_value"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_firstname_label"
-                android:layout_marginTop="8dp"
-                android:text="John" />
+                android:paddingStart="32dp"
+                android:paddingEnd="32dp">
 
-            <TextView
-                android:id="@+id/profile_lastname_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_firstname_value"
-                android:layout_marginTop="16dp"
-                android:text="Last Name"
-                android:textStyle="bold" />
+                <!-- Header Section -->
+                <ImageView
+                    android:id="@+id/profile_btn_back"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:padding="12dp"
+                    android:src="@drawable/chevron_right_outline" />
 
-            <TextView
-                android:id="@+id/profile_lastname_value"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_lastname_label"
-                android:layout_marginTop="8dp"
-                android:text="Doe" />
+                <TextView
+                    android:id="@+id/profile_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="sans-serif"
+                    android:text="Profile"
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
 
-            <TextView
-                android:id="@+id/profile_username_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_lastname_value"
-                android:layout_marginTop="16dp"
-                android:text="Username"
-                android:textStyle="bold" />
+                <ImageView
+                    android:id="@+id/profile_btn_menu"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:padding="12dp"
+                    android:src="@drawable/three_dots" />
 
-            <TextView
-                android:id="@+id/profile_username_value"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_username_label"
-                android:layout_marginTop="8dp"
-                android:text="johndoe123" />
+                <!-- Profile Image -->
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/profile_image"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_below="@id/profile_title"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="32dp"
+                    android:background="#CCCCCC"
+                    app:civ_border_color="#FF000000"
+                    app:civ_border_width="2dp" />
 
-            <TextView
-                android:id="@+id/profile_email_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_username_value"
-                android:layout_marginTop="16dp"
-                android:text="Email"
-                android:textStyle="bold" />
+                <!-- Edit Profile Button -->
+                <Button
+                    android:id="@+id/profile_btn_edit_profile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_image"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="16dp"
+                    android:text="Edit Profile" />
 
-            <TextView
-                android:id="@+id/profile_email_value"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_email_label"
-                android:layout_marginTop="8dp"
-                android:text="johndoe@example.com" />
+                <!-- Profile Information -->
+                <TextView
+                    android:id="@+id/profile_firstname_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_btn_edit_profile"
+                    android:layout_marginTop="32dp"
+                    android:text="First Name"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/profile_role_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_email_value"
-                android:layout_marginTop="16dp"
-                android:text="Role"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/profile_firstname_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_firstname_label"
+                    android:layout_marginTop="8dp"
+                    android:text="John" />
 
-            <TextView
-                android:id="@+id/profile_role_value"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_role_label"
-                android:layout_marginTop="8dp"
-                android:text="Resident" />
+                <TextView
+                    android:id="@+id/profile_lastname_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_firstname_value"
+                    android:layout_marginTop="16dp"
+                    android:text="Last Name"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/profile_address_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_role_value"
-                android:layout_marginTop="16dp"
-                android:text="Address"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/profile_lastname_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_lastname_label"
+                    android:layout_marginTop="8dp"
+                    android:text="Doe" />
 
-            <TextView
-                android:id="@+id/profile_address_value"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_address_label"
-                android:layout_marginTop="8dp"
-                android:text="123 Main St, Cebu City, Philippines" />
+                <TextView
+                    android:id="@+id/profile_username_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_lastname_value"
+                    android:layout_marginTop="16dp"
+                    android:text="Username"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/profile_phone_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_address_value"
-                android:layout_marginTop="16dp"
-                android:text="Phone Number"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/profile_username_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_username_label"
+                    android:layout_marginTop="8dp"
+                    android:text="johndoe123" />
 
-            <TextView
-                android:id="@+id/profile_phone_value"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/profile_phone_label"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="32dp"
-                android:text="+63 912 345 6789" />
+                <TextView
+                    android:id="@+id/profile_email_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_username_value"
+                    android:layout_marginTop="16dp"
+                    android:text="Email"
+                    android:textStyle="bold" />
 
-        </RelativeLayout>
-    </ScrollView>
+                <TextView
+                    android:id="@+id/profile_email_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_email_label"
+                    android:layout_marginTop="8dp"
+                    android:text="johndoe@example.com" />
+
+                <TextView
+                    android:id="@+id/profile_role_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_email_value"
+                    android:layout_marginTop="16dp"
+                    android:text="Role"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/profile_role_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_role_label"
+                    android:layout_marginTop="8dp"
+                    android:text="Resident" />
+
+                <TextView
+                    android:id="@+id/profile_address_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_role_value"
+                    android:layout_marginTop="16dp"
+                    android:text="Address"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/profile_address_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_address_label"
+                    android:layout_marginTop="8dp"
+                    android:text="123 Main St, Cebu City, Philippines" />
+
+                <TextView
+                    android:id="@+id/profile_phone_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_address_value"
+                    android:layout_marginTop="16dp"
+                    android:text="Phone Number"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/profile_phone_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_phone_label"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="32dp"
+                    android:text="+63 912 345 6789" />
+
+            </RelativeLayout>
+        </ScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </RelativeLayout>

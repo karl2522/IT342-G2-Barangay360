@@ -5,11 +5,16 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import android.widget.TextView
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 
 class ServicesFragment : Fragment() {
-    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var tabLayout: TabLayout
+    lateinit var viewPager: ViewPager2
+    private lateinit var titleTextView: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -18,41 +23,55 @@ class ServicesFragment : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_services, container, false)
 
-        // Initialize SwipeRefreshLayout
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
-
-        // Configure refresh colors
-        swipeRefreshLayout.setColorSchemeResources(
-            R.color.maroon,
-            android.R.color.holo_green_dark,
-            android.R.color.holo_blue_dark
-        )
-
-        // Set up refresh listener
-        swipeRefreshLayout.setOnRefreshListener {
-            refreshHomeContent()
-        }
+        // Initialize views
+        tabLayout = view.findViewById(R.id.tab_layout)
+        viewPager = view.findViewById(R.id.viewPager)
+        titleTextView = view.findViewById(R.id.tv_title)
 
         return view
     }
 
-    private fun refreshHomeContent() {
-        // TODO: Implement your data refresh logic here
-        // For example:
-        // 1. Fetch new announcements
-        // 2. Update any real-time data
-        // 3. Reload content from server
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        // Simulate network delay
-        swipeRefreshLayout.postDelayed({
-            // Your network operations would go here
-            // ...
+        // Set up adapter for ViewPager
+        viewPager.adapter = ServicesPagerAdapter(this)
 
-            // When done, hide the refresh indicator
-            swipeRefreshLayout.isRefreshing = false
+        // Connect TabLayout with ViewPager
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            tab.text = when(position) {
+                0 -> "Request Services"
+                1 -> "My Services"
+                else -> null
+            }
+        }.attach()
 
-            // Optional: Show a confirmation toast
-            Toast.makeText(context, "Content refreshed", Toast.LENGTH_SHORT).show()
-        }, 1500) // Simulate a 1.5 second refresh operation
+        // Update title based on selected tab
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                when(tab.position) {
+                    0 -> titleTextView.text = "Barangay360 Services"
+                    1 -> titleTextView.text = "Barangay Services"
+                }
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
+    }
+
+    // ViewPager adapter
+    private inner class ServicesPagerAdapter(fragment: Fragment) :
+        FragmentStateAdapter(fragment) {
+
+        override fun getItemCount(): Int = 2
+
+        override fun createFragment(position: Int): Fragment {
+            return when (position) {
+                0 -> RequestServicesFragment()
+                1 -> MyServicesFragment()
+                else -> RequestServicesFragment()
+            }
+        }
     }
 }
