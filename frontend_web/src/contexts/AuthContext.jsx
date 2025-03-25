@@ -63,29 +63,38 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
 
+      // Log the refresh token being used (first few chars only for security)
+      console.log(`Using refresh token: ${refreshToken.token.substring(0, 10)}...`);
+
       const response = await fetch('http://localhost:8080/api/auth/refreshtoken', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refreshToken: refreshToken.token })
+        body: JSON.stringify({ refreshToken: refreshToken.token }),
+        // Don't throw error on non-2xx responses
+        credentials: 'include'
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        const newAccessToken = data.accessToken;
-        const newRefreshToken = data.refreshToken;
+      // Handle both successful and failed responses without throwing
+      const data = await response.json().catch(() => ({}));
+      
+      if (response.ok && data.accessToken && data.refreshToken) {
+        console.log('Token refresh successful');
         
         // Store the tokens with their metadata
-        localStorage.setItem('token', JSON.stringify(newAccessToken));
-        localStorage.setItem('refreshToken', JSON.stringify(newRefreshToken));
+        localStorage.setItem('token', JSON.stringify(data.accessToken));
+        localStorage.setItem('refreshToken', JSON.stringify(data.refreshToken));
         
         // Update state
-        setToken(newAccessToken);
-        setRefreshToken(newRefreshToken);
+        setToken(data.accessToken);
+        setRefreshToken(data.refreshToken);
         return true;
+      } else {
+        console.warn('Token refresh failed with status:', response.status);
+        // Return false instead of throwing - let caller decide what to do
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Error refreshing token:', error);
       return false;
