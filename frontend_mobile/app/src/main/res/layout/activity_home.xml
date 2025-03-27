@@ -65,7 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:backgroundTint="@color/maroon"
-            android:src="@drawable/qr_scan"
+            android:src="@drawable/bottom_qr_scan_icon"
             app:layout_anchor="@id/bottomAppBar"
             app:maxImageSize="24dp"
             app:tint="@color/white" />
