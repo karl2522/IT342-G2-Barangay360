@@ -39,6 +39,7 @@ public class ForumPost {
     private User author;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"post", "hibernateLazyInitializer", "handler"})
     private List<ForumComment> comments = new ArrayList<>();
 
     @ManyToMany
