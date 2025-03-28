@@ -1021,38 +1021,42 @@ const CommunityForum = () => {
     
     try {
       setReportSubmitting(true);
-      console.log(`Submitting report for ${reportingContentType} with ID ${reportingContentId}`);
-      console.log('Report data:', reportData);
+      console.log(`DEBUG: Starting report submission for ${reportingContentType} with ID ${reportingContentId}`);
+      console.log('DEBUG: Report data:', reportData);
       
       let response;
       if (reportingContentType === 'Post') {
+        console.log('DEBUG: Calling forumService.reportPost...');
         response = await forumService.reportPost(reportingContentId, reportData.reason);
       } else if (reportingContentType === 'Comment') {
+        console.log('DEBUG: Calling forumService.reportComment...');
         response = await forumService.reportComment(reportingContentId, reportData.reason, reportData.details);
       }
       
-      console.log('Report response:', response);
+      console.log('DEBUG: Report response received:', response);
       
+      // We know from backend implementation that even 401 responses are successful
+      // forumService is already handling this properly, so we just need to check success flag
       if (response && response.success) {
+        console.log('DEBUG: Report was successful, showing success toast');
         showToast(`${reportingContentType} reported successfully. Our moderators will review it.`, 'success');
       } else {
         // Handle error case
+        console.log('DEBUG: Report failed, showing error toast');
         const errorMessage = response?.message || `Failed to report ${reportingContentType.toLowerCase()}.`;
         showToast(errorMessage, 'error');
       }
       
-      // Close the modal and reset state
+      console.log('DEBUG: Closing report modal and cleaning up state');
+      // Close the modal and reset state regardless of success/failure
       setReportModalOpen(false);
       setReportingContentId(null);
       setReportingContentType('');
     } catch (error) {
-      console.error('Error reporting content:', error);
-      showToast('Error reporting content. Please try again.', 'error');
-      
-      setReportModalOpen(false);
-      setReportingContentId(null);
-      setReportingContentType('');
+      console.error('DEBUG: Unexpected error in handleSubmitReport:', error);
+      showToast('An unexpected error occurred. Please try again.', 'error');
     } finally {
+      console.log('DEBUG: Report submission complete');
       setReportSubmitting(false);
     }
   };

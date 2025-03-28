@@ -245,13 +245,6 @@ public class ForumServiceImpl implements ForumService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
         logger.info("Found post with title: {}", post.getTitle());
         
-        // Check if the user has already reported this post
-        boolean exists = reportRepository.existsByPostAndReporter(post, reporter);
-        logger.info("User has already reported this post: {}", exists);
-        if (exists) {
-            throw new IllegalStateException("You have already reported this post");
-        }
-        
         // Cannot report your own post
         if (Objects.equals(post.getAuthor().getId(), reporter.getId())) {
             logger.info("User attempting to report their own post");
@@ -322,13 +315,6 @@ public class ForumServiceImpl implements ForumService {
         // Find comment or throw 404
         ForumComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + commentId));
-        
-        // Check if the user has already reported this comment
-        boolean exists = commentReportRepository.existsByCommentAndReporter(comment, reporter);
-        logger.info("User has already reported this comment: {}", exists);
-        if (exists) {
-            throw new IllegalStateException("You have already reported this comment");
-        }
         
         // Cannot report your own comment
         if (Objects.equals(comment.getAuthor().getId(), reporter.getId())) {
