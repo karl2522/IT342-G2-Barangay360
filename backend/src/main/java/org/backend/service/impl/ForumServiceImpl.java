@@ -7,9 +7,11 @@ import org.backend.model.ForumComment;
 import org.backend.model.ForumPost;
 import org.backend.model.PostReport;
 import org.backend.model.User;
+import org.backend.model.CommentReport;
 import org.backend.repository.ForumCommentRepository;
 import org.backend.repository.ForumPostRepository;
 import org.backend.repository.PostReportRepository;
+import org.backend.repository.CommentReportRepository;
 import org.backend.service.ForumService;
 import org.backend.service.StorageService;
 import org.springframework.data.domain.Page;
@@ -36,6 +38,7 @@ public class ForumServiceImpl implements ForumService {
     private final ForumPostRepository postRepository;
     private final ForumCommentRepository commentRepository;
     private final PostReportRepository reportRepository;
+    private final CommentReportRepository commentReportRepository;
     private final StorageService storageService;
     private static final String FORUM_IMAGES_PATH = "forum-images/";
     
@@ -242,13 +245,6 @@ public class ForumServiceImpl implements ForumService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
         logger.info("Found post with title: {}", post.getTitle());
         
-        // Check if the user has already reported this post
-        boolean exists = reportRepository.existsByPostAndReporter(post, reporter);
-        logger.info("User has already reported this post: {}", exists);
-        if (exists) {
-            throw new IllegalStateException("You have already reported this post");
-        }
-        
         // Cannot report your own post
         if (Objects.equals(post.getAuthor().getId(), reporter.getId())) {
             logger.info("User attempting to report their own post");
@@ -310,5 +306,85 @@ public class ForumServiceImpl implements ForumService {
         ForumPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
         return reportRepository.findByPostOrderByCreatedAtDesc(post, pageable);
+    }
+
+    @Override
+    public CommentReport reportComment(Long commentId, String reason, User reporter) {
+        logger.info("Starting reportComment method for commentId: {} by reporter: {}", commentId, reporter.getUsername());
+        
+        // Find comment or throw 404
+        ForumComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + commentId));
+        
+        // Cannot report your own comment
+        if (Objects.equals(comment.getAuthor().getId(), reporter.getId())) {
+            logger.info("User attempting to report their own comment");
+            throw new IllegalStateException("You cannot report your own comment");
+        }
+        
+        logger.info("Creating new CommentReport object");
+        CommentReport report = new CommentReport();
+        report.setComment(comment);
+        report.setReporter(reporter);
+        report.setReason(reason);
+        report.setStatus(CommentReport.ReportStatus.PENDING);
+        
+        logger.info("Saving comment report to database");
+        CommentReport savedReport = commentReportRepository.saveAndFlush(report);
+        logger.info("Comment report saved successfully with ID: {}", savedReport.getId());
+        return savedReport;
+    }
+
+    @Override
+    public CommentReport updateCommentReportStatus(Long reportId, CommentReport.ReportStatus status, String rejectionReason, User admin) {
+        CommentReport report = commentReportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment report not found with ID: " + reportId));
+        
+        // Store the old status to check if we're transitioning from PENDING to APPROVED/REJECTED
+        CommentReport.ReportStatus oldStatus = report.getStatus();
+        
+        // Update the status
+        report.setStatus(status);
+        
+        // If the report is being rejected and a rejection reason is provided, save it
+        if (status == CommentReport.ReportStatus.REJECTED && rejectionReason != null && !rejectionReason.trim().isEmpty()) {
+            report.setRejectionReason(rejectionReason);
+        }
+        
+        // If we're transitioning from PENDING to APPROVED/REJECTED, set resolvedAt
+        if (oldStatus == CommentReport.ReportStatus.PENDING && 
+            (status == CommentReport.ReportStatus.APPROVED || status == CommentReport.ReportStatus.REJECTED)) {
+            report.setResolvedAt(LocalDateTime.now());
+        }
+        
+        return commentReportRepository.save(report);
+    }
+
+    @Override
+    public CommentReport getCommentReportById(Long reportId) {
+        return commentReportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment report not found with ID: " + reportId));
+    }
+
+    @Override
+    public Page<CommentReport> getAllCommentReports(Pageable pageable) {
+        return commentReportRepository.findAllByOrderByCreatedAtDesc(pageable);
+    }
+
+    @Override
+    public Page<CommentReport> getCommentReportsByStatus(CommentReport.ReportStatus status, Pageable pageable) {
+        return commentReportRepository.findByStatusOrderByCreatedAtDesc(status, pageable);
+    }
+
+    @Override
+    public Page<CommentReport> getCommentReportsByUser(User reporter, Pageable pageable) {
+        return commentReportRepository.findByReporterOrderByCreatedAtDesc(reporter, pageable);
+    }
+
+    @Override
+    public Page<CommentReport> getCommentReportsByComment(Long commentId, Pageable pageable) {
+        ForumComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + commentId));
+        return commentReportRepository.findByCommentOrderByCreatedAtDesc(comment, pageable);
     }
 } 

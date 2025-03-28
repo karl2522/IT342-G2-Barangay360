@@ -27,7 +27,7 @@ public class ForumComment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
-    @JsonIgnoreProperties("comments")
+    @JsonIgnoreProperties({"comments", "hibernateLazyInitializer", "handler"})
     private ForumPost post;
 
     @ManyToOne(fetch = FetchType.EAGER)

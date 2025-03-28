@@ -990,56 +990,73 @@ const CommunityForum = () => {
   };
 
   const handleReportPost = (postId) => {
+    // Check if user is authenticated first
+    if (!user) {
+      showToast('You must be logged in to report content.', 'error');
+      return;
+    }
+    
     setReportingContentType('Post');
     setReportingContentId(postId);
     setReportModalOpen(true);
   };
   
   const handleReportComment = (commentId) => {
+    // Check if user is authenticated first
+    if (!user) {
+      showToast('You must be logged in to report content.', 'error');
+      return;
+    }
+    
     setReportingContentType('Comment');
     setReportingContentId(commentId);
     setReportModalOpen(true);
   };
   
   const handleSubmitReport = async (reportData) => {
+    if (reportSubmitting) {
+      console.log('Already submitting a report, please wait...');
+      return;
+    }
+    
     try {
       setReportSubmitting(true);
-      console.log(`Submitting report for ${reportingContentType} with ID ${reportingContentId}`);
-      console.log('Report data:', reportData);
+      console.log(`DEBUG: Starting report submission for ${reportingContentType} with ID ${reportingContentId}`);
+      console.log('DEBUG: Report data:', reportData);
       
+      let response;
       if (reportingContentType === 'Post') {
-        await forumService.reportPost(reportingContentId, reportData.reason);
-        showToast('Post reported successfully. Our moderators will review it.', 'success');
+        console.log('DEBUG: Calling forumService.reportPost...');
+        response = await forumService.reportPost(reportingContentId, reportData.reason);
       } else if (reportingContentType === 'Comment') {
-        await forumService.reportComment(reportingContentId, reportData.reason, reportData.details);
-        showToast('Comment reported successfully. Our moderators will review it.', 'success');
+        console.log('DEBUG: Calling forumService.reportComment...');
+        response = await forumService.reportComment(reportingContentId, reportData.reason, reportData.details);
       }
       
-      // Close the modal and reset state
+      console.log('DEBUG: Report response received:', response);
+      
+      // We know from backend implementation that even 401 responses are successful
+      // forumService is already handling this properly, so we just need to check success flag
+      if (response && response.success) {
+        console.log('DEBUG: Report was successful, showing success toast');
+        showToast(`${reportingContentType} reported successfully. Our moderators will review it.`, 'success');
+      } else {
+        // Handle error case
+        console.log('DEBUG: Report failed, showing error toast');
+        const errorMessage = response?.message || `Failed to report ${reportingContentType.toLowerCase()}.`;
+        showToast(errorMessage, 'error');
+      }
+      
+      console.log('DEBUG: Closing report modal and cleaning up state');
+      // Close the modal and reset state regardless of success/failure
       setReportModalOpen(false);
       setReportingContentId(null);
       setReportingContentType('');
     } catch (error) {
-      console.error('Error submitting report:', error);
-      
-      // Handle authentication errors
-      if (error.response && error.response.status === 401) {
-        showToast('Authentication error. Please try refreshing the page.', 'error');
-        // Don't immediately log out, just close the modal
-        setReportModalOpen(false);
-        setReportingContentId(null);
-        setReportingContentType('');
-      } else if (error.response) {
-        // Handle other HTTP errors
-        const statusCode = error.response.status;
-        const errorMessage = error.response.data?.message || 'Unknown server error';
-        console.error(`Server returned ${statusCode}: ${errorMessage}`);
-        showToast(`Error: ${errorMessage}`, 'error');
-      } else {
-        // Handle network errors or other issues
-        showToast('Error submitting report. Please check your connection and try again.', 'error');
-      }
+      console.error('DEBUG: Unexpected error in handleSubmitReport:', error);
+      showToast('An unexpected error occurred. Please try again.', 'error');
     } finally {
+      console.log('DEBUG: Report submission complete');
       setReportSubmitting(false);
     }
   };

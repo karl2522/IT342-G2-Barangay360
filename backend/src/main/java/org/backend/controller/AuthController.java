@@ -1,5 +1,11 @@
 package org.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +45,7 @@ import jakarta.validation.Valid;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"}, maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Authentication API endpoints for login, signup, and token management")
 public class AuthController {
     @Autowired
     AuthenticationManager authenticationManager;
@@ -55,6 +62,12 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
+    @Operation(summary = "Authenticate user", description = "Login with username and password to get JWT tokens")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Authentication successful", 
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JwtResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid username or password")
+    })
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -88,6 +101,12 @@ public class AuthController {
         ));
     }
 
+    @Operation(summary = "Register new user", description = "Create a new user account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User registered successfully", 
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Username or email already in use")
+    })
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
@@ -146,6 +165,12 @@ public class AuthController {
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
+    @Operation(summary = "Refresh JWT token", description = "Use refresh token to get a new access token")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Token refreshed successfully", 
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenRefreshResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid refresh token")
+    })
     @PostMapping("/refreshtoken")
     public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
         String requestRefreshToken = request.getRefreshToken();
@@ -166,6 +191,11 @@ public class AuthController {
         throw new TokenRefreshException(requestRefreshToken, "Invalid refresh token!");
     }
     
+    @Operation(summary = "Sign out user", description = "Log out the current user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Logout successful", 
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MessageResponse.class)))
+    })
     @PostMapping("/signout")
     public ResponseEntity<?> logoutUser(@Valid @RequestBody LogoutRequest logoutRequest) {
         return ResponseEntity.ok(new MessageResponse("Log out successful!"));

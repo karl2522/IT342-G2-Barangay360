@@ -1,9 +1,8 @@
 package org.backend.service;
 
-import org.backend.model.ForumComment;
-import org.backend.model.ForumPost;
+import org.backend.model.*;
+import org.backend.model.CommentReport;
 import org.backend.model.PostReport;
-import org.backend.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,4 +35,13 @@ public interface ForumService {
     Page<PostReport> getReportsByStatus(PostReport.ReportStatus status, Pageable pageable);
     Page<PostReport> getReportsByUser(User reporter, Pageable pageable);
     Page<PostReport> getReportsByPost(Long postId, Pageable pageable);
+    
+    // Comment Report Operations
+    CommentReport reportComment(Long commentId, String reason, User reporter);
+    CommentReport updateCommentReportStatus(Long reportId, CommentReport.ReportStatus status, String rejectionReason, User admin);
+    CommentReport getCommentReportById(Long reportId);
+    Page<CommentReport> getAllCommentReports(Pageable pageable);
+    Page<CommentReport> getCommentReportsByStatus(CommentReport.ReportStatus status, Pageable pageable);
+    Page<CommentReport> getCommentReportsByUser(User reporter, Pageable pageable);
+    Page<CommentReport> getCommentReportsByComment(Long commentId, Pageable pageable);
 } 
