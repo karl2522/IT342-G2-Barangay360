@@ -4,7 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:paddingBottom="80dp"
+    android:clipToPadding="false">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -36,6 +38,7 @@
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- All your existing fields here (unchanged) -->
         <!-- Purpose -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/purpose_layout"
@@ -146,11 +149,14 @@
 
         <!-- Buttons -->
         <LinearLayout
+            android:id="@+id/buttons_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/address_layout">
+            app:layout_constraintTop_toBottomOf="@id/address_layout"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="16dp">
 
             <Button
                 android:id="@+id/btn_submit"
