@@ -10,145 +10,181 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class MyServicesFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyStateView: LinearLayout
-    private var servicesList = mutableListOf<ServiceRequest>()
+
+    // Define service status categories
+    private val STATUS_APPROVED = "approved"
+    private val STATUS_PENDING = "pending"
+    private val STATUS_REJECTED = "rejected"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_my_services, container, false)
-    }
+        val view = inflater.inflate(R.layout.fragment_my_services, container, false)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // Initialize views
         recyclerView = view.findViewById(R.id.recycler_services)
         emptyStateView = view.findViewById(R.id.empty_state_view)
 
         // Setup RecyclerView
-        setupRecyclerView()
+        recyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Load sample data
-        loadSampleData()
+        // Load service status categories with sample data
+        loadServiceCategories()
 
-        // Setup empty state button
-        view.findViewById<Button>(R.id.btn_create_request).setOnClickListener {
-            // Navigate to Request Services tab
-            (parentFragment as? ServicesFragment)?.let {
-                it.viewPager.currentItem = 0
-            }
+        // Setup "Request a Service" button in empty state
+        view.findViewById<Button>(R.id.btn_create_request)?.setOnClickListener {
+            navigateToRequestServices()
         }
+
+        return view
     }
 
-    private fun setupRecyclerView() {
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        val adapter = ServiceRequestAdapter(servicesList)
-        recyclerView.adapter = adapter
-    }
-
-    private fun loadSampleData() {
-        // Add sample data
-        servicesList.add(
-            ServiceRequest(
-                "Barangay Clearance",
-                "Need a barangay clearance for employment purposes",
-                getCurrentDate(),
-                "Pending"
-            )
-        )
-        servicesList.add(
-            ServiceRequest(
-                "Business Permit",
-                "Requesting business permit for my small online shop",
-                getCurrentDate(),
-                "Approved"
-            )
-        )
-        servicesList.add(
-            ServiceRequest(
-                "Certificate of Residency",
-                "Need proof of residency for scholarship application",
-                getCurrentDate(),
-                "Rejected"
+    private fun loadServiceCategories() {
+        // Create our status categories with sample data
+        val categories = listOf(
+            CategoryWithSample(
+                StatusCategory(STATUS_APPROVED, "Approved", R.drawable.bg_status_approved, R.color.approved_text, 3),
+                ServiceItem("Barangay Clearance", "Mar 15, 2025", "For business permit renewal")
+            ),
+            CategoryWithSample(
+                StatusCategory(STATUS_PENDING, "Pending", R.drawable.bg_status_pending, R.color.pending_text, 5),
+                ServiceItem("Waste Management", "Mar 20, 2025", "Weekly garbage collection request")
+            ),
+            CategoryWithSample(
+                StatusCategory(STATUS_REJECTED, "Rejected", R.drawable.bg_status_rejected, R.color.rejected_text, 2),
+                ServiceItem("Building Permit", "Mar 12, 2025", "Incomplete documentation provided")
             )
         )
 
-        // Update UI based on data
-        if (servicesList.isEmpty()) {
-            recyclerView.visibility = View.GONE
-            emptyStateView.visibility = View.VISIBLE
-        } else {
+        // If we have categories to show, hide empty state
+        if (categories.isNotEmpty()) {
             recyclerView.visibility = View.VISIBLE
             emptyStateView.visibility = View.GONE
-            recyclerView.adapter?.notifyDataSetChanged()
+
+            // Set adapter with status categories
+            recyclerView.adapter = CategoryAdapter(categories)
+        } else {
+            // If no categories, show empty state
+            recyclerView.visibility = View.GONE
+            emptyStateView.visibility = View.VISIBLE
         }
     }
 
-    private fun getCurrentDate(): String {
-        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-        return dateFormat.format(Date())
+    private fun navigateToApprovedServices() {
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, ApprovedServicesFragment())
+            .addToBackStack(null)
+            .commit()
     }
 
-    // Service Request data class
-    data class ServiceRequest(
-        val type: String,
-        val description: String,
-        val date: String,
-        val status: String
+    private fun navigateToPendingServices() {
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, PendingServicesFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun navigateToRejectedServices() {
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, RejectedServicesFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun navigateToRequestServices() {
+        // Direct navigation to RequestServicesFragment
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, RequestServicesFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
+    // Model classes
+    data class StatusCategory(
+        val id: String,
+        val title: String,
+        val backgroundResId: Int,
+        val textColorResId: Int,
+        val count: Int
     )
 
-    // RecyclerView Adapter
-    inner class ServiceRequestAdapter(private val services: List<ServiceRequest>) :
-        RecyclerView.Adapter<ServiceRequestAdapter.ServiceViewHolder>() {
+    data class ServiceItem(
+        val type: String,
+        val date: String,
+        val details: String
+    )
 
-        inner class ServiceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val titleTextView: TextView = itemView.findViewById(R.id.service_title)
-            val dateTextView: TextView = itemView.findViewById(R.id.service_date)
-            val descriptionTextView: TextView = itemView.findViewById(R.id.service_description)
-            val statusTextView: TextView = itemView.findViewById(R.id.service_status)
-        }
+    data class CategoryWithSample(
+        val category: StatusCategory,
+        val sampleService: ServiceItem
+    )
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ServiceViewHolder {
+    // Adapter for displaying categories with sample services
+    inner class CategoryAdapter(
+        private val categories: List<CategoryWithSample>
+    ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_service, parent, false)
-            return ServiceViewHolder(view)
+                .inflate(R.layout.item_service_category, parent, false)
+            return ViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: ServiceViewHolder, position: Int) {
-            val service = services[position]
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.bind(categories[position])
+        }
 
-            holder.titleTextView.text = service.type
-            holder.dateTextView.text = service.date
-            holder.descriptionTextView.text = service.description
-            holder.statusTextView.text = service.status
+        override fun getItemCount() = categories.size
 
-            // Set background and text color based on status
-            when (service.status) {
-                "Approved" -> {
-                    holder.statusTextView.setBackgroundResource(R.drawable.bg_status_approved)
-                    holder.statusTextView.setTextColor(resources.getColor(android.R.color.white))
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            // Simplified findViewById calls with the new layout IDs
+            private val statusLabel: TextView = itemView.findViewById(R.id.status_label)
+            private val statusCount: TextView = itemView.findViewById(R.id.status_count)
+            private val sampleTitle: TextView = itemView.findViewById(R.id.sample_service_title)
+            private val sampleDate: TextView = itemView.findViewById(R.id.sample_service_date)
+            private val sampleDetails: TextView = itemView.findViewById(R.id.sample_service_details)
+            private val viewMoreButton: TextView = itemView.findViewById(R.id.btn_view_more)
+
+            fun bind(categoryWithSample: CategoryWithSample) {
+                val category = categoryWithSample.category
+                val sample = categoryWithSample.sampleService
+
+                // Set category header
+                statusLabel.text = category.title
+                statusCount.text = "${category.count} total"
+
+                // Style the status label
+                statusLabel.setBackgroundResource(category.backgroundResId)
+                statusLabel.setTextColor(requireContext().getColor(category.textColorResId))
+
+                // Set sample service data
+                sampleTitle.text = sample.type
+                sampleDate.text = sample.date
+                sampleDetails.text = sample.details
+
+                // Set view more button click
+                viewMoreButton.setOnClickListener {
+                    when (category.id) {
+                        STATUS_APPROVED -> navigateToApprovedServices()
+                        STATUS_PENDING -> navigateToPendingServices()
+                        STATUS_REJECTED -> navigateToRejectedServices()
+                    }
                 }
-                "Pending" -> {
-                    holder.statusTextView.setBackgroundResource(R.drawable.bg_status_pending)
-                    holder.statusTextView.setTextColor(resources.getColor(android.R.color.black))
-                }
-                "Rejected" -> {
-                    holder.statusTextView.setBackgroundResource(R.drawable.bg_status_rejected)
-                    holder.statusTextView.setTextColor(resources.getColor(R.color.design_default_color_error))
+
+                // Make the whole card clickable too
+                itemView.setOnClickListener {
+                    when (category.id) {
+                        STATUS_APPROVED -> navigateToApprovedServices()
+                        STATUS_PENDING -> navigateToPendingServices()
+                        STATUS_REJECTED -> navigateToRejectedServices()
+                    }
                 }
             }
         }
-
-        override fun getItemCount() = services.size
     }
 }
