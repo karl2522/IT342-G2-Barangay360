@@ -14,7 +14,6 @@
     <item
         android:id="@+id/camera"
         android:title=""
-        android:icon="@drawable/bottom_qr_scan_icon"
         app:showAsAction="always"/>
 
     <item

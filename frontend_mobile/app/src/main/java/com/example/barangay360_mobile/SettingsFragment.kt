@@ -36,6 +36,7 @@ class SettingsFragment : Fragment() {
         return view
     }
 
+
     private fun refreshHomeContent() {
         // TODO: Implement your data refresh logic here
         // For example:
@@ -55,4 +56,5 @@ class SettingsFragment : Fragment() {
             Toast.makeText(context, "Content refreshed", Toast.LENGTH_SHORT).show()
         }, 1500) // Simulate a 1.5 second refresh operation
     }
+
 }
