@@ -87,6 +87,9 @@ dependencies {
     //Swipe Refresh Layout
     implementation ("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     //Circle Image View
+
+    implementation ("de.hdodenhof:circleimageview:3.1.0")
+
     implementation ("de.hdodenhof:circleimageview:3.1.0")
     implementation(libs.androidx.navigation.fragment.ktx)
     testImplementation(libs.junit)

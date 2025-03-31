@@ -45,7 +45,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Setup floating action button for QR scanner
         fab = findViewById(R.id.fab)
-        fab.setImageResource(R.drawable.qr_scan) // Use your existing QR scan icon
+        fab.setImageResource(R.drawable.bottom_qr_scan_icon) // Use your existing QR scan icon
         fab.setOnClickListener {
             // Launch your existing QRCodeScannerActivity
             val intent = Intent(this, QRCodeScannerActivity::class.java)
@@ -79,6 +79,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     replaceFragment(ProfileFragment())
                     true
                 }
+
                 else -> false
             }
         }
@@ -107,13 +108,21 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     replaceFragment(HomeFragment())
                     bottomNavigationView.selectedItemId = R.id.home
                 }
+                R.id.nav_services -> {
+                    // Navigate to SettingsFragment
+                    replaceFragment(ServicesFragment())
+                }
+                R.id.nav_announcements -> {
+                    // Navigate to SettingsFragment
+                    replaceFragment(AnnouncementFragment())
+                }
+                R.id.nav_profile -> {
+                    // Navigate to ShareFragment
+                    replaceFragment(ProfileFragment())
+                }
                 R.id.nav_settings -> {
                     // Navigate to SettingsFragment
                     replaceFragment(SettingsFragment())
-                }
-                R.id.nav_share -> {
-                    // Navigate to ShareFragment
-                    replaceFragment(ShareFragment())
                 }
                 R.id.nav_about -> {
                     // Navigate to AboutFragment
