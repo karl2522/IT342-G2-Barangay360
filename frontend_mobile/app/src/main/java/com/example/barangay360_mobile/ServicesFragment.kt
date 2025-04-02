@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
@@ -15,6 +16,7 @@ class ServicesFragment : Fragment() {
     private lateinit var tabLayout: TabLayout
     lateinit var viewPager: ViewPager2
     private lateinit var titleTextView: TextView
+    private lateinit var backButton: ImageView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,6 +29,13 @@ class ServicesFragment : Fragment() {
         tabLayout = view.findViewById(R.id.tab_layout)
         viewPager = view.findViewById(R.id.viewPager)
         titleTextView = view.findViewById(R.id.tv_title)
+        backButton = view.findViewById(R.id.btn_back)
+
+        // Set up back button click listener
+        backButton.setOnClickListener {
+            // Navigate back to previous screen
+            requireActivity().onBackPressed()
+        }
 
         return view
     }
@@ -50,8 +59,8 @@ class ServicesFragment : Fragment() {
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 when(tab.position) {
-                    0 -> titleTextView.text = "Barangay360 Services"
-                    1 -> titleTextView.text = "Barangay Services"
+                    0 -> titleTextView.text = "Services"
+                    1 -> titleTextView.text = "Services"
                 }
             }
 
@@ -74,6 +83,4 @@ class ServicesFragment : Fragment() {
             }
         }
     }
-
-
 }

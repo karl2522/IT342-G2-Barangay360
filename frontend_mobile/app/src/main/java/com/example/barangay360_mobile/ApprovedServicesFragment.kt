@@ -4,16 +4,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 
 class ApprovedServicesFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var tabLayout: TabLayout
+    lateinit var viewPager: ViewPager2
+    private lateinit var titleTextView: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,7 +57,7 @@ class ApprovedServicesFragment : Fragment() {
         view.findViewById<View>(R.id.tab_request_services).setOnClickListener {
             // Direct navigation to RequestServicesFragment
             requireActivity().supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, RequestServicesFragment())
+                .replace(R.id.fragment_container, ServicesFragment())
                 .addToBackStack(null)
                 .commit()
         }
@@ -59,6 +67,50 @@ class ApprovedServicesFragment : Fragment() {
 
         return view
     }
+
+/*    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Set up adapter for ViewPager
+        viewPager.adapter = ApprovedServicesPagerAdapter(this)
+
+        // Connect TabLayout with ViewPager
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            tab.text = when(position) {
+                0 -> "Request Services"
+                1 -> "My Services"
+                else -> null
+            }
+        }.attach()
+
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                when(tab.position) {
+                    0 -> titleTextView.text = "Services"
+                    1 -> titleTextView.text = "Services"
+                }
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
+    }
+
+
+    // ViewPager adapter
+    private inner class ApprovedServicesPagerAdapter(fragment: Fragment) :
+        FragmentStateAdapter(fragment) {
+
+        override fun getItemCount(): Int = 2
+
+        override fun createFragment(position: Int): Fragment {
+            return when (position) {
+                0 -> RequestServicesFragment()
+                1 -> MyServicesFragment()
+                else -> RequestServicesFragment()
+            }
+        }
+    }*/
 
     private fun loadApprovedServices() {
         // TODO: Replace with actual data loading from your backend
