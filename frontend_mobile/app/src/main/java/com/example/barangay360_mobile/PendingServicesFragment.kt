@@ -49,7 +49,7 @@ class PendingServicesFragment : Fragment() {
         view.findViewById<View>(R.id.tab_request_services).setOnClickListener {
             // Direct navigation to RequestServicesFragment
             requireActivity().supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, RequestServicesFragment())
+                .replace(R.id.fragment_container, ServicesFragment())
                 .addToBackStack(null)
                 .commit()
         }
