@@ -19,11 +19,18 @@ public class SignupRequest {
     private Set<String> roles;
 
     @NotBlank
-    @Size(min = 6, max = 40)
+    @Size(min = 8, max = 40)
     private String password;
+
+    @NotBlank(message = "Confirm Password is required")
+    private String confirmPassword;
 
     @Size(max = 50)
     private String firstName;
+
+    public String getConfirmPassword() {
+        return confirmPassword;
+    }
 
     @Size(max = 50)
     private String lastName;
@@ -95,4 +102,4 @@ public class SignupRequest {
     public void setPhone(String phone) {
         this.phone = phone;
     }
-} 
+}

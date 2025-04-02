@@ -14,6 +14,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,8 +48,10 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
+    @Size(max = 100)
     private String address;
     
+    @Size(max = 20) // Assuming phone number max length
     private String phone;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -56,4 +59,4 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
-} 
+}

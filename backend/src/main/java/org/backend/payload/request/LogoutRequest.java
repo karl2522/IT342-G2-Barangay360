@@ -3,14 +3,25 @@ package org.backend.payload.request;
 import jakarta.validation.constraints.NotNull;
 
 public class LogoutRequest {
-    @NotNull
-    private Long userId;
+    @NotNull(message = "Access token cannot be null")
+    private String accessToken;
 
-    public Long getUserId() {
-        return userId;
+    @NotNull(message = "Refresh token cannot be null")
+    private String refreshToken;
+
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
-} 
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+}

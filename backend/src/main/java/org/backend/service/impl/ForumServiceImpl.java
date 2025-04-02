@@ -1,34 +1,35 @@
 package org.backend.service.impl;
 
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.backend.exception.UnauthorizedException;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
+import org.backend.exception.AuthorizationException;
+import org.backend.model.CommentReport;
 import org.backend.model.ForumComment;
 import org.backend.model.ForumPost;
 import org.backend.model.PostReport;
 import org.backend.model.User;
-import org.backend.model.CommentReport;
+import org.backend.repository.CommentReportRepository;
 import org.backend.repository.ForumCommentRepository;
 import org.backend.repository.ForumPostRepository;
 import org.backend.repository.PostReportRepository;
-import org.backend.repository.CommentReportRepository;
 import org.backend.service.ForumService;
 import org.backend.service.StorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -91,7 +92,7 @@ public class ForumServiceImpl implements ForumService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
         
         if (!Objects.equals(post.getAuthor().getId(), currentUser.getId())) {
-            throw new UnauthorizedException("You are not authorized to update this post");
+            throw new AuthorizationException("You are not authorized to update this post");
         }
         
         post.setTitle(title);
@@ -120,7 +121,7 @@ public class ForumServiceImpl implements ForumService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
         
         if (!Objects.equals(post.getAuthor().getId(), currentUser.getId())) {
-            throw new UnauthorizedException("You are not authorized to delete this post");
+            throw new AuthorizationException("You are not authorized to delete this post");
         }
         
         // Delete image if exists
@@ -183,7 +184,7 @@ public class ForumServiceImpl implements ForumService {
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
         
         if (!Objects.equals(comment.getAuthor().getId(), currentUser.getId())) {
-            throw new UnauthorizedException("You are not authorized to update this comment");
+            throw new AuthorizationException("You are not authorized to update this comment");
         }
         
         comment.setContent(content);
@@ -197,7 +198,7 @@ public class ForumServiceImpl implements ForumService {
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
         
         if (!Objects.equals(comment.getAuthor().getId(), currentUser.getId())) {
-            throw new UnauthorizedException("You are not authorized to delete this comment");
+            throw new AuthorizationException("You are not authorized to delete this comment");
         }
         
         commentRepository.delete(comment);
@@ -387,4 +388,4 @@ public class ForumServiceImpl implements ForumService {
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + commentId));
         return commentReportRepository.findByCommentOrderByCreatedAtDesc(comment, pageable);
     }
-} 
+}

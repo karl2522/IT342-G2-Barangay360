@@ -1,26 +1,30 @@
 package org.backend.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.backend.payload.response.MessageResponse;
 import org.backend.service.StorageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/files")
@@ -45,11 +49,20 @@ public class FileStorageController {
             @Parameter(description = "Optional prefix/folder path for the file")
             @RequestParam(value = "prefix", required = false) String prefix
     ) {
+        
+        final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
+        
         try {
             if (file.isEmpty()) {
                 return ResponseEntity
                         .badRequest()
                         .body(new MessageResponse("Cannot upload empty file"));
+            }
+            
+            if (file.getSize() > MAX_FILE_SIZE) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse("File size exceeds the limit of 10MB"));
             }
 
             String fileUrl = storageService.uploadFile(file, prefix);
@@ -62,9 +75,10 @@ public class FileStorageController {
         } catch (IOException e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Could not upload the file: " + e.getMessage()));
+                    .body(new MessageResponse("File upload failed: " + e.getMessage()));
         }
     }
+    
 
     @Operation(summary = "Delete a file", description = "Delete a file from cloud storage")
     @ApiResponses(value = {
@@ -83,9 +97,10 @@ public class FileStorageController {
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Could not delete the file: " + e.getMessage()));
+                    .body(new MessageResponse("File deletion failed: " + e.getMessage()));
         }
     }
+    
 
     @Operation(summary = "List files", description = "List files in cloud storage, optionally filtered by prefix")
     @ApiResponses(value = {
@@ -99,13 +114,16 @@ public class FileStorageController {
             @Parameter(description = "Optional prefix/folder path to filter files")
             @RequestParam(value = "prefix", required = false) String prefix
     ) {
+        
+        String searchPrefix = prefix != null ? prefix : ""; // Ensure prefix is not null
+        
         try {
-            List<String> files = storageService.listFiles(prefix);
+            List<String> files = storageService.listFiles(searchPrefix);
             return ResponseEntity.ok(files);
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Could not list files: " + e.getMessage()));
+                    .body(new MessageResponse("File listing failed: " + e.getMessage()));
         }
     }
-} 
+}

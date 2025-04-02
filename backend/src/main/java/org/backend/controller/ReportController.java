@@ -1,19 +1,18 @@
 package org.backend.controller;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import org.backend.model.ForumPost;
-import org.backend.model.ForumComment;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.backend.model.CommentReport;
 import org.backend.model.PostReport;
 import org.backend.model.User;
-import org.backend.model.CommentReport;
-import org.backend.repository.ForumPostRepository;
-import org.backend.repository.PostReportRepository;
 import org.backend.repository.CommentReportRepository;
 import org.backend.repository.ForumCommentRepository;
+import org.backend.repository.ForumPostRepository;
+import org.backend.repository.PostReportRepository;
 import org.backend.repository.UserRepository;
 import org.backend.security.services.UserDetailsImpl;
 import org.backend.service.ForumService;
@@ -25,15 +24,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -81,6 +86,7 @@ public class ReportController {
     }
     
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<PostReport>> getAllReports(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -291,7 +297,7 @@ public class ReportController {
         User admin = userService.getUserById(userDetails.getId());
         
         CommentReport report = forumService.updateCommentReportStatus(reportId, status, rejectionReason, admin);
-        return ResponseEntity.ok(report);
+        return ResponseEntity.ok().body(report);
     }
     
     @GetMapping("/all")
@@ -383,4 +389,4 @@ public class ReportController {
         
         return ResponseEntity.ok(response);
     }
-} 
+}

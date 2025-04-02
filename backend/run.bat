@@ -1,3 +1,5 @@
 @echo off
+echo Cleaning and packaging the application...
+call .\mvnw.cmd clean package
 echo Starting the Spring Boot application...
-mvnw.cmd spring-boot:run 
+call .\mvnw.cmd spring-boot:run

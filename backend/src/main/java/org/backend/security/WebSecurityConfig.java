@@ -61,7 +61,13 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174"));
+        String allowedOrigins = System.getenv("ALLOWED_ORIGINS");
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+            configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        } else {
+            // Default to localhost origins if ALLOWED_ORIGINS env variable is not set
+            configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174"));
+        }
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
             "authorization", 
@@ -91,7 +97,6 @@ public class WebSecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
                 auth.requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .requestMatchers("/ws").permitAll()
                     // Swagger UI and API docs endpoints
@@ -100,12 +105,15 @@ public class WebSecurityConfig {
                     .requestMatchers("/api-docs/**").permitAll()
                     .requestMatchers("/api-docs").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
+                    // Allow access to H2 Console
+                    .requestMatchers("/h2-console/**").permitAll()
+                    .requestMatchers("/h2-console").permitAll()
                     .anyRequest().authenticated()
             );
         
-        http.authenticationProvider(authenticationProvider());
+         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }
-} 
+}

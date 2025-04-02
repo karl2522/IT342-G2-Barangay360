@@ -1,17 +1,13 @@
 package org.backend.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.backend.exception.EmailAlreadyExistsException;
 import org.backend.exception.TokenRefreshException;
+import org.backend.exception.UsernameAlreadyExistsException;
 import org.backend.model.ERole;
 import org.backend.model.Role;
 import org.backend.model.User;
@@ -40,6 +36,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"}, maxAge = 3600)
@@ -110,16 +112,19 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+            throw new UsernameAlreadyExistsException("Username is already taken!");
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+            throw new EmailAlreadyExistsException("Email is already in use!");
+        }
+
+        if (!signUpRequest.getPassword().equals(signUpRequest.getConfirmPassword())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+                    .body(new MessageResponse("Error: Passwords do not match!"));
         }
+
 
         // Create new user's account
         User user = new User();
@@ -164,6 +169,7 @@ public class AuthController {
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
+    
 
     @Operation(summary = "Refresh JWT token", description = "Use refresh token to get a new access token")
     @ApiResponses(value = {
@@ -198,8 +204,18 @@ public class AuthController {
     })
     @PostMapping("/signout")
     public ResponseEntity<?> logoutUser(@Valid @RequestBody LogoutRequest logoutRequest) {
+        String accessToken = logoutRequest.getAccessToken();
+        String refreshToken = logoutRequest.getRefreshToken();
+        
+        // Blacklist both tokens
+        if (accessToken != null) {
+            jwtUtils.blacklistToken(accessToken);
+        }
+        if (refreshToken != null) {
+            jwtUtils.blacklistToken(refreshToken);
+        }
+
+        SecurityContextHolder.clearContext();
         return ResponseEntity.ok(new MessageResponse("Log out successful!"));
     }
 }
-
- 
