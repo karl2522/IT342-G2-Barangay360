@@ -68,50 +68,6 @@ class ApprovedServicesFragment : Fragment() {
         return view
     }
 
-/*    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // Set up adapter for ViewPager
-        viewPager.adapter = ApprovedServicesPagerAdapter(this)
-
-        // Connect TabLayout with ViewPager
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = when(position) {
-                0 -> "Request Services"
-                1 -> "My Services"
-                else -> null
-            }
-        }.attach()
-
-        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                when(tab.position) {
-                    0 -> titleTextView.text = "Services"
-                    1 -> titleTextView.text = "Services"
-                }
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab) {}
-            override fun onTabReselected(tab: TabLayout.Tab) {}
-        })
-    }
-
-
-    // ViewPager adapter
-    private inner class ApprovedServicesPagerAdapter(fragment: Fragment) :
-        FragmentStateAdapter(fragment) {
-
-        override fun getItemCount(): Int = 2
-
-        override fun createFragment(position: Int): Fragment {
-            return when (position) {
-                0 -> RequestServicesFragment()
-                1 -> MyServicesFragment()
-                else -> RequestServicesFragment()
-            }
-        }
-    }*/
-
     private fun loadApprovedServices() {
         // TODO: Replace with actual data loading from your backend
         val services = listOf(
