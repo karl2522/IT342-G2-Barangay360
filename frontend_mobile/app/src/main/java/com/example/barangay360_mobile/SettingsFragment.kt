@@ -1,60 +1,63 @@
 package com.example.barangay360_mobile
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.Switch
 import android.widget.Toast
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.appcompat.widget.SwitchCompat
+import androidx.fragment.app.Fragment
+import com.example.barangay360_mobile.util.ThemeManager
 
 class SettingsFragment : Fragment() {
-    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+
+    private lateinit var darkModeSwitch: SwitchCompat
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
-        // Initialize SwipeRefreshLayout
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
+        // Initialize dark mode switch
+        darkModeSwitch = view.findViewById(R.id.switch_dark_mode)
 
-        // Configure refresh colors
-        swipeRefreshLayout.setColorSchemeResources(
-            R.color.maroon,
-            android.R.color.holo_green_dark,
-            android.R.color.holo_blue_dark
-        )
+        // Set switch initial state based on current theme
+        darkModeSwitch.isChecked = ThemeManager.isDarkModeEnabled(requireContext())
 
-        // Set up refresh listener
-        swipeRefreshLayout.setOnRefreshListener {
-            refreshHomeContent()
+        // Set up switch listener
+        darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            ThemeManager.toggleDarkMode(requireContext(), isChecked)
+
+            // Optional: Show a toast message
+            val message = if (isChecked) "Dark mode enabled" else "Light mode enabled"
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         }
+
+        // Set up other settings items click listeners
+        setupSettingsClickListeners(view)
 
         return view
     }
 
-
-    private fun refreshHomeContent() {
-        // TODO: Implement your data refresh logic here
-        // For example:
-        // 1. Fetch new announcements
-        // 2. Update any real-time data
-        // 3. Reload content from server
-
-        // Simulate network delay
-        swipeRefreshLayout.postDelayed({
-            // Your network operations would go here
+    private fun setupSettingsClickListeners(view: View) {
+        // Example: Profile settings click
+        view.findViewById<LinearLayout>(R.id.setting_profile)?.setOnClickListener {
+            // Navigate to profile settings
             // ...
+        }
 
-            // When done, hide the refresh indicator
-            swipeRefreshLayout.isRefreshing = false
+        // Example: About click
+        view.findViewById<LinearLayout>(R.id.setting_about)?.setOnClickListener {
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, AboutFragment())
+                .addToBackStack(null)
+                .commit()
+        }
 
-            // Optional: Show a confirmation toast
-            Toast.makeText(context, "Content refreshed", Toast.LENGTH_SHORT).show()
-        }, 1500) // Simulate a 1.5 second refresh operation
+        // Add other settings click listeners as needed
     }
-
 }

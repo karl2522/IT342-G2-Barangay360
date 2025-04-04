@@ -2,6 +2,7 @@ package com.example.barangay360_mobile
 
 import android.content.Intent
 import android.os.Bundle
+import com.example.barangay360_mobile.util.ThemeManager
 import android.os.Handler
 import android.os.Looper
 import android.view.MenuItem
@@ -12,6 +13,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -21,8 +23,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var bottomNavigationView: BottomNavigationView
     private lateinit var fab: FloatingActionButton
+    private lateinit var bottomAppBar: BottomAppBar  // Add this declaration
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.initialize(this)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
@@ -42,6 +47,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         )
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
+
+        // Initialize bottomAppBar - Add this line
+        bottomAppBar = findViewById(R.id.bottomAppBar)
 
         // Setup floating action button for QR scanner
         fab = findViewById(R.id.fab)
@@ -89,6 +97,17 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment()).commit()
             navigationView.setCheckedItem(R.id.nav_home)
             bottomNavigationView.selectedItemId = R.id.home
+        }
+
+        // Force correct appearance mode based on current theme
+        if (ThemeManager.isDarkModeEnabled(this)) {
+            // In dark mode - ensure UI components use dark styling
+            // (They should do this automatically with proper theme settings)
+        } else {
+            // In light mode - force light styling
+            navigationView.setBackgroundColor(getColor(R.color.white))
+            bottomAppBar.setBackgroundColor(getColor(R.color.white))
+            bottomNavigationView.setBackgroundColor(getColor(R.color.white))
         }
     }
 
