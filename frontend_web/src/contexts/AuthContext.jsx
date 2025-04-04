@@ -215,7 +215,7 @@ export const AuthProvider = ({ children }) => {
       // Transform the role field to match backend expectations
       const formattedData = {
         ...userData,
-        roles: userData.role === 'official' ? ['ROLE_OFFICIAL'] : ['ROLE_USER']
+        roles: userData.role === 'official' ? ['official'] : ['resident']
       };
       
       const response = await fetch('http://localhost:8080/api/auth/signup', {

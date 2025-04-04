@@ -1,3 +1,0 @@
-@echo off
-echo Starting the Spring Boot application...
-mvnw.cmd spring-boot:run 

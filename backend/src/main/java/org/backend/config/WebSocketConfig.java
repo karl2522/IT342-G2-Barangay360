@@ -21,8 +21,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .addInterceptors(new WebSocketHandshakeInterceptor())
-                .setAllowedOrigins("http://localhost:5173", "http://localhost:5174")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8080")
                 .withSockJS();
     }
 
@@ -30,6 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
         registration.setMessageSizeLimit(8192)
                    .setSendBufferSizeLimit(8192)
-                   .setSendTimeLimit(10000);
+                   .setSendTimeLimit(10000)
+                   .setTimeToFirstMessage(30000);
     }
 } 

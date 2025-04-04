@@ -20,7 +20,7 @@ public class Announcement {
     @Column(nullable = false)
     private String title;
     
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "CLOB")
     private String content;
     
     @Column(name = "thumbnail_url")

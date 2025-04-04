@@ -61,7 +61,7 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174", "http://localhost:8080"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
             "authorization", 
@@ -94,6 +94,8 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .requestMatchers("/ws").permitAll()
+                    // H2 Console
+                    .requestMatchers("/h2-console/**").permitAll()
                     // Swagger UI and API docs endpoints
                     .requestMatchers("/swagger-ui.html").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
@@ -102,6 +104,9 @@ public class WebSecurityConfig {
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .anyRequest().authenticated()
             );
+        
+        // Allow H2 Console frame options
+        http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
         
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
