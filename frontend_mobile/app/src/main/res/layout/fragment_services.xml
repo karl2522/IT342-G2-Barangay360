@@ -55,7 +55,7 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Tab Layout -->
+    <!-- Tab Layout - FIXED -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
@@ -65,8 +65,7 @@
         app:tabIndicatorColor="#D32F2F"
         app:tabIndicatorHeight="3dp"
         app:tabSelectedTextColor="#D32F2F"
-        app:tabTextColor="#9E9E9E"
-        app:tabTextAppearance="@style/CustomTabStyle">
+        app:tabTextColor="#9E9E9E">
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
