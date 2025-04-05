@@ -108,9 +108,18 @@ const Sidebar = ({ isOfficial }) => {
   const navigate = useNavigate();
   const { hasRole, logout, user } = useContext(AuthContext);
 
+  // Add null check for user
+  if (!user) {
+    return null; // Don't render anything if user is not loaded
+  }
+
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
   
   const openLogoutModal = () => {
@@ -121,15 +130,15 @@ const Sidebar = ({ isOfficial }) => {
     setShowLogoutModal(false);
   };
 
-  // Determine user's role for display
+  // Determine user's role for display with null checks
   const userRole = isOfficial ? 'Official' : 'Resident';
   const roleColor = isOfficial ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
 
-  // Define navigation items for regular residents
+  // Define navigation items for regular residents with null checks
   const residentNavItems = [
     { 
       name: 'Dashboard', 
-      path: '/resident-dashboard',
+      path: '/resident/dashboard',
       icon: <DashboardIcon />
     },
     { 
@@ -139,7 +148,7 @@ const Sidebar = ({ isOfficial }) => {
     },
     { 
       name: 'Announcements', 
-      path: '/resident-announcements', 
+      path: '/resident/announcements', 
       icon: <AnnouncementIcon />
     },
     { 
@@ -159,11 +168,11 @@ const Sidebar = ({ isOfficial }) => {
     },
   ];
 
-  // Define navigation items for officials
+  // Define navigation items for officials with null checks
   const officialNavItems = [
     { 
       name: 'Dashboard', 
-      path: '/official-dashboard', 
+      path: '/official/dashboard', 
       icon: <DashboardIcon />
     },
     { 
@@ -191,10 +200,10 @@ const Sidebar = ({ isOfficial }) => {
       path: '/residents', 
       icon: <ResidentsIcon />
     },
-    { 
-      name: 'Reports', 
-      path: '/reports', 
-      icon: <ReportsIcon />
+    {
+      name: 'Appeals',
+      path: '/official/appeals',
+      icon: <ResidentsIcon />
     },
     { 
       name: 'Events Calendar', 
@@ -210,11 +219,11 @@ const Sidebar = ({ isOfficial }) => {
       name: 'Settings', 
       path: '/settings', 
       icon: <SettingsIcon />
-    }
+    },
   ];
 
-  // Add admin panel if user has admin role
-  if (hasRole('ROLE_ADMIN')) {
+  // Add admin panel if user has admin role with null check
+  if (hasRole && hasRole('ROLE_ADMIN')) {
     officialNavItems.push({ 
       name: 'Admin Panel', 
       path: '/admin', 
@@ -222,7 +231,7 @@ const Sidebar = ({ isOfficial }) => {
     });
   }
 
-  // Choose which navigation items to display based on user role
+  // Choose which navigation items to display based on user role with null check
   const navItems = isOfficial ? officialNavItems : residentNavItems;
 
   const toggleSidebar = () => {

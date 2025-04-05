@@ -2,6 +2,7 @@ package org.backend.model;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,6 +18,7 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Data
 @NoArgsConstructor
@@ -56,4 +58,29 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "warnings", nullable = false)
+    private int warnings = 0;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
+
+    @Column(name = "last_warning_date")
+    private LocalDateTime lastWarningDate;
+
+    @Column(name = "has_appeal", nullable = false)
+    private boolean hasAppeal = false;
+
+    @Column(name = "appeal_message", columnDefinition = "TEXT")
+    private String appealMessage;
+
+    @Column(name = "appeal_date")
+    private LocalDateTime appealDate;
+
+    @Column(name = "appeal_status")
+    private String appealStatus = "PENDING"; // PENDING, APPROVED, REJECTED
 } 

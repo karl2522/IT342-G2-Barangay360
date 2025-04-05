@@ -1,9 +1,14 @@
 import PropTypes from 'prop-types';
 import { createContext, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from './ToastContext';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+
   // Initialize state from localStorage
   const getUserFromStorage = () => {
     try {
@@ -145,68 +150,78 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      console.log('Attempting login for:', username);
       const response = await fetch('http://localhost:8080/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
+        body: JSON.stringify({ username, password }),
         credentials: 'include',
-        body: JSON.stringify({ username, password })
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Login successful:', data);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      if (!data || !data.accessToken || !data.refreshToken) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Check if user is deactivated or has 3+ warnings
+      if (data.isActive === false || data.warnings >= 3) {
+        // Clear any existing tokens
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
         
-        if (!data.accessToken || !data.refreshToken) {
-          console.error('No tokens received from server');
-          return { success: false, message: 'No tokens received from server' };
-        }
+        // Show error message
+        showToast('Your account has been deactivated. Please submit an appeal to request reactivation.', 'error');
         
-        // Store the tokens with their metadata
-        localStorage.setItem('token', JSON.stringify(data.accessToken));
-        localStorage.setItem('refreshToken', JSON.stringify(data.refreshToken));
-        
-        // Prepare user data with proper checking
-        const userData = {
-          id: data.id || '',
-          username: data.username || '',
-          email: data.email || '',
-          roles: Array.isArray(data.roles) ? data.roles : [],
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          phoneNumber: data.phoneNumber || '',
-          address: data.address || '',
-          profileImage: data.profileImage || ''
-        };
-        
-        localStorage.setItem('user', JSON.stringify(userData));
-        
-        // Update state
-        setToken(data.accessToken);
-        setRefreshToken(data.refreshToken);
-        setUser(userData);
-        
-        // Return both success status and user data
-        return { success: true, userData };
+        // Redirect to appeal form
+        navigate('/resident/appeal');
+        return;
+      }
+
+      // Store user data and tokens
+      const userData = {
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        roles: data.roles,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        address: data.address,
+        isActive: data.isActive,
+        warnings: data.warnings || 0
+      };
+
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', JSON.stringify(data.accessToken));
+      localStorage.setItem('refreshToken', JSON.stringify(data.refreshToken));
+      
+      setUser(userData);
+      setToken(data.accessToken);
+      setRefreshToken(data.refreshToken);
+
+      // Show success message
+      showToast('Login successful!', 'success');
+
+      // Redirect based on role
+      const roles = data.roles.map(role => role.toUpperCase());
+      if (roles.includes('ROLE_ADMIN')) {
+        navigate('/admin/dashboard');
+      } else if (roles.includes('ROLE_OFFICIAL')) {
+        navigate('/official/dashboard');
       } else {
-        const errorData = await response.json();
-        console.error('Login failed:', errorData);
-        return { 
-          success: false, 
-          message: errorData.message || 'Login failed',
-          status: response.status
-        };
+        navigate('/resident/dashboard');
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { 
-        success: false, 
-        message: 'Network error occurred',
-        error: error.message
-      };
+      showToast(error.message || 'Login failed. Please check your credentials.', 'error');
+      throw error;
     }
   };
 

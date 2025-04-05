@@ -12,11 +12,14 @@ import RequestsManagement from './pages/official/RequestsManagement.jsx';
 import AnnouncementsManagement from './pages/official/AnnouncementsManagement.jsx';
 import ForumManagement from './pages/official/ForumManagement.jsx';
 import ReportManagement from './pages/official/ReportManagement.jsx';
+import ResidentsManagement from './pages/official/ResidentsManagement.jsx';
+import AppealsManagement from './pages/official/AppealsManagement.jsx';
 import './index.css';
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import { ToastProvider } from './contexts/ToastContext';
 import ResidentAnnouncements from './pages/resident/Announcements';
 import CommunityForum from './pages/resident/CommunityForum.jsx';
+import AppealForm from './pages/resident/AppealForm';
 
 // Define a placeholder component for routes that haven't been fully implemented
 const PlaceholderPage = ({ title }) => (
@@ -34,9 +37,9 @@ PlaceholderPage.propTypes = {
 
 function App() {
   return (
-    <AuthProvider>
+    <Router>
       <ToastProvider>
-        <Router>
+        <AuthProvider>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -93,6 +96,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/resident/appeal" element={<AppealForm />} />
             
             {/* Official Routes */}
             <Route 
@@ -139,7 +143,7 @@ function App() {
               path="/residents" 
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
-                  <PlaceholderPage title="Resident Management" />
+                  <ResidentsManagement />
                 </ProtectedRoute>
               } 
             />
@@ -167,10 +171,26 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/official/residents" 
+              element={
+                <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
+                  <ResidentsManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/official/appeals" 
+              element={
+                <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
+                  <AppealsManagement />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
-        </Router>
+        </AuthProvider>
       </ToastProvider>
-    </AuthProvider>
+    </Router>
   )
 }
 

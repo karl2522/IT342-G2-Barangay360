@@ -51,28 +51,11 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const result = await login(formData.username, formData.password);
+      await login(formData.username, formData.password);
       
-      if (result.success) {
-        // Success message
-        showToast('Login successful!', 'success');
-        
-        // Use the userData directly from the result if available
-        const userData = result.userData || JSON.parse(localStorage.getItem('user') || '{}');
-        
-        // Navigate based on user role with proper checks
-        if (userData && userData.roles && userData.roles.includes('ROLE_OFFICIAL')) {
-          navigate('/official-dashboard');
-        } else if (userData && userData.roles && userData.roles.includes('ROLE_USER')) {
-          navigate('/resident-dashboard');
-        } else {
-          // Default fallback if roles are undefined or empty
-          navigate('/resident-dashboard');
-        }
-      } else {
-        // Show error message from the login result
-        showToast(result.message || 'Failed to login. Please check your credentials.', 'error');
-      }
+      // If login is successful, the AuthContext will handle navigation
+      // and show success message
+      
     } catch (error) {
       console.error('Login error:', error);
       showToast(error.message || 'Failed to login. Please check your credentials.', 'error');

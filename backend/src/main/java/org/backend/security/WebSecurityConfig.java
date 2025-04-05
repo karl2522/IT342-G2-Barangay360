@@ -99,18 +99,14 @@ public class WebSecurityConfig {
                     // Swagger UI and API docs endpoints
                     .requestMatchers("/swagger-ui.html").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
-                    .requestMatchers("/api-docs/**").permitAll()
-                    .requestMatchers("/api-docs").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .anyRequest().authenticated()
-            );
-        
-        // Allow H2 Console frame options
-        http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
-        
-        http.authenticationProvider(authenticationProvider());
-        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-        
+            )
+            .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        // Enable H2 console
+        http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+
         return http.build();
     }
 } 

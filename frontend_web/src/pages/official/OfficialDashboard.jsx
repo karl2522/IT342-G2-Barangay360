@@ -122,6 +122,52 @@ const OfficialDashboard = () => {
                   </div>
                 </div>
                 <div className="mb-4">
+                  <Link to="/official/announcements" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200">
+                    Manage Announcements
+                  </Link>
+                </div>
+                <div className="text-sm text-gray-600">
+                  <p>Create and manage announcements for the community. Keep residents informed about important updates and events.</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
+                <div className="flex items-center mb-4">
+                  <div className="p-3 rounded-full bg-[#861A2D] bg-opacity-10 mr-4">
+                    <svg className="h-6 w-6 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-[#861A2D]">Reports</h3>
+                    <p className="text-gray-600">View and generate reports</p>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <Link to="/official/reports" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200">
+                    View Reports
+                  </Link>
+                </div>
+                <div className="text-sm text-gray-600">
+                  <p>Access and generate various reports about community activities, service requests, and resident statistics.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
+                <div className="flex items-center mb-4">
+                  <div className="p-3 rounded-full bg-[#861A2D] bg-opacity-10 mr-4">
+                    <svg className="h-6 w-6 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-[#861A2D]">Announcements</h3>
+                    <p className="text-gray-600">Create and manage community announcements</p>
+                  </div>
+                </div>
+                <div className="mb-4">
                   <button className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors duration-200">
                     Create New Announcement
                   </button>
