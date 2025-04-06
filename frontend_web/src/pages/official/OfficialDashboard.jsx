@@ -152,20 +152,44 @@ const OfficialDashboard = () => {
     };
   }, []);
 
-  // Format date for display
+  // Function to format date for display
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return 'Recently';
     
     try {
       const date = new Date(dateString);
-      // Check if the date is valid before calling toISOString
+      // Check if the date is valid before formatting
       if (isNaN(date.getTime())) {
-        return 'Invalid date';
+        console.warn('Invalid date:', dateString);
+        return 'Recently';
       }
-      return date.toLocaleDateString();
+      
+      // Use relative time format
+      const now = new Date();
+      const diffInSeconds = Math.floor((now - date) / 1000);
+      
+      if (diffInSeconds < 60) {
+        return 'Just now';
+      } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+      } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+      } else if (diffInSeconds < 2592000) { // Less than 30 days
+        const days = Math.floor(diffInSeconds / 86400);
+        return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+      } else {
+        // For older dates, use the date format
+        return date.toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
     } catch (error) {
       console.error('Error formatting date:', error);
-      return 'Invalid date';
+      return 'Recently';
     }
   };
 
@@ -404,8 +428,18 @@ const OfficialDashboard = () => {
                       <ul className="space-y-3 h-full min-h-[200px]">
                         {posts.map(post => (
                     <li key={post.id} className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                       <p className="text-sm font-medium text-gray-800">{post.title}</p>
-                            <p className="text-xs text-gray-500">By {post.author.username} on {formatDate(post.createdDate)}</p>
+                       <p className="text-sm font-medium text-gray-800 line-clamp-1">{post.title || 'Untitled Post'}</p>
+                            <div className="flex justify-between items-center mt-2">
+                              <div className="flex items-center">
+                                <div className="mr-2 h-7 w-7 bg-[#861A2D33] rounded-full flex items-center justify-center text-[#861A2D]">
+                                  <span className="text-xs font-medium">{(post.author?.firstName || 'U').charAt(0).toUpperCase()}</span>
+                                </div>
+                                <div className="text-sm text-gray-700">{post.author?.firstName} {post.author?.lastName}</div>
+                              </div>
+                              <div className="text-xs text-gray-500 text-right">
+                                <div className="font-medium">{formatDate(post.createdDate || post.createdAt || post.date)}</div>
+                              </div>
+                            </div>
                     </li>
                   ))}
                 </ul>

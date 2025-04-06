@@ -179,7 +179,12 @@ const ResidentDashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
-                <h3 className="text-lg font-medium text-[#861A2D] mb-2">Latest Announcements</h3>
+                <h3 className="text-lg font-medium text-[#861A2D] mb-2 flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                  </svg>
+                  Latest Announcements
+                </h3>
                 <p className="text-gray-600 mb-4">Stay updated with the latest barangay announcements.</p>
                 {announcementsLoading ? (
                     <div className="flex flex-col justify-center items-center py-8">
@@ -195,13 +200,36 @@ const ResidentDashboard = () => {
                 ) : announcements.length > 0 ? (
                     <div className="space-y-3">
                         {announcements.map((announcement) => (
-                            <Link key={announcement.id} to={`/announcements/${announcement.id}`} className="block p-3 bg-gray-50 rounded-md border border-gray-200 hover:shadow-sm transition-all duration-200">
-                                <h4 className="text-sm font-medium text-gray-800 truncate">{announcement.title}</h4>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Posted {formatDistanceToNow(new Date(announcement.createdAt), { addSuffix: true })}
-                                </p>
+                            <Link 
+                                key={announcement.id} 
+                                to={`/announcements/${announcement.id}`} 
+                                className="block p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 relative overflow-hidden"
+                            >
+                                <div className="absolute left-0 top-0 w-1 h-full bg-[#861A2D]"></div>
+                                <h4 className="text-md font-semibold text-gray-800 mb-2 truncate pr-6">{announcement.title}</h4>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{announcement.content}</p>
+                                <div className="flex justify-between items-center mt-2">
+                                    <div className="flex items-center text-xs text-gray-500">
+                                        <svg className="w-4 h-4 mr-1 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        {formatDistanceToNow(new Date(announcement.createdAt), { addSuffix: true })}
+                                    </div>
+                                    <span className="text-xs font-medium text-[#861A2D] inline-flex items-center">
+                                        Read more
+                                        <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </span>
+                                </div>
                             </Link>
                         ))}
+                        <Link to="/announcements" className="mt-4 inline-block text-sm font-medium text-[#861A2D] hover:underline flex items-center">
+                            View all announcements
+                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </Link>
                     </div>
                 ) : (
                      <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
@@ -210,9 +238,6 @@ const ResidentDashboard = () => {
                         <p className="mt-1 text-xs text-gray-500">There are currently no announcements.</p>
                     </div>
                 )}
-                <Link to="/announcements" className="mt-4 inline-block text-sm text-[#861A2D] hover:underline">
-                  View all announcements →
-                </Link>
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
