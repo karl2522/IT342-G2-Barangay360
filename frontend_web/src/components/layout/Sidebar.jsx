@@ -143,7 +143,7 @@ const Sidebar = ({ isOfficial }) => {
     },
     { 
       name: 'Services', 
-      path: '/services', 
+      path: '/resident/services',
       icon: <ServicesIcon />
     },
     { 
@@ -153,17 +153,17 @@ const Sidebar = ({ isOfficial }) => {
     },
     { 
       name: 'Community', 
-      path: '/community', 
+      path: '/resident/community',
       icon: <CommunityIcon />
     },
     { 
       name: 'Profile', 
-      path: '/profile', 
+      path: '/resident/profile',
       icon: <ProfileIcon />
     },
     { 
       name: 'Settings', 
-      path: '/settings', 
+      path: '/resident/settings',
       icon: <SettingsIcon />
     },
   ];
@@ -172,52 +172,52 @@ const Sidebar = ({ isOfficial }) => {
   const officialNavItems = [
     { 
       name: 'Dashboard', 
-      path: '/official/dashboard', 
+      path: '/official/dashboard',
       icon: <DashboardIcon />
     },
     { 
       name: 'Manage Requests', 
-      path: '/requests', 
+      path: '/official/requests',
       icon: <RequestsIcon />
     },
     { 
       name: 'Announcements', 
-      path: '/manage-announcements', 
+      path: '/official/manage-announcements',
       icon: <AnnouncementIcon />
     },
     { 
       name: 'Forum Posts', 
-      path: '/forum-management', 
+      path: '/official/forum-management',
       icon: <ForumIcon />
     },
     { 
       name: 'Content Reports', 
-      path: '/reports-management', 
+      path: '/official/reports-management',
       icon: <ContentReportIcon />
     },
     { 
       name: 'Residents', 
-      path: '/residents', 
+      path: '/official/residents',
       icon: <ResidentsIcon />
     },
     {
       name: 'Appeals',
       path: '/official/appeals',
-      icon: <ResidentsIcon />
+      icon: <ReportsIcon />
     },
     { 
       name: 'Events Calendar', 
-      path: '/events', 
+      path: '/official/events',
       icon: <CalendarIcon />
     },
     { 
       name: 'Profile', 
-      path: '/profile', 
+      path: '/official/profile',
       icon: <ProfileIcon />
     },
     { 
       name: 'Settings', 
-      path: '/settings', 
+      path: '/official/settings',
       icon: <SettingsIcon />
     },
   ];

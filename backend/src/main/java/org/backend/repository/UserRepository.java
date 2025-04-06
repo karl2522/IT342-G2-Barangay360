@@ -17,8 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.id = :roleId")
     List<User> findByRoleId(@Param("roleId") int roleId);
     
-    List<User> findByHasAppealTrue();
-    
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
 } 

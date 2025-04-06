@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.backend.payload.response.MessageResponse;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.backend.security.services.UserDetailsImpl;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -103,49 +105,6 @@ public class UserController {
         }
     }
 
-    @PostMapping("/{userId}/appeal")
-    public ResponseEntity<?> submitAppeal(
-            @PathVariable Long userId,
-            @RequestBody Map<String, String> request) {
-        try {
-            String message = request.get("message");
-            userService.submitAppeal(userId, message);
-            return ResponseEntity.ok(new MessageResponse("Appeal submitted successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error submitting appeal: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/appeals")
-    public ResponseEntity<?> getAppeals() {
-        try {
-            List<User> appeals = userService.getAppeals();
-            return ResponseEntity.ok(appeals);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error fetching appeals: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/{userId}/appeal/approve")
-    public ResponseEntity<?> approveAppeal(@PathVariable Long userId) {
-        try {
-            userService.approveAppeal(userId);
-            return ResponseEntity.ok(new MessageResponse("Appeal approved successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error approving appeal: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/{userId}/appeal/reject")
-    public ResponseEntity<?> rejectAppeal(@PathVariable Long userId) {
-        try {
-            userService.rejectAppeal(userId);
-            return ResponseEntity.ok(new MessageResponse("Appeal rejected successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error rejecting appeal: " + e.getMessage()));
-        }
-    }
-
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
@@ -154,6 +113,71 @@ public class UserController {
             return ResponseEntity.ok(new MessageResponse("User account deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('USER') or hasRole('OFFICIAL') or hasRole('ADMIN')")
+    @Operation(summary = "Update user profile", description = "Update user profile information")
+    public ResponseEntity<?> updateUserProfile(
+            @PathVariable Long userId,
+            @RequestBody Map<String, Object> updateData,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        try {
+            // Check if user is updating their own profile or is an admin
+            if (!userDetails.getId().equals(userId) && !userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                return ResponseEntity.status(403).body(new MessageResponse("You can only update your own profile"));
+            }
+            
+            User user = userService.getUserById(userId);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            // Update fields if provided
+            if (updateData.containsKey("firstName")) {
+                user.setFirstName((String) updateData.get("firstName"));
+            }
+            
+            if (updateData.containsKey("lastName")) {
+                user.setLastName((String) updateData.get("lastName"));
+            }
+            
+            if (updateData.containsKey("phone")) {
+                user.setPhone((String) updateData.get("phone"));
+            }
+            
+            if (updateData.containsKey("address")) {
+                user.setAddress((String) updateData.get("address"));
+            }
+            
+            // Bio can be set for all users
+            if (updateData.containsKey("bio")) {
+                user.setBio((String) updateData.get("bio"));
+            }
+            
+            // Position and department are for officials only
+            boolean isOfficial = user.getRoles().stream()
+                    .anyMatch(role -> role.getName().name().equals("ROLE_OFFICIAL"));
+                    
+            if (isOfficial) {
+                // Additional profile fields for officials only
+                if (updateData.containsKey("position")) {
+                    user.setPosition((String) updateData.get("position"));
+                }
+                
+                if (updateData.containsKey("department")) {
+                    user.setDepartment((String) updateData.get("department"));
+                }
+            }
+            
+            User updatedUser = userService.updateUser(user);
+            
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error updating profile: " + e.getMessage()));
         }
     }
 } 

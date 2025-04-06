@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
+import TopNavigation from '../../components/layout/TopNavigation';
 import { forumService } from '../../services/ForumService';
 import { useToast } from '../../contexts/ToastContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -113,10 +114,8 @@ const ForumManagement = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col ml-64">
-        {/* Header */}
-        <header className="bg-white shadow-sm px-4 sm:px-6 lg:px-8 h-16 flex items-center">
-          <h1 className="text-2xl font-semibold text-[#861A2D]">Forum Management</h1>
-        </header>
+        {/* Top Navigation */}
+        <TopNavigation title="Forum Management" />
 
         {/* Header */}
         <div className="flex justify-between py-6 px-8">

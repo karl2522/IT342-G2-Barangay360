@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../../contexts/AuthContext.jsx';
-import Sidebar from '../../components/layout/Sidebar.jsx';
+import { AuthContext } from '../../contexts/AuthContext';
+import Sidebar from '../../components/layout/Sidebar';
 import { useToast } from '../../contexts/ToastContext';
+import TopNavigation from '../../components/layout/TopNavigation';
 
 const ResidentsManagement = () => {
-  const { user } = useContext(AuthContext);
+  const { handleApiRequest, hasRole } = useContext(AuthContext);
   const { showToast } = useToast();
   const [residents, setResidents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,6 @@ const ResidentsManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [warningReason, setWarningReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { handleApiRequest } = useContext(AuthContext);
 
   useEffect(() => {
     fetchResidents();
@@ -53,7 +53,12 @@ const ResidentsManagement = () => {
       const sortedData = [...data].sort((a, b) => {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
-      console.log('Fetched residents:', sortedData); // Debug log
+      
+      // Debug log to check isActive values
+      console.log('Raw resident data:', data);
+      console.log('First resident isActive:', data[0]?.active);
+      console.log('First resident:', data[0]);
+      
       setResidents(sortedData);
       setTotalPages(Math.ceil(sortedData.length / itemsPerPage));
       setLoading(false);
@@ -188,24 +193,45 @@ const ResidentsManagement = () => {
     }
   };
 
+  // Activate Modal (Keep for potential future use or reference, but button is removed)
+  const ActivateConfirmationModal = ({ show, onClose, onConfirm, userName, isSubmitting }) => {
+    // ... (modal implementation)
+  };
+
+  // Deactivate Modal
+  const DeactivateConfirmationModal = ({ show, onClose, onConfirm, userName, isSubmitting }) => (
+    // ... (modal implementation - using &apos; for apostrophe)
+    <p className="text-sm text-gray-600">
+      Are you sure you want to deactivate {userName}&apos;s account? They will need to submit an appeal to regain access.
+    </p>
+    // ... (rest of modal)
+  );
+
+  // Warn Modal
+  const WarnConfirmationModal = ({ show, onClose, onConfirm, userName, isSubmitting }) => (
+    // ... (modal implementation - using &apos; for apostrophe)
+    <p className="text-sm text-gray-600">
+      Are you sure you want to issue a warning to {userName}&apos;s account? This may lead to deactivation if they reach 3 warnings.
+    </p>
+    // ... (rest of modal)
+  );
+
+  // Delete Modal
+  const DeleteConfirmationModal = ({ show, onClose, onConfirm, userName, isSubmitting }) => (
+    // ... (modal implementation - using &apos; for apostrophe)
+    <p className="text-sm text-gray-600">
+      Are you sure you want to permanently delete {userName}&apos;s account? This action cannot be undone.
+    </p>
+    // ... (rest of modal)
+  );
+
   return (
     <div className="min-h-screen bg-gray-100 flex w-full">
       <Sidebar isOfficial={true} />
       
       <div className="flex-1 flex flex-col ml-64">
         {/* Top Navigation */}
-        <nav className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-[#861A2D]">Residents Management</h1>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Welcome,</span>
-                <span className="text-sm font-medium text-[#861A2D]">{user?.firstName} {user?.lastName}</span>
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Official</span>
-              </div>
-            </div>
-          </div>
-        </nav>
+        <TopNavigation title="Residents Management" />
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
@@ -251,7 +277,7 @@ const ResidentsManagement = () => {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                       <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -281,7 +307,9 @@ const ResidentsManagement = () => {
                           <div className="text-sm text-gray-900">{resident.address}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{resident.phone}</div>
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${resident.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {resident.active ? 'Active' : 'Inactive'}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500">
@@ -291,78 +319,52 @@ const ResidentsManagement = () => {
                             {new Date(resident.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
-                          <div className="flex items-center justify-center space-x-2">
-                            <button
-                              onClick={() => {
-                                setSelectedUser(resident);
-                                setShowWarnModal(true);
-                              }}
-                              className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                            >
-                              <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                              </svg>
-                              Warn
-                            </button>
-                            {resident.warnings >= 3 ? (
-                              <button
-                                onClick={() => {
-                                  setSelectedUser(resident);
-                                  setShowActivateModal(true);
-                                }}
-                                className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                              >
-                                <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Activate
-                              </button>
-                            ) : resident.isActive ? (
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            {/* Removed Activate Button */}
+                            {resident.active && (
                               <button
                                 onClick={() => {
                                   setSelectedUser(resident);
                                   setShowDeactivateModal(true);
                                 }}
-                                className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
+                                className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-600 transition ease-in-out duration-150"
+                                title="Deactivate User"
                               >
-                                <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
                                 </svg>
                                 Deactivate
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  setSelectedUser(resident);
-                                  setShowActivateModal(true);
-                                }}
-                                className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                              >
-                                <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Activate
                               </button>
                             )}
                             <button
                               onClick={() => {
                                 setSelectedUser(resident);
+                                setShowWarnModal(true);
+                              }}
+                              className={`inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-[#EAB308] hover:bg-[#D4A107] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#EAB308] transition ease-in-out duration-150 ${resident.warnings >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              disabled={resident.warnings >= 3}
+                              title={resident.warnings >= 3 ? "User already has maximum warnings" : "Warn User"}
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                              Warn ({resident.warnings})
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedUser(resident);
                                 setShowDeleteModal(true);
                               }}
-                              className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                              className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition ease-in-out duration-150"
+                              title="Delete User"
                             >
-                              <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
-                              Remove
+                              Delete
                             </button>
                           </div>
-                          {resident.warnings >= 3 && (
-                            <div className="mt-2 text-xs text-red-600">
-                              Account deactivated due to excessive warnings
-                            </div>
-                          )}
                         </td>
                       </tr>
                     ))}

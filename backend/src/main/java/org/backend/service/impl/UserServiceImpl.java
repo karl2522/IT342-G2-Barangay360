@@ -58,41 +58,4 @@ public class UserServiceImpl implements UserService {
         user.setLastWarningDate(null);
         userRepository.save(user);
     }
-
-    @Override
-    public void submitAppeal(Long userId, String message) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setHasAppeal(true);
-        user.setAppealMessage(message);
-        user.setAppealDate(LocalDateTime.now());
-        user.setAppealStatus("PENDING");
-        userRepository.save(user);
-    }
-
-    @Override
-    public List<User> getAppeals() {
-        return userRepository.findByHasAppealTrue();
-    }
-
-    @Override
-    public void approveAppeal(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setHasAppeal(false);
-        user.setAppealStatus("APPROVED");
-        user.setActive(true);
-        user.setWarnings(0);
-        user.setLastWarningDate(null);
-        userRepository.save(user);
-    }
-
-    @Override
-    public void rejectAppeal(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setHasAppeal(false);
-        user.setAppealStatus("REJECTED");
-        userRepository.save(user);
-    }
 } 

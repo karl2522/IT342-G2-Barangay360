@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
 
 import jakarta.validation.Valid;
 
@@ -74,18 +75,18 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // Proceed with generating tokens 
         TokenDTO accessToken = jwtUtils.generateJwtToken(authentication);
         TokenDTO refreshToken = jwtUtils.generateRefreshToken(authentication);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
-        // Get the user entity to access additional fields
-        User user = userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+        // No need to fetch User again, details are in UserDetailsImpl
         return ResponseEntity.ok(new JwtResponse(
                 accessToken,
                 refreshToken,
@@ -93,11 +94,12 @@ public class AuthController {
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 roles,
-                user.getFirstName(),
-                user.getLastName(),
-                user.getPhone(),
-                user.getAddress(),
-                null // profileImage is not available in the User model
+                userDetails.getFirstName(), // Get from userDetails
+                userDetails.getLastName(),  // Get from userDetails
+                userDetails.getPhone(),     // Get from userDetails
+                userDetails.getAddress(),   // Get from userDetails
+                userDetails.isActive(),      // Pass isActive status
+                null // profileImage is not available
         ));
     }
 

@@ -94,6 +94,10 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .requestMatchers("/ws").permitAll()
+                    // Allow unauthenticated access to POST /api/appeals
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/appeals").permitAll()
+                    // Allow unauthenticated access to GET /api/events
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/events").permitAll()
                     // H2 Console
                     .requestMatchers("/h2-console/**").permitAll()
                     // Swagger UI and API docs endpoints

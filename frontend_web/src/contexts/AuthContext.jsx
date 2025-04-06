@@ -77,7 +77,6 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ refreshToken: refreshToken.token }),
-        // Don't throw error on non-2xx responses
         credentials: 'include'
       });
 
@@ -126,15 +125,31 @@ export const AuthProvider = ({ children }) => {
         'Authorization': `Bearer ${token.token}`
       };
 
-      const response = await fetch(url, { ...options, headers });
+      // Ensure credentials are included
+      const requestOptions = {
+        ...options,
+        headers,
+        credentials: 'include'
+      };
+
+      const response = await fetch(url, requestOptions);
 
       // If the response is 401, try to refresh the token and retry the request
       if (response.status === 401) {
+        console.log('Received 401, attempting to refresh token');
         const refreshSuccess = await refreshAccessToken();
         if (refreshSuccess) {
           // Retry the request with the new token
-          headers['Authorization'] = `Bearer ${token.token}`;
-          return await fetch(url, { ...options, headers });
+          const retryHeaders = {
+            ...options.headers,
+            'Authorization': `Bearer ${token.token}`
+          };
+          const retryOptions = {
+            ...options,
+            headers: retryHeaders,
+            credentials: 'include'
+          };
+          return await fetch(url, retryOptions);
         } else {
           logout(); // Force logout if refresh fails
           throw new Error('Authentication failed');
@@ -162,26 +177,23 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Invalid username or password');
+        }
+        if (response.status === 403 && data.message?.includes("disabled")) {
+          // Clear any existing tokens
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          
+          // Throw error with deactivation reason
+          throw new Error(data.message || 'Your account has been deactivated due to multiple warnings.');
+        }
         throw new Error(data.message || 'Login failed');
       }
 
       if (!data || !data.accessToken || !data.refreshToken) {
         throw new Error('Invalid response from server');
-      }
-
-      // Check if user is deactivated or has 3+ warnings
-      if (data.isActive === false || data.warnings >= 3) {
-        // Clear any existing tokens
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        
-        // Show error message
-        showToast('Your account has been deactivated. Please submit an appeal to request reactivation.', 'error');
-        
-        // Redirect to appeal form
-        navigate('/resident/appeal');
-        return;
       }
 
       // Store user data and tokens
@@ -212,7 +224,7 @@ export const AuthProvider = ({ children }) => {
       // Redirect based on role
       const roles = data.roles.map(role => role.toUpperCase());
       if (roles.includes('ROLE_ADMIN')) {
-        navigate('/admin/dashboard');
+        navigate('/admin-dashboard');
       } else if (roles.includes('ROLE_OFFICIAL')) {
         navigate('/official/dashboard');
       } else {

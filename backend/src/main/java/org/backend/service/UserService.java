@@ -11,8 +11,4 @@ public interface UserService {
     void deleteUser(Long id);
     List<User> getUsersByRoleId(int roleId);
     void activateUser(Long userId);
-    void submitAppeal(Long userId, String message);
-    List<User> getAppeals();
-    void approveAppeal(Long userId);
-    void rejectAppeal(Long userId);
 } 

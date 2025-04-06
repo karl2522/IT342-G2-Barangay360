@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
 import Sidebar from '../../components/layout/Sidebar';
+import TopNavigation from '../../components/layout/TopNavigation';
 import { forumService } from '../../services/ForumService';
 import { useToast } from '../../contexts/ToastContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -1135,28 +1136,12 @@ const CommunityForum = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-gray-100 flex w-full">
       <Sidebar isOfficial={false} />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col ml-64">
         {/* Top Navigation */}
-        <nav className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-[#861A2D]">Community Forum</h1>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Welcome,</span>
-                <span className="text-sm font-medium text-[#861A2D]">{user?.username}</span>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Resident</span>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-[#861A2D] text-white flex items-center justify-center font-bold">
-                {user?.firstName?.charAt(0) || 'U'}
-              </div>
-            </div>
-          </div>
-        </nav>
+        <TopNavigation title="Community Forum" />
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-auto p-6">

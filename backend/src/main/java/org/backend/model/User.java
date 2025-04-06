@@ -52,6 +52,15 @@ public class User {
     private String address;
     
     private String phone;
+    
+    @Column(length = 100)
+    private String position;
+    
+    @Column(length = 1000)
+    private String bio;
+    
+    @Column(length = 100)
+    private String department;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
@@ -71,16 +80,4 @@ public class User {
 
     @Column(name = "last_warning_date")
     private LocalDateTime lastWarningDate;
-
-    @Column(name = "has_appeal", nullable = false)
-    private boolean hasAppeal = false;
-
-    @Column(name = "appeal_message", columnDefinition = "TEXT")
-    private String appealMessage;
-
-    @Column(name = "appeal_date")
-    private LocalDateTime appealDate;
-
-    @Column(name = "appeal_status")
-    private String appealStatus = "PENDING"; // PENDING, APPROVED, REJECTED
 } 

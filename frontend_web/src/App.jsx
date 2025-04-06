@@ -14,12 +14,15 @@ import ForumManagement from './pages/official/ForumManagement.jsx';
 import ReportManagement from './pages/official/ReportManagement.jsx';
 import ResidentsManagement from './pages/official/ResidentsManagement.jsx';
 import AppealsManagement from './pages/official/AppealsManagement.jsx';
+import OfficialProfile from './pages/official/OfficialProfile.jsx';
 import './index.css';
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import { ToastProvider } from './contexts/ToastContext';
 import ResidentAnnouncements from './pages/resident/Announcements';
 import CommunityForum from './pages/resident/CommunityForum.jsx';
 import AppealForm from './pages/resident/AppealForm';
+import EventsManagement from './pages/official/EventsManagement.jsx';
+import ResidentProfile from "./pages/resident/ResidentProfile.jsx";
 
 // Define a placeholder component for routes that haven't been fully implemented
 const PlaceholderPage = ({ title }) => (
@@ -49,7 +52,7 @@ function App() {
             
             {/* Resident User Routes */}
             <Route 
-              path="/resident-dashboard"
+              path="/resident/dashboard"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_USER']}>
                   <ResidentDashboard />
@@ -57,7 +60,7 @@ function App() {
               } 
             />
             <Route 
-              path="/services" 
+              path="/resident/services"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_USER']}>
                   <Services />
@@ -65,7 +68,7 @@ function App() {
               } 
             />
             <Route 
-              path="/resident-announcements" 
+              path="/resident/announcements"
               element={
                 <ProtectedRoute allowedRoles={['ROLE_USER']}>
                   <ResidentAnnouncements />
@@ -73,7 +76,7 @@ function App() {
               } 
             />
             <Route 
-              path="/community" 
+              path="/resident/community"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_USER']}>
                   <CommunityForum />
@@ -81,15 +84,15 @@ function App() {
               } 
             />
             <Route 
-              path="/profile" 
+              path="/resident/profile"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_USER']}>
-                  <PlaceholderPage title="User Profile" />
+                  <ResidentProfile />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/settings" 
+              path="/resident/settings"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_USER']}>
                   <PlaceholderPage title="Account Settings" />
@@ -100,7 +103,7 @@ function App() {
             
             {/* Official Routes */}
             <Route 
-              path="/official-dashboard" 
+              path="/official/dashboard"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
                   <OfficialDashboard />
@@ -108,7 +111,7 @@ function App() {
               } 
             />
             <Route 
-              path="/requests" 
+              path="/official/requests"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
                   <RequestsManagement />
@@ -116,7 +119,7 @@ function App() {
               } 
             />
             <Route 
-              path="/manage-announcements" 
+              path="/official/manage-announcements"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
                   <AnnouncementsManagement />
@@ -124,7 +127,7 @@ function App() {
               } 
             />
             <Route 
-              path="/forum-management" 
+              path="/official/forum-management"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
                   <ForumManagement />
@@ -132,7 +135,7 @@ function App() {
               } 
             />
             <Route 
-              path="/reports-management" 
+              path="/official/reports-management"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
                   <ReportManagement />
@@ -140,7 +143,7 @@ function App() {
               } 
             />
             <Route 
-              path="/residents" 
+              path="/official/residents"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
                   <ResidentsManagement />
@@ -148,18 +151,18 @@ function App() {
               } 
             />
             <Route 
-              path="/reports" 
+              path="/official/events"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
-                  <PlaceholderPage title="Reports" />
+                  <EventsManagement />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/events" 
+              path="/official/profile"
               element={
                 <ProtectedRoute requiredRoles={['ROLE_OFFICIAL']}>
-                  <PlaceholderPage title="Events Calendar" />
+                  <OfficialProfile />
                 </ProtectedRoute>
               } 
             />
