@@ -21,7 +21,7 @@ public class PostReport {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "CLOB")
     private String reason;
 
     @ManyToOne(fetch = FetchType.EAGER)

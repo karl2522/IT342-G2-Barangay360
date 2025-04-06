@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import { forumService } from '../../services/ForumService';
 import { useToast } from '../../contexts/ToastContext';
 import { formatDistanceToNow } from 'date-fns';
 import axios from 'axios';
+import { AuthContext } from '../../contexts/AuthContext';
+import TopNavigation from '../../components/layout/TopNavigation';
 
 const ReportManagement = () => {
   const { showToast } = useToast();
@@ -22,6 +24,7 @@ const ReportManagement = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [reportTypeFilter, setReportTypeFilter] = useState('ALL'); // ALL, POST, COMMENT
   const [manualDeletionInfo, setManualDeletionInfo] = useState(null);
+  const { user, handleApiRequest } = useContext(AuthContext);
   
   // Function to get reports data from backend with proper authentication
   const getReports = async () => {
@@ -466,28 +469,7 @@ const ReportManagement = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col ml-64">
         {/* Header */}
-        <header className="bg-white shadow-sm px-4 sm:px-6 lg:px-8 h-16 flex items-center">
-          <h1 className="text-2xl font-semibold text-[#861A2D]">Report Management</h1>
-        </header>
-
-        {/* Header */}
-        <div className="flex justify-between py-6 px-8">
-          <div>
-            <h2 className="text-lg font-medium text-gray-800">Content Reports</h2>
-            <p className="mt-1 text-sm text-gray-600">Review and manage user-reported content from community forum</p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <button
-                onClick={getReports}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
-            >
-              <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
-          </div>
-        </div>
+        <TopNavigation title="Report Management" />
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-auto p-4 sm:p-6">
@@ -628,16 +610,6 @@ const ReportManagement = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center justify-center space-x-2">
-                            <button
-                              onClick={() => handleViewReport(report)}
-                              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-[#861A2D] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
-                            >
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                              </svg>
-                              View
-                            </button>
                             {report.status === 'PENDING' && (
                               <>
                                 <button
@@ -657,6 +629,16 @@ const ReportManagement = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                                   </svg>
                                   Reject
+                                </button>
+                                <button
+                                    onClick={() => handleViewReport(report)}
+                                    className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-[#861A2D] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
+                                >
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                  </svg>
+                                  View
                                 </button>
                               </>
                             )}

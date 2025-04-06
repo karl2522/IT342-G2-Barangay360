@@ -1,9 +1,14 @@
 import PropTypes from 'prop-types';
 import { createContext, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from './ToastContext';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+
   // Initialize state from localStorage
   const getUserFromStorage = () => {
     try {
@@ -72,7 +77,6 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ refreshToken: refreshToken.token }),
-        // Don't throw error on non-2xx responses
         credentials: 'include'
       });
 
@@ -121,15 +125,31 @@ export const AuthProvider = ({ children }) => {
         'Authorization': `Bearer ${token.token}`
       };
 
-      const response = await fetch(url, { ...options, headers });
+      // Ensure credentials are included
+      const requestOptions = {
+        ...options,
+        headers,
+        credentials: 'include'
+      };
+
+      const response = await fetch(url, requestOptions);
 
       // If the response is 401, try to refresh the token and retry the request
       if (response.status === 401) {
+        console.log('Received 401, attempting to refresh token');
         const refreshSuccess = await refreshAccessToken();
         if (refreshSuccess) {
           // Retry the request with the new token
-          headers['Authorization'] = `Bearer ${token.token}`;
-          return await fetch(url, { ...options, headers });
+          const retryHeaders = {
+            ...options.headers,
+            'Authorization': `Bearer ${token.token}`
+          };
+          const retryOptions = {
+            ...options,
+            headers: retryHeaders,
+            credentials: 'include'
+          };
+          return await fetch(url, retryOptions);
         } else {
           logout(); // Force logout if refresh fails
           throw new Error('Authentication failed');
@@ -145,68 +165,75 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      console.log('Attempting login for:', username);
       const response = await fetch('http://localhost:8080/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
+        body: JSON.stringify({ username, password }),
         credentials: 'include',
-        body: JSON.stringify({ username, password })
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Login successful:', data);
-        
-        if (!data.accessToken || !data.refreshToken) {
-          console.error('No tokens received from server');
-          return { success: false, message: 'No tokens received from server' };
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Invalid username or password');
         }
-        
-        // Store the tokens with their metadata
-        localStorage.setItem('token', JSON.stringify(data.accessToken));
-        localStorage.setItem('refreshToken', JSON.stringify(data.refreshToken));
-        
-        // Prepare user data with proper checking
-        const userData = {
-          id: data.id || '',
-          username: data.username || '',
-          email: data.email || '',
-          roles: Array.isArray(data.roles) ? data.roles : [],
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          phoneNumber: data.phoneNumber || '',
-          address: data.address || '',
-          profileImage: data.profileImage || ''
-        };
-        
-        localStorage.setItem('user', JSON.stringify(userData));
-        
-        // Update state
-        setToken(data.accessToken);
-        setRefreshToken(data.refreshToken);
-        setUser(userData);
-        
-        // Return both success status and user data
-        return { success: true, userData };
+        if (response.status === 403 && data.message?.includes("disabled")) {
+          // Clear any existing tokens
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          
+          // Throw error with deactivation reason
+          throw new Error(data.message || 'Your account has been deactivated due to multiple warnings.');
+        }
+        throw new Error(data.message || 'Login failed');
+      }
+
+      if (!data || !data.accessToken || !data.refreshToken) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Store user data and tokens
+      const userData = {
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        roles: data.roles,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        address: data.address,
+        isActive: data.isActive,
+        warnings: data.warnings || 0
+      };
+
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', JSON.stringify(data.accessToken));
+      localStorage.setItem('refreshToken', JSON.stringify(data.refreshToken));
+      
+      setUser(userData);
+      setToken(data.accessToken);
+      setRefreshToken(data.refreshToken);
+
+      // Show success message
+      showToast('Login successful!', 'success');
+
+      // Redirect based on role
+      const roles = data.roles.map(role => role.toUpperCase());
+      if (roles.includes('ROLE_ADMIN')) {
+        navigate('/admin-dashboard');
+      } else if (roles.includes('ROLE_OFFICIAL')) {
+        navigate('/official/dashboard');
       } else {
-        const errorData = await response.json();
-        console.error('Login failed:', errorData);
-        return { 
-          success: false, 
-          message: errorData.message || 'Login failed',
-          status: response.status
-        };
+        navigate('/resident/dashboard');
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { 
-        success: false, 
-        message: 'Network error occurred',
-        error: error.message
-      };
+      showToast(error.message || 'Login failed. Please check your credentials.', 'error');
+      throw error;
     }
   };
 
@@ -215,7 +242,7 @@ export const AuthProvider = ({ children }) => {
       // Transform the role field to match backend expectations
       const formattedData = {
         ...userData,
-        roles: userData.role === 'official' ? ['ROLE_OFFICIAL'] : ['ROLE_USER']
+        roles: userData.role === 'official' ? ['official'] : ['resident']
       };
       
       const response = await fetch('http://localhost:8080/api/auth/signup', {

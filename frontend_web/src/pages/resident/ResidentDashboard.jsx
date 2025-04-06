@@ -2,8 +2,38 @@ import { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import Sidebar from '../../components/layout/Sidebar.jsx';
+import TopNavigation from '../../components/layout/TopNavigation.jsx';
 import { serviceRequestService } from '../../services/ServiceRequestService';
 import { webSocketService } from '../../services/WebSocketService';
+import { forumService } from '../../services/ForumService';
+import { announcementService } from '../../services/AnnouncementService';
+import { formatDistanceToNow } from 'date-fns';
+
+// Helper function to format date and time
+const formatDateTime = (dateTimeStr) => {
+  if (!dateTimeStr) return 'Date not specified';
+  try {
+    const dateObj = new Date(dateTimeStr);
+    if (isNaN(dateObj.getTime())) { // Check if date is valid
+        console.warn("Invalid date string received:", dateTimeStr);
+        return 'Invalid Date';
+    }
+    const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
+    const date = dateObj.toLocaleDateString(undefined, optionsDate);
+    // Check if it's an all-day event (time is midnight)
+    // Note: This check might need adjustment based on how 'allDay' affects the 'start' time from backend
+    const isMidnight = dateObj.getHours() === 0 && dateObj.getMinutes() === 0 && dateObj.getSeconds() === 0;
+    if (isMidnight) {
+        return date; // Don't show time for midnight/all-day events
+    }
+    const optionsTime = { hour: 'numeric', minute: '2-digit', hour12: true };
+    const time = dateObj.toLocaleTimeString(undefined, optionsTime);
+    return `${date} at ${time}`;
+  } catch (error) {
+      console.error("Error formatting date:", dateTimeStr, error);
+      return 'Error formatting date';
+  }
+};
 
 const ResidentDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -12,6 +42,15 @@ const ResidentDashboard = () => {
   const [details, setDetails] = useState('');
   const [myRequests, setMyRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState(null);
+  const [headlines, setHeadlines] = useState([]);
+  const [headlinesLoading, setHeadlinesLoading] = useState(true);
+  const [headlinesError, setHeadlinesError] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [announcementsError, setAnnouncementsError] = useState(null);
 
   useEffect(() => {
     // Connect to WebSocket
@@ -19,6 +58,12 @@ const ResidentDashboard = () => {
 
     // Load user's requests
     loadUserRequests();
+    // Load community events
+    loadEvents();
+    // Load community headlines
+    loadHeadlines();
+    // Load announcements
+    loadAnnouncements();
 
     // Cleanup on unmount
     return () => {
@@ -39,6 +84,59 @@ const ResidentDashboard = () => {
       console.error('Error loading requests:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadEvents = async () => {
+    setEventsLoading(true);
+    setEventsError(null);
+    try {
+      // Adjust the URL if your backend runs on a different port/host
+      const response = await fetch('/api/events');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+       // Sort events, e.g., by start date (newest first)
+       const sortedData = [...data].sort((a, b) => new Date(b.start) - new Date(a.start));
+       setEvents(sortedData);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setEventsError('Failed to load community events. Please try again later.');
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  const loadHeadlines = async () => {
+    setHeadlinesLoading(true);
+    setHeadlinesError(null);
+    try {
+        const pageData = await forumService.getAllPosts(0, 3); // Fetch page 0, size 3
+        setHeadlines(pageData.content || []); // Assuming API returns { content: [...] }
+    } catch (error) {
+        console.error('Error loading headlines:', error);
+        setHeadlinesError('Failed to load community headlines.');
+    } finally {
+        setHeadlinesLoading(false);
+    }
+  };
+
+  const loadAnnouncements = async () => {
+    setAnnouncementsLoading(true);
+    setAnnouncementsError(null);
+    try {
+        const data = await announcementService.getAllAnnouncements();
+        // Sort by createdAt descending and take the latest 3
+        const sortedData = [...data]
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 3);
+        setAnnouncements(sortedData);
+    } catch (error) {
+        console.error('Error loading announcements:', error);
+        setAnnouncementsError('Failed to load announcements.');
+    } finally {
+        setAnnouncementsLoading(false);
     }
   };
 
@@ -66,29 +164,8 @@ const ResidentDashboard = () => {
 
       {/* Main Content */}
       <div className={`flex-1 flex flex-col ml-64`}>
-        {/* Top Navigation */}
-        <nav className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-[#861A2D]">Resident Dashboard</h1>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Welcome,</span>
-                <span className="text-sm font-medium text-[#861A2D]">{user?.username}</span>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Resident</span>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border-2 border-[#861A2D]">
-                <img 
-                  src="/images/default-profile.png" 
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = `https://ui-avatars.com/api/?name=${user?.firstName || 'User'}&background=861A2D&color=fff`;
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </nav>
+        {/* Use TopNavigation Component */}
+        <TopNavigation title="Resident Dashboard" />
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-auto p-6">
@@ -102,30 +179,108 @@ const ResidentDashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
-                <h3 className="text-lg font-medium text-[#861A2D] mb-2">Latest Announcements</h3>
-                <p className="text-gray-600 mb-4">Stay updated with the latest barangay announcements and events.</p>
-                <div className="p-3 bg-gray-50 rounded-md mb-2 border border-gray-200">
-                  <p className="text-sm text-gray-800">COVID-19 vaccination schedule for this week.</p>
-                  <p className="text-xs text-gray-500 mt-1">Posted 2 days ago</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                  <p className="text-sm text-gray-800">Monthly clean-up drive this Saturday.</p>
-                  <p className="text-xs text-gray-500 mt-1">Posted 3 days ago</p>
-                </div>
-                <Link to="/announcements" className="mt-4 inline-block text-sm text-[#861A2D] hover:underline">
-                  View all announcements →
-                </Link>
+                <h3 className="text-lg font-medium text-[#861A2D] mb-2 flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                  </svg>
+                  Latest Announcements
+                </h3>
+                <p className="text-gray-600 mb-4">Stay updated with the latest barangay announcements.</p>
+                {announcementsLoading ? (
+                    <div className="flex flex-col justify-center items-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
+                        <p className="mt-3 text-gray-600 font-medium">Loading announcements...</p>
+                    </div>
+                ) : announcementsError ? (
+                    <div className="text-center py-6 bg-red-50 rounded-md border border-red-200 px-3">
+                        <svg className="mx-auto h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p className="mt-2 text-sm font-medium text-red-800">Error Loading Announcements</p>
+                        <p className="mt-1 text-xs text-red-700">{announcementsError}</p>
+                    </div>
+                ) : announcements.length > 0 ? (
+                    <div className="space-y-3">
+                        {announcements.map((announcement) => (
+                            <Link 
+                                key={announcement.id} 
+                                to={`/announcements/${announcement.id}`} 
+                                className="block p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 relative overflow-hidden"
+                            >
+                                <div className="absolute left-0 top-0 w-1 h-full bg-[#861A2D]"></div>
+                                <h4 className="text-md font-semibold text-gray-800 mb-2 truncate pr-6">{announcement.title}</h4>
+                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{announcement.content}</p>
+                                <div className="flex justify-between items-center mt-2">
+                                    <div className="flex items-center text-xs text-gray-500">
+                                        <svg className="w-4 h-4 mr-1 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        {formatDistanceToNow(new Date(announcement.createdAt), { addSuffix: true })}
+                                    </div>
+                                    <span className="text-xs font-medium text-[#861A2D] inline-flex items-center">
+                                        Read more
+                                        <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                            </Link>
+                        ))}
+                        <Link to="/announcements" className="mt-4 inline-block text-sm font-medium text-[#861A2D] hover:underline flex items-center">
+                            View all announcements
+                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </Link>
+                    </div>
+                ) : (
+                     <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
+                        <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-6 4h6"></path></svg>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No announcements</h3>
+                        <p className="mt-1 text-xs text-gray-500">There are currently no announcements.</p>
+                    </div>
+                )}
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
-                <h3 className="text-lg font-medium text-[#861A2D] mb-2">Quick Services</h3>
-                <p className="text-gray-600 mb-4">Request certificates, permits, and other barangay services.</p>
-                <button
-                  onClick={() => setShowServiceForm(true)}
-                  className="w-full mt-4 px-4 py-2 bg-[#861A2D] text-white rounded-md hover:bg-[#9b3747] transition-colors text-sm"
-                >
-                  Request a service
-                </button>
+                <h3 className="text-lg font-medium text-[#861A2D] mb-2">Community Events Calendar</h3>
+                <p className="text-gray-600 mb-4">Upcoming events in our barangay.</p>
+                {eventsLoading ? (
+                  <div className="flex flex-col justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
+                    <p className="mt-3 text-gray-600 font-medium">Loading events...</p>
+                  </div>
+                ) : eventsError ? (
+                  <div className="text-center py-6 bg-red-50 rounded-md border border-red-200 px-3">
+                     <svg className="mx-auto h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                     <p className="mt-2 text-sm font-medium text-red-800">Error Loading Events</p>
+                     <p className="mt-1 text-xs text-red-700">{eventsError}</p>
+                  </div>
+                ) : events.length > 0 ? (
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                     {/* Map through the fetched events */} 
+                    {events.map((event) => (
+                      <div key={event.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md border border-gray-200 hover:shadow-sm transition-all duration-200">
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">{event.title}</p>
+                          <p className="text-xs text-gray-500">
+                             {formatDateTime(event.start)} 
+                             {event.location && ` • ${event.location}`}
+                          </p>
+                          {event.description && (
+                              <p className="text-xs text-gray-600 mt-1">{event.description}</p>
+                          )}
+                        </div>
+                        {/* Example Status - You might derive this based on date or add a status field to Event model */}
+                         <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full whitespace-nowrap">Upcoming</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
+                    <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No upcoming events</h3>
+                    <p className="mt-1 text-xs text-gray-500">Check back later for community events.</p>
+                  </div>
+                )}
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
@@ -188,7 +343,7 @@ const ResidentDashboard = () => {
                     <h3 className="mt-2 text-sm font-medium text-gray-900">No requests</h3>
                     <p className="mt-1 text-xs text-gray-500">You haven&apos;t submitted any requests yet.</p>
                     <Link 
-                      to="/resident/request" 
+                      to="/resident/services"
                       className="mt-3 inline-block py-2 px-4 border border-[#861A2D] rounded-md text-xs font-medium text-[#861A2D] hover:bg-[#861A2D] hover:text-white transition-colors duration-200"
                     >
                       Make a Request
@@ -196,6 +351,57 @@ const ResidentDashboard = () => {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Community Headlines Section */}
+            <div className="mt-8 bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
+                <h3 className="text-lg font-medium text-[#861A2D] mb-4">Community Headlines</h3>
+                {headlinesLoading ? (
+                    <div className="flex flex-col justify-center items-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
+                        <p className="mt-3 text-gray-600 font-medium">Loading headlines...</p>
+                    </div>
+                ) : headlinesError ? (
+                    <div className="text-center py-6 bg-red-50 rounded-md border border-red-200 px-3">
+                        <svg className="mx-auto h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p className="mt-2 text-sm font-medium text-red-800">Error Loading Headlines</p>
+                        <p className="mt-1 text-xs text-red-700">{headlinesError}</p>
+                    </div>
+                ) : headlines.length > 0 ? (
+                    <div className="space-y-4">
+                        {headlines.map((post) => (
+                            <div key={post.id} className="p-4 bg-gray-50 rounded-md border border-gray-200 hover:shadow-sm transition-all duration-200">
+                                <Link to={`/forum/posts/${post.id}`} className="hover:underline">
+                                    <h4 className="text-md font-semibold text-gray-800 mb-1">{post.title}</h4>
+                                </Link>
+                                <p className="text-xs text-gray-500">
+                                    By {post.author?.username || 'Unknown User'} • {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                                </p>
+                                {/* Optional: Show a snippet of content */}
+                                <p className="text-sm text-gray-600 mt-2 truncate">{post.content}</p>
+                            </div>
+                        ))}
+                         <Link 
+                            to="/resident/community" // Link to the main forum page
+                            className="mt-4 inline-block text-sm text-[#861A2D] hover:underline"
+                        >
+                            View all posts →
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
+                        {/* Placeholder Icon */} 
+                        <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-6 4h6"></path></svg>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No community posts yet</h3>
+                        <p className="mt-1 text-xs text-gray-500">Check back later for discussions and updates.</p>
+                         <Link 
+                            to="/resident/community" // Link to the main forum page
+                            className="mt-3 inline-block py-2 px-4 border border-[#861A2D] rounded-md text-xs font-medium text-[#861A2D] hover:bg-[#861A2D] hover:text-white transition-colors duration-200"
+                        >
+                            View Community Forum
+                        </Link>
+                    </div>
+                )}
             </div>
 
             {/* Service Request Form Modal */}
@@ -252,34 +458,6 @@ const ResidentDashboard = () => {
                 </div>
               </div>
             )}
-
-            <div className="mt-8 bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
-              <h3 className="text-lg font-medium text-[#861A2D] mb-2">Community Events Calendar</h3>
-              <p className="text-gray-600 mb-4">Upcoming events in our barangay.</p>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md border border-gray-200">
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">Barangay Assembly</p>
-                    <p className="text-xs text-gray-500">June 15, 2023 • 9:00 AM • Barangay Hall</p>
-                  </div>
-                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Upcoming</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md border border-gray-200">
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">Medical Mission</p>
-                    <p className="text-xs text-gray-500">June 25, 2023 • 8:00 AM • Covered Court</p>
-                  </div>
-                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Upcoming</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md border border-gray-200">
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">Community Clean-up</p>
-                    <p className="text-xs text-gray-500">July 2, 2023 • 7:00 AM • Meeting point: Barangay Hall</p>
-                  </div>
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Volunteer</span>
-                </div>
-              </div>
-            </div>
           </div>
         </main>
       </div>

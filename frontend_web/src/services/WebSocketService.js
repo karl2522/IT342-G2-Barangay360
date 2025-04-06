@@ -5,6 +5,10 @@ class WebSocketService {
     constructor() {
         this.stompClient = null;
         this.subscribers = new Map();
+        this.connectionAttempts = 0;
+        this.maxConnectionAttempts = 5;
+        this.reconnectDelay = 3000; // 3 seconds
+        this.connected = false;
     }
 
     getToken() {
@@ -21,68 +25,108 @@ class WebSocketService {
 
     connect() {
         const token = this.getToken();
-        if (!token) {
-            console.error('No authentication token found');
-            return;
-        }
-
+        
         // Close existing connections if any
         this.disconnect();
 
         try {
             // Define a factory function that creates a SockJS instance with token
-            const socketFactory = () => new SockJS(`http://localhost:8080/ws?token=${token}`);
+            const socketFactory = () => {
+                const url = `http://localhost:8080/ws${token ? `?token=${token}` : ''}`;
+                console.log('Connecting to WebSocket at:', url);
+                return new SockJS(url);
+            };
             
             // Create STOMP client with the factory function
             this.stompClient = Stomp.over(socketFactory);
             
-            // Set debug to a function instead of null
+            // Disable debug logs in production
             this.stompClient.debug = function() {};
-
-            // Connect with authorization header
-            const headers = {
-                'Authorization': `Bearer ${token}`
+            
+            // Set heartbeat to keep connection alive
+            this.stompClient.heartbeat = {
+                outgoing: 10000, // Send heartbeat every 10 seconds
+                incoming: 10000  // Expect heartbeat every 10 seconds
             };
+
+            // Connect with authorization header if token exists
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
             
             this.stompClient.connect(
                 headers,
                 () => {
                     console.log('Connected to WebSocket');
+                    this.connected = true;
+                    this.connectionAttempts = 0;
                     this.subscribeToServiceRequests();
+                    this.subscribeToForumUpdates();
                 },
                 (error) => {
                     console.error('WebSocket connection error:', error);
-                    // Don't attempt to reconnect automatically on auth errors
-                    // as it could cause an infinite loop
+                    this.connected = false;
+                    
+                    // Attempt to reconnect if not max attempts
+                    if (this.connectionAttempts < this.maxConnectionAttempts) {
+                        this.connectionAttempts++;
+                        console.log(`Reconnecting in ${this.reconnectDelay/1000} seconds... (Attempt ${this.connectionAttempts}/${this.maxConnectionAttempts})`);
+                        setTimeout(() => this.connect(), this.reconnectDelay);
+                    } else {
+                        console.error('Max reconnection attempts reached. Please refresh the page.');
+                    }
                 }
             );
         } catch (error) {
             console.error('Error creating WebSocket connection:', error);
+            this.connected = false;
         }
     }
 
     disconnect() {
         if (this.stompClient) {
-            this.stompClient.disconnect();
+            try {
+                this.stompClient.disconnect();
+                console.log('Disconnected from WebSocket');
+            } catch (error) {
+                console.error('Error disconnecting from WebSocket:', error);
+            }
             this.stompClient = null;
+            this.connected = false;
         }
     }
 
     subscribeToServiceRequests() {
         if (this.stompClient && this.stompClient.connected) {
-            this.stompClient.subscribe('/topic/service-requests', (message) => {
-                const serviceRequest = JSON.parse(message.body);
-                this.notifySubscribers('service-requests', serviceRequest);
-            });
+            try {
+                this.stompClient.subscribe('/topic/service-requests', (message) => {
+                    try {
+                        const serviceRequest = JSON.parse(message.body);
+                        this.notifySubscribers('service-requests', serviceRequest);
+                    } catch (error) {
+                        console.error('Error parsing service request message:', error);
+                    }
+                });
+                console.log('Subscribed to service requests');
+            } catch (error) {
+                console.error('Error subscribing to service requests:', error);
+            }
         }
     }
 
     subscribeToForumUpdates() {
         if (this.stompClient && this.stompClient.connected) {
-            this.stompClient.subscribe('/topic/forum', (message) => {
-                const forumUpdate = JSON.parse(message.body);
-                this.notifySubscribers('forum', forumUpdate);
-            });
+            try {
+                this.stompClient.subscribe('/topic/forum', (message) => {
+                    try {
+                        const forumUpdate = JSON.parse(message.body);
+                        this.notifySubscribers('forum', forumUpdate);
+                    } catch (error) {
+                        console.error('Error parsing forum update message:', error);
+                    }
+                });
+                console.log('Subscribed to forum updates');
+            } catch (error) {
+                console.error('Error subscribing to forum updates:', error);
+            }
         }
     }
 
@@ -101,18 +145,38 @@ class WebSocketService {
 
     notifySubscribers(topic, data) {
         if (this.subscribers.has(topic)) {
-            this.subscribers.get(topic).forEach(callback => callback(data));
+            this.subscribers.get(topic).forEach(callback => {
+                try {
+                    callback(data);
+                } catch (error) {
+                    console.error(`Error in subscriber callback for topic ${topic}:`, error);
+                }
+            });
         }
     }
 
     sendForumUpdate(destination, data) {
         if (this.stompClient && this.stompClient.connected) {
-            this.stompClient.send(
-                destination,
-                { 'Authorization': `Bearer ${this.getToken()}` },
-                JSON.stringify(data)
-            );
+            try {
+                const token = this.getToken();
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                
+                this.stompClient.send(
+                    destination,
+                    headers,
+                    JSON.stringify(data)
+                );
+                console.log(`Sent forum update to ${destination}`);
+            } catch (error) {
+                console.error('Error sending forum update:', error);
+            }
+        } else {
+            console.warn('Cannot send forum update: WebSocket not connected');
         }
+    }
+    
+    isConnected() {
+        return this.connected && this.stompClient && this.stompClient.connected;
     }
 }
 
