@@ -54,7 +54,7 @@ public class ForumServiceImpl implements ForumService {
             // Check if the post_reports table exists
             try {
                 logger.info("Checking database table existence for post_reports");
-                entityManager.createNativeQuery("SELECT 1 FROM post_reports LIMIT 1").getResultList();
+                entityManager.createNativeQuery("SELECT 1 FROM post_reports FETCH FIRST 1 ROWS ONLY").getResultList();
                 logger.info("post_reports table exists in the database");
             } catch (Exception e) {
                 logger.error("post_reports table might not exist in the database: {}", e.getMessage());

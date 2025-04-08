@@ -18,6 +18,12 @@ public class UserDetailsImpl implements UserDetails {
     private Long id;
     private String username;
     private String email;
+    private String firstName;
+    private String lastName;
+    private String phone;
+    private String address;
+    private boolean isActive;
+    private int warnings;
     
     @JsonIgnore
     private String password;
@@ -25,11 +31,19 @@ public class UserDetailsImpl implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(Long id, String username, String email, String password,
+                          String firstName, String lastName, String phone, String address,
+                          boolean isActive, int warnings,
                           Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.address = address;
+        this.isActive = isActive;
+        this.warnings = warnings;
         this.authorities = authorities;
     }
 
@@ -43,6 +57,12 @@ public class UserDetailsImpl implements UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getPhone(),
+                user.getAddress(),
+                user.isActive(),
+                user.getWarnings(),
                 authorities);
     }
 
@@ -69,6 +89,31 @@ public class UserDetailsImpl implements UserDetails {
         return username;
     }
 
+    // Custom getters for additional user info
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public int getWarnings() {
+        return warnings;
+    }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -86,15 +131,13 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return this.isActive; // Use the stored isActive status
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         UserDetailsImpl user = (UserDetailsImpl) o;
         return Objects.equals(id, user.id);
     }

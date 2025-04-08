@@ -4,8 +4,11 @@ import org.backend.model.User;
 import java.util.List;
 
 public interface UserService {
-    User getUserById(Long id);
-    User getUserByUsername(String username);
     List<User> getAllUsers();
+    User getUserById(Long id);
+    User createUser(User user);
     User updateUser(User user);
+    void deleteUser(Long id);
+    List<User> getUsersByRoleId(int roleId);
+    void activateUser(Long userId);
 } 

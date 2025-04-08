@@ -27,6 +27,7 @@ const ProtectedRoute = ({ children, requiredRoles = [] }) => {
     });
     
     if (!hasRequiredRole) {
+      console.log('Access denied - user does not have required role');
       return <Navigate to="/unauthorized" replace />;
     }
   }

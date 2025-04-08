@@ -2,6 +2,9 @@ package org.backend.payload.response;
 
 import java.util.List;
 
+import lombok.Data;
+
+@Data
 public class JwtResponse {
     private TokenDTO accessToken;
     private TokenDTO refreshToken;
@@ -11,13 +14,13 @@ public class JwtResponse {
     private List<String> roles;
     private String firstName;
     private String lastName;
-    private String phoneNumber;
+    private String phone;
     private String address;
+    private boolean isActive;
     private String profileImage;
 
-    public JwtResponse(TokenDTO accessToken, TokenDTO refreshToken, Long id, String username, String email, 
-                      List<String> roles, String firstName, String lastName, String phoneNumber, 
-                      String address, String profileImage) {
+    public JwtResponse(TokenDTO accessToken, TokenDTO refreshToken, Long id, String username, String email, List<String> roles, 
+                       String firstName, String lastName, String phone, String address, boolean isActive, String profileImage) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.id = id;
@@ -26,8 +29,9 @@ public class JwtResponse {
         this.roles = roles;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.phoneNumber = phoneNumber;
+        this.phone = phone;
         this.address = address;
+        this.isActive = isActive;
         this.profileImage = profileImage;
     }
 
@@ -95,12 +99,12 @@ public class JwtResponse {
         this.lastName = lastName;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getAddress() {
@@ -109,6 +113,14 @@ public class JwtResponse {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     public String getProfileImage() {

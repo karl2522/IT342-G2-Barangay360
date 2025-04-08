@@ -3,6 +3,7 @@ import { AuthContext } from '../../contexts/AuthContext.jsx';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import { serviceRequestService } from '../../services/ServiceRequestService';
 import { useToast } from '../../contexts/ToastContext';
+import TopNavigation from '../../components/layout/TopNavigation';
 
 const RequestsManagement = () => {
   const { user } = useContext(AuthContext);
@@ -127,18 +128,7 @@ const RequestsManagement = () => {
       
       <div className="flex-1 flex flex-col ml-64">
         {/* Top Navigation */}
-        <nav className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-[#861A2D]">Service Requests Management</h1>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Welcome,</span>
-                <span className="text-sm font-medium text-[#861A2D]">{user?.firstName} {user?.lastName}</span>
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Official</span>
-              </div>
-            </div>
-          </div>
-        </nav>
+        <TopNavigation title="Service Requests Management" />
         
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">

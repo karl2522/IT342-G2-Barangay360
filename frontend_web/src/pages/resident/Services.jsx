@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import Sidebar from '../../components/layout/Sidebar.jsx';
+import TopNavigation from '../../components/layout/TopNavigation.jsx';
 import { serviceRequestService } from '../../services/ServiceRequestService';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -267,27 +268,14 @@ const Services = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex w-full">
-      {/* Sidebar */}
-      <Sidebar />
+      <Sidebar isOfficial={false} />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col ml-64">
         {/* Top Navigation */}
-        <nav className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-[#861A2D]">Barangay Services</h1>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Welcome,</span>
-                <span className="text-sm font-medium text-[#861A2D]">{user?.username}</span>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Resident</span>
-              </div>
-            </div>
-          </div>
-        </nav>
+        <TopNavigation title="Request Services" />
 
-        {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-auto p-6">
           {/* Header and Action Button */}
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
             <div>
