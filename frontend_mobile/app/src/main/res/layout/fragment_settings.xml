@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="?attr/colorSurface"
     tools:context=".SettingsFragment">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -21,7 +21,6 @@
             android:clipToPadding="false"
             android:paddingBottom="80dp">
 
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -34,7 +33,7 @@
                     android:layout_height="wrap_content"
                     android:padding="16dp"
                     android:text="Settings"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
@@ -46,6 +45,7 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -59,7 +59,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_marginTop="16dp"
                             android:text="Account"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
                         <!-- Profile Settings -->
@@ -78,7 +78,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F"
+                                android:tint="@color/maroon"
                                 tools:ignore="ContentDescription" />
 
                             <TextView
@@ -87,21 +87,21 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Edit Profile"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <ImageView
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#757575" />
+                                android:tint="@color/text_secondary" />
                         </LinearLayout>
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginStart="56dp"
-                            android:background="#E0E0E0" />
+                            android:background="@color/card_stroke" />
 
                         <!-- Change Password -->
                         <LinearLayout
@@ -119,7 +119,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -127,14 +127,14 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Change Password"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <ImageView
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#757575" />
+                                android:tint="@color/text_secondary" />
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -147,6 +147,7 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -160,7 +161,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_marginTop="16dp"
                             android:text="Notifications"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
                         <!-- Announcements Notifications -->
@@ -176,7 +177,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -184,7 +185,7 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Announcements"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <androidx.appcompat.widget.SwitchCompat
@@ -198,7 +199,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginStart="56dp"
-                            android:background="#E0E0E0" />
+                            android:background="@color/card_stroke" />
 
                         <!-- Service Updates Notifications -->
                         <LinearLayout
@@ -213,7 +214,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -221,7 +222,7 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Service Updates"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <androidx.appcompat.widget.SwitchCompat
@@ -235,7 +236,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginStart="56dp"
-                            android:background="#E0E0E0" />
+                            android:background="@color/card_stroke" />
 
                         <!-- Emergency Alerts Notifications -->
                         <LinearLayout
@@ -250,7 +251,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -258,7 +259,7 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Emergency Alerts"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <androidx.appcompat.widget.SwitchCompat
@@ -278,6 +279,7 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -291,7 +293,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_marginTop="16dp"
                             android:text="App Preferences"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
                         <!-- Language -->
@@ -310,7 +312,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -318,7 +320,7 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Language"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <TextView
@@ -326,7 +328,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="English"
-                                android:textColor="#757575"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="14sp" />
 
                             <ImageView
@@ -334,14 +336,14 @@
                                 android:layout_height="24dp"
                                 android:layout_marginStart="8dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#757575" />
+                                android:tint="@color/text_secondary" />
                         </LinearLayout>
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginStart="56dp"
-                            android:background="#E0E0E0" />
+                            android:background="@color/card_stroke" />
 
                         <!-- Dark Mode -->
                         <LinearLayout
@@ -356,7 +358,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -364,7 +366,7 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Dark Mode"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <androidx.appcompat.widget.SwitchCompat
@@ -384,6 +386,7 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -397,7 +400,7 @@
                             android:layout_marginStart="16dp"
                             android:layout_marginTop="16dp"
                             android:text="Support &amp; About"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
                         <!-- Help & Support -->
@@ -416,7 +419,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -424,21 +427,21 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Help &amp; Support"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <ImageView
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#757575" />
+                                android:tint="@color/text_secondary" />
                         </LinearLayout>
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginStart="56dp"
-                            android:background="#E0E0E0" />
+                            android:background="@color/card_stroke" />
 
                         <!-- Privacy Policy -->
                         <LinearLayout
@@ -456,7 +459,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -464,21 +467,21 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="Privacy Policy"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <ImageView
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#757575" />
+                                android:tint="@color/text_secondary" />
                         </LinearLayout>
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginStart="56dp"
-                            android:background="#E0E0E0" />
+                            android:background="@color/card_stroke" />
 
                         <!-- About -->
                         <LinearLayout
@@ -496,7 +499,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#D32F2F" />
+                                android:tint="@color/maroon" />
 
                             <TextView
                                 android:layout_width="0dp"
@@ -504,7 +507,7 @@
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
                                 android:text="About Barangay360"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="16sp" />
 
                             <TextView
@@ -512,7 +515,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="v1.0.0"
-                                android:textColor="#757575"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="14sp" />
 
                             <ImageView
@@ -520,7 +523,7 @@
                                 android:layout_height="24dp"
                                 android:layout_marginStart="8dp"
                                 android:src="@drawable/barangay360_logo"
-                                android:tint="#757575" />
+                                android:tint="@color/text_secondary" />
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -532,6 +535,7 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
                     app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -549,14 +553,14 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/barangay360_logo"
-                            android:tint="#D32F2F" />
+                            android:tint="@color/maroon" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="16dp"
                             android:text="Logout"
-                            android:textColor="#D32F2F"
+                            android:textColor="@color/maroon"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>

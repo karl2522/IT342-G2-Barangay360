@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFAFA"
+    android:background="?attr/colorSurface"
     tools:context=".AboutFragment">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -21,7 +21,7 @@
             android:clipToPadding="false"
             android:paddingBottom="80dp">
 
-        <LinearLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -45,8 +45,8 @@
                         android:layout_centerVertical="true"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="12dp"
-                        android:src="@drawable/chevron_right_outline" />
-
+                        android:src="@drawable/chevron_right_outline"
+                        app:tint="@color/icon_color" />
                     <TextView
                         android:id="@+id/profile_title"
                         android:layout_width="wrap_content"
@@ -55,18 +55,9 @@
                         android:layout_centerVertical="true"
                         android:fontFamily="sans-serif"
                         android:text="Profile"
-                        android:textColor="#000000"
+                        android:textColor="@color/text_primary"
                         android:textSize="20sp" />
 
-                    <ImageView
-                        android:id="@+id/profile_btn_menu"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="12dp"
-                        android:src="@drawable/three_dots" />
                 </RelativeLayout>
 
                 <!-- Header with basic info and ROLE indicator -->
@@ -113,7 +104,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:text="Juan Dela Cruz"
-                        android:textColor="#212121"
+                        android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
 
@@ -123,7 +114,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Resident ID: BRG-2023-0123"
-                        android:textColor="#757575"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <Button
@@ -143,7 +134,7 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
                     android:text="Basic Information"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -151,6 +142,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="8dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -170,7 +162,7 @@
                                 android:layout_width="100dp"
                                 android:layout_height="wrap_content"
                                 android:text="Phone:"
-                                android:textColor="#757575"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="14sp" />
 
                             <TextView
@@ -178,7 +170,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="0912-345-6789"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="14sp" />
                         </LinearLayout>
 
@@ -193,7 +185,7 @@
                                 android:layout_width="100dp"
                                 android:layout_height="wrap_content"
                                 android:text="Email:"
-                                android:textColor="#757575"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="14sp" />
 
                             <TextView
@@ -201,7 +193,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="juan.delacruz@example.com"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="14sp" />
                         </LinearLayout>
 
@@ -215,7 +207,7 @@
                                 android:layout_width="100dp"
                                 android:layout_height="wrap_content"
                                 android:text="Address:"
-                                android:textColor="#757575"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="14sp" />
 
                             <TextView
@@ -223,7 +215,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="123 Main Street, Barangay 360"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="14sp" />
                         </LinearLayout>
                     </LinearLayout>
@@ -236,7 +228,7 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
                     android:text="Document Requests"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -244,6 +236,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="8dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -279,7 +272,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Pending"
-                                    android:textColor="#757575"
+                                    android:textColor="@color/text_secondary"
                                     android:textSize="14sp" />
                             </LinearLayout>
 
@@ -303,7 +296,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Approved"
-                                    android:textColor="#757575"
+                                    android:textColor="@color/text_secondary"
                                     android:textSize="14sp" />
                             </LinearLayout>
 
@@ -327,7 +320,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Rejected"
-                                    android:textColor="#757575"
+                                    android:textColor="@color/text_secondary"
                                     android:textSize="14sp" />
                             </LinearLayout>
                         </LinearLayout>
@@ -350,7 +343,7 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
                     android:text="Resident QR Code"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -358,6 +351,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="8dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -379,7 +373,7 @@
                             android:layout_marginTop="8dp"
                             android:text="Show this QR code for identification at the Barangay Hall"
                             android:textAlignment="center"
-                            android:textColor="#757575"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
                         <Button
@@ -401,7 +395,7 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
                     android:text="Account Settings"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -410,6 +404,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="8dp"
+                    app:cardBackgroundColor="@color/surface_variant"
                     app:cardElevation="2dp">
 
                     <LinearLayout
@@ -434,12 +429,12 @@
                                 android:paddingStart="16dp"
                                 android:text="Manage Users"
                                 android:textAllCaps="false"
-                                android:textColor="#212121" />
+                                android:textColor="@color/text_primary" />
 
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="1dp"
-                                android:background="#E0E0E0" />
+                                android:background="@color/card_stroke" />
 
                             <Button
                                 android:id="@+id/btn_system_settings"
@@ -450,12 +445,12 @@
                                 android:paddingStart="16dp"
                                 android:text="System Settings"
                                 android:textAllCaps="false"
-                                android:textColor="#212121" />
+                                android:textColor="@color/text_primary" />
 
                             <View
                                 android:layout_width="match_parent"
                                 android:layout_height="1dp"
-                                android:background="#E0E0E0" />
+                                android:background="@color/card_stroke" />
                         </LinearLayout>
 
                         <Button
@@ -467,12 +462,12 @@
                             android:paddingStart="16dp"
                             android:text="Change Password"
                             android:textAllCaps="false"
-                            android:textColor="#212121" />
+                            android:textColor="@color/text_primary" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="#E0E0E0" />
+                            android:background="@color/card_stroke" />
 
                         <Button
                             android:id="@+id/btn_help"
@@ -483,12 +478,12 @@
                             android:paddingStart="16dp"
                             android:text="Help &amp; Support"
                             android:textAllCaps="false"
-                            android:textColor="#212121" />
+                            android:textColor="@color/text_primary" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="#E0E0E0" />
+                            android:background="@color/card_stroke" />
 
                         <Button
                             android:id="@+id/btn_logout"

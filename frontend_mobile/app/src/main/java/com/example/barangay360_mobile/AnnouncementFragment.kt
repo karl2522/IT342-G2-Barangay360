@@ -1,5 +1,6 @@
 package com.example.barangay360_mobile
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,18 +12,17 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class AnnouncementFragment : Fragment() {
 
@@ -51,6 +51,7 @@ class AnnouncementFragment : Fragment() {
 
     // Current filter category
     private var currentCategory = CATEGORY_ALL
+    private var announcements = listOf<Announcement>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -77,7 +78,7 @@ class AnnouncementFragment : Fragment() {
         }
 
         // Setup chip group listener
-        setupFilterChips()
+        setupFilterChips(view)
 
         // Setup swipe refresh
         swipeRefreshLayout.setColorSchemeResources(R.color.maroon)
@@ -107,12 +108,12 @@ class AnnouncementFragment : Fragment() {
         }
     }
 
-    private fun setupFilterChips() {
-        val chipAll = view?.findViewById<Chip>(R.id.chip_all)
-        val chipEmergency = view?.findViewById<Chip>(R.id.chip_emergency)
-        val chipEvents = view?.findViewById<Chip>(R.id.chip_events)
-        val chipServices = view?.findViewById<Chip>(R.id.chip_services)
-        val chipMaintenance = view?.findViewById<Chip>(R.id.chip_maintenance)
+    private fun setupFilterChips(view: View) {
+        val chipAll = view.findViewById<Chip>(R.id.chip_all)
+        val chipEmergency = view.findViewById<Chip>(R.id.chip_emergency)
+        val chipEvents = view.findViewById<Chip>(R.id.chip_events)
+        val chipServices = view.findViewById<Chip>(R.id.chip_services)
+        val chipMaintenance = view.findViewById<Chip>(R.id.chip_maintenance)
 
         chipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
             if (checkedIds.isEmpty()) {
@@ -134,8 +135,9 @@ class AnnouncementFragment : Fragment() {
     }
 
     private fun checkUserRole() {
-        // TODO: Check user role from your authentication system
-        val isAdmin = false // Change this based on your authentication logic
+        // Check user role from shared preferences or your auth system
+        val sharedPreferences = requireActivity().getSharedPreferences("UserPrefs", 0)
+        val isAdmin = sharedPreferences.getBoolean("isAdmin", false)
 
         if (isAdmin) {
             fabAddAnnouncement.visibility = View.VISIBLE
@@ -145,7 +147,11 @@ class AnnouncementFragment : Fragment() {
     }
 
     private fun showAddAnnouncementDialog() {
-        // TODO: Implement dialog for adding new announcements
+        // Navigate to announcement creation screen
+        // findNavController().navigate(R.id.action_announcementFragment_to_createAnnouncementFragment)
+
+        // For now, just show a toast
+        Toast.makeText(context, "Create announcement feature coming soon", Toast.LENGTH_SHORT).show()
     }
 
     private fun loadAnnouncements() {
@@ -157,7 +163,7 @@ class AnnouncementFragment : Fragment() {
         // Simulate network delay
         view?.postDelayed({
             // Get announcements from your data source
-            val announcements = getSampleAnnouncements()
+            announcements = getSampleAnnouncements()
 
             if (announcements.isEmpty()) {
                 // Show empty state
@@ -189,12 +195,10 @@ class AnnouncementFragment : Fragment() {
     }
 
     private fun filterAnnouncements() {
-        val allAnnouncements = getSampleAnnouncements()
-
         val filteredAnnouncements = if (currentCategory == CATEGORY_ALL) {
-            allAnnouncements
+            announcements
         } else {
-            allAnnouncements.filter { it.category == currentCategory }
+            announcements.filter { it.category == currentCategory }
         }
 
         if (filteredAnnouncements.isEmpty()) {
@@ -205,7 +209,7 @@ class AnnouncementFragment : Fragment() {
     }
 
     private fun getSampleAnnouncements(): List<Announcement> {
-        // TODO: Replace with actual data from your API
+        // In a real app, you would fetch this from an API
         return listOf(
             Announcement(
                 "1",
@@ -298,7 +302,8 @@ class AnnouncementFragment : Fragment() {
                 // Handle image
                 if (announcement.imageUrl != null) {
                     imageView.visibility = View.VISIBLE
-                    // TODO: Load image using your preferred image loading library (Glide, Picasso, etc.)
+                    // In a real app, you would use Glide or Picasso to load the image
+                    // Glide.with(itemView.context).load(announcement.imageUrl).into(imageView)
                 } else {
                     imageView.visibility = View.GONE
                 }
@@ -321,10 +326,36 @@ class AnnouncementFragment : Fragment() {
     }
 
     private fun shareAnnouncement(announcement: Announcement) {
-        // TODO: Implement sharing functionality
+        // Create a share intent
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "text/plain"
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "[Barangay360] ${announcement.title}")
+
+        // Prepare the content to share
+        val shareContent = """
+            ${announcement.title}
+            Date: ${announcement.date}
+            Category: ${announcement.category}
+            
+            ${announcement.content}
+            
+            - Shared from Barangay360 App
+        """.trimIndent()
+
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareContent)
+        startActivity(Intent.createChooser(shareIntent, "Share Announcement"))
     }
 
     private fun viewAnnouncementDetails(announcement: Announcement) {
-        // TODO: Navigate to announcement details screen
+        // In a real app, you would use Navigation Component to navigate to details
+        // val action = AnnouncementFragmentDirections.actionAnnouncementFragmentToAnnouncementDetailFragment(announcement.id)
+        // findNavController().navigate(action)
+
+        // For now, we'll show a Toast with the announcement details
+        Toast.makeText(
+            context,
+            "Viewing announcement: ${announcement.title}",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
