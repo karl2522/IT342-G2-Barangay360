@@ -56,12 +56,6 @@ class ProfileFragment : Fragment() {
             requireActivity().onBackPressed()
         }
 
-        // Setup menu button
-        view.findViewById<ImageView>(R.id.profile_btn_menu)?.setOnClickListener {
-            // Show options menu
-            Toast.makeText(context, "Menu options", Toast.LENGTH_SHORT).show()
-            // You can implement a popup menu here
-        }
 
         // Initialize role-related views
         profileRole = view.findViewById(R.id.profile_role)

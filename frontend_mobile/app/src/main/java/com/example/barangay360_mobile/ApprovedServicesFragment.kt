@@ -11,17 +11,10 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
 
 class ApprovedServicesFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
-    private lateinit var tabLayout: TabLayout
-    lateinit var viewPager: ViewPager2
-    private lateinit var titleTextView: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,18 +41,14 @@ class ApprovedServicesFragment : Fragment() {
             refreshData()
         }
 
-        // Set up navigation
-        view.findViewById<View>(R.id.btn_back).setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
-        }
+        // Set up header title for Pending Services
+        val titleTextView = view.findViewById<TextView>(R.id.tv_title)
+        titleTextView.text = "Approved Services"
 
-        // In each of the status fragments:
-        view.findViewById<View>(R.id.tab_request_services).setOnClickListener {
-            // Direct navigation to RequestServicesFragment
-            requireActivity().supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, ServicesFragment())
-                .addToBackStack(null)
-                .commit()
+        // Set up back button click listener
+        val backButton = view.findViewById<ImageView>(R.id.btn_back)
+        backButton.setOnClickListener {
+            requireActivity().onBackPressed()
         }
 
         // Load data

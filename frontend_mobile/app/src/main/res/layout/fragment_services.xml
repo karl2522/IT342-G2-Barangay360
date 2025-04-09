@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="?attr/colorSurface">
 
     <!-- Header Section -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/header_layout"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFFFFF"
+        android:background="?attr/colorSurface"
         android:elevation="4dp"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -26,15 +26,16 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="#D32F2F" />
+            app:tint="@color/icon_color"/>
+
 
         <!-- Title -->
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Barangay360 Services"
-            android:textColor="#212121"
+            android:text="Services"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -42,30 +43,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Menu Button -->
-        <ImageView
-            android:id="@+id/btn_menu"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
-            android:padding="12dp"
-            android:src="@drawable/three_dots"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Tab Layout - FIXED -->
+    <!-- Tab Layout -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:background="?attr/colorSurface"
         app:layout_constraintTop_toBottomOf="@id/header_layout"
-        app:tabIndicatorColor="#D32F2F"
+        app:tabIndicatorColor="@color/maroon"
         app:tabIndicatorHeight="3dp"
-        app:tabSelectedTextColor="#D32F2F"
-        app:tabTextColor="#9E9E9E">
+        app:tabSelectedTextColor="@color/maroon"
+        app:tabTextColor="@color/text_secondary">
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"

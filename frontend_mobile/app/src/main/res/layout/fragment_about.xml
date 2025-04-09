@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFAFA"
+    android:background="?attr/colorSurface"
     tools:context=".AboutFragment">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -21,7 +21,7 @@
             android:clipToPadding="false"
             android:paddingBottom="80dp">
 
-        <LinearLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -37,7 +37,7 @@
                     android:layout_marginBottom="20dp"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="3dp"
-                    app:cardBackgroundColor="#FFFFFF">
+                    app:cardBackgroundColor="@color/surface_variant">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -56,6 +56,14 @@
                                 android:alpha="0.4"
                                 android:scaleType="centerCrop"
                                 android:src="@drawable/barangay_people_crowd" />
+
+                            <!-- Dark mode overlay for better contrast -->
+                            <View
+                                android:id="@+id/dark_mode_gradient_overlay"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@color/dark_overlay"
+                                android:visibility="gone"/>
                         </FrameLayout>
 
                         <!-- Logo and text overlapping the gradient -->
@@ -73,7 +81,7 @@
                                 app:cardCornerRadius="55dp"
                                 app:cardElevation="6dp"
                                 app:strokeWidth="2dp"
-                                app:strokeColor="#FFFFFF">
+                                app:strokeColor="@color/maroon">
 
                                 <ImageView
                                     android:layout_width="match_parent"
@@ -88,7 +96,7 @@
                                 android:layout_marginTop="16dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="Barangay360"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="28sp"
                                 android:textStyle="bold" />
 
@@ -99,7 +107,7 @@
                                 android:fontFamily="sans-serif"
                                 android:letterSpacing="0.03"
                                 android:text="🏘️ Empowering communities through digital connection"
-                                android:textColor="#757575"
+                                android:textColor="@color/text_secondary"
                                 android:textSize="16sp" />
                         </LinearLayout>
                     </LinearLayout>
@@ -113,7 +121,7 @@
                     android:layout_marginBottom="10dp"
                     android:fontFamily="sans-serif-medium"
                     android:text="🌟 About Barangay360"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -124,7 +132,7 @@
                     app:cardCornerRadius="12dp"
                     app:cardElevation="2dp"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#E0E0E0">
+                    app:strokeColor="@color/card_stroke">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -138,7 +146,7 @@
                             android:lineSpacingExtra="6dp"
                             android:fontFamily="sans-serif"
                             android:text="Barangay360 is a cutting-edge, community-centric platform designed to revolutionize communication and engagement between barangay officials and residents. Our mission is to create stronger, more connected communities through innovative digital solutions."
-                            android:textColor="#333333"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -151,7 +159,7 @@
                     android:layout_marginBottom="10dp"
                     android:fontFamily="sans-serif-medium"
                     android:text="🚀 Key Features"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -162,7 +170,7 @@
                     app:cardCornerRadius="12dp"
                     app:cardElevation="2dp"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#E0E0E0">
+                    app:strokeColor="@color/card_stroke">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -182,9 +190,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -205,7 +213,7 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="Admin &amp; Resident Dashboard"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
@@ -217,9 +225,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -240,7 +248,7 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="Community Announcements"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
@@ -252,9 +260,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -275,14 +283,13 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="Request Approval System"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
                             </com.google.android.material.card.MaterialCardView>
                         </LinearLayout>
 
-                        <!-- Similar enhanced styling for remaining feature rows -->
                         <!-- Features Grid - Row 2 with enhanced styling -->
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -296,9 +303,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -319,7 +326,7 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="Data Analytics"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
@@ -331,9 +338,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -354,7 +361,7 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="Resident Management"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
@@ -366,9 +373,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -389,7 +396,7 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="Event Management"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
@@ -409,9 +416,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -432,7 +439,7 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="Push Notifications"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
@@ -444,9 +451,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -467,7 +474,7 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="QR Code Scanning"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
@@ -479,9 +486,9 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_margin="4dp"
-                                app:cardBackgroundColor="#F5F5F5"
+                                app:cardBackgroundColor="@color/surface_variant"
                                 app:cardCornerRadius="8dp"
-                                app:cardElevation="0dp">
+                                app:cardElevation="1dp">
 
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -502,7 +509,7 @@
                                         android:layout_marginTop="8dp"
                                         android:gravity="center"
                                         android:text="Document Requests"
-                                        android:textColor="#212121"
+                                        android:textColor="@color/text_primary"
                                         android:textSize="12sp"
                                         android:fontFamily="sans-serif-medium" />
                                 </LinearLayout>
@@ -519,7 +526,7 @@
                     android:layout_marginBottom="10dp"
                     android:fontFamily="sans-serif-medium"
                     android:text="🛠️ Technical Details"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -530,7 +537,7 @@
                     app:cardCornerRadius="12dp"
                     app:cardElevation="2dp"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#E0E0E0">
+                    app:strokeColor="@color/card_stroke">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -551,7 +558,7 @@
                                 android:layout_height="wrap_content"
                                 android:minWidth="120dp"
                                 android:text="Frontend:"
-                                android:textColor="#616161"
+                                android:textColor="@color/text_secondary"
                                 android:fontFamily="sans-serif-medium"
                                 android:textSize="15sp" />
 
@@ -559,7 +566,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="React with Next.js"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:fontFamily="sans-serif"
                                 android:textSize="15sp" />
                         </LinearLayout>
@@ -567,7 +574,7 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="#F0F0F0" />
+                            android:background="@color/card_stroke" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -581,7 +588,7 @@
                                 android:layout_height="wrap_content"
                                 android:minWidth="120dp"
                                 android:text="Backend:"
-                                android:textColor="#616161"
+                                android:textColor="@color/text_secondary"
                                 android:fontFamily="sans-serif-medium"
                                 android:textSize="15sp" />
 
@@ -589,7 +596,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Node.js with Express"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:fontFamily="sans-serif"
                                 android:textSize="15sp" />
                         </LinearLayout>
@@ -597,7 +604,7 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="#F0F0F0" />
+                            android:background="@color/card_stroke" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -611,7 +618,7 @@
                                 android:layout_height="wrap_content"
                                 android:minWidth="120dp"
                                 android:text="Authentication:"
-                                android:textColor="#616161"
+                                android:textColor="@color/text_secondary"
                                 android:fontFamily="sans-serif-medium"
                                 android:textSize="15sp" />
 
@@ -619,7 +626,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="JWT"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:fontFamily="sans-serif"
                                 android:textSize="15sp" />
                         </LinearLayout>
@@ -627,7 +634,7 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="#F0F0F0" />
+                            android:background="@color/card_stroke" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -641,7 +648,7 @@
                                 android:layout_height="wrap_content"
                                 android:minWidth="120dp"
                                 android:text="Mobile App:"
-                                android:textColor="#616161"
+                                android:textColor="@color/text_secondary"
                                 android:fontFamily="sans-serif-medium"
                                 android:textSize="15sp" />
 
@@ -649,7 +656,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Kotlin+Java"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:fontFamily="sans-serif"
                                 android:textSize="15sp" />
                         </LinearLayout>
@@ -664,7 +671,7 @@
                     android:layout_marginBottom="10dp"
                     android:fontFamily="sans-serif-medium"
                     android:text="🔗 Important Links"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -675,7 +682,7 @@
                     app:cardCornerRadius="12dp"
                     app:cardElevation="2dp"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#E0E0E0">
+                    app:strokeColor="@color/card_stroke">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -738,7 +745,7 @@
                     android:layout_marginBottom="10dp"
                     android:fontFamily="sans-serif-medium"
                     android:text="👨‍💻 Meet the Team"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -749,7 +756,7 @@
                     app:cardCornerRadius="12dp"
                     app:cardElevation="2dp"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#E0E0E0">
+                    app:strokeColor="@color/card_stroke">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -769,7 +776,7 @@
                                 android:layout_width="90dp"
                                 android:layout_height="90dp"
                                 android:src="@drawable/barangay360_logo"
-                                app:civ_border_color="#8E0000"
+                                app:civ_border_color="@color/maroon"
                                 app:civ_border_width="2dp" />
 
                             <TextView
@@ -777,7 +784,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="12dp"
                                 android:text="James"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="17sp"
                                 android:fontFamily="sans-serif-medium" />
 
@@ -809,7 +816,7 @@
                                 android:layout_width="90dp"
                                 android:layout_height="90dp"
                                 android:src="@drawable/barangay360_logo"
-                                app:civ_border_color="#8E0000"
+                                app:civ_border_color="@color/maroon"
                                 app:civ_border_width="2dp" />
 
                             <TextView
@@ -817,7 +824,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="12dp"
                                 android:text="FRED"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="17sp"
                                 android:fontFamily="sans-serif-medium" />
 
@@ -849,7 +856,7 @@
                                 android:layout_width="90dp"
                                 android:layout_height="90dp"
                                 android:src="@drawable/barangay360_logo"
-                                app:civ_border_color="#8E0000"
+                                app:civ_border_color="@color/maroon"
                                 app:civ_border_width="2dp" />
 
                             <TextView
@@ -857,7 +864,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="12dp"
                                 android:text="CARL"
-                                android:textColor="#212121"
+                                android:textColor="@color/text_primary"
                                 android:textSize="17sp"
                                 android:fontFamily="sans-serif-medium" />
 
@@ -886,7 +893,7 @@
                     android:layout_marginTop="8dp"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="#F5F5F5">
+                    app:cardBackgroundColor="@color/surface_variant">
 
                     <TextView
                         android:layout_width="match_parent"
@@ -894,7 +901,7 @@
                         android:padding="16dp"
                         android:gravity="center"
                         android:text="Made with ❤️ by the Barangay360 Team"
-                        android:textColor="#757575"
+                        android:textColor="@color/text_secondary"
                         android:textSize="15sp"
                         android:fontFamily="sans-serif-medium" />
                 </androidx.cardview.widget.CardView>
