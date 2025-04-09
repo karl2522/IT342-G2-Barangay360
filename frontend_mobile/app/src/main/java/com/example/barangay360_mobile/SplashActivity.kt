@@ -28,7 +28,7 @@ class SplashActivity : AppCompatActivity() {
         findViewById<ImageView>(R.id.logo_text).startAnimation(fadeInText)
 
         Handler(Looper.getMainLooper()).postDelayed({
-            val mainIntent = Intent(this@SplashActivity, HomeActivity::class.java)
+            val mainIntent = Intent(this@SplashActivity, SignInActivity::class.java)
             startActivity(mainIntent)
             finish()
         }, SPLASH_DISPLAY_LENGTH)

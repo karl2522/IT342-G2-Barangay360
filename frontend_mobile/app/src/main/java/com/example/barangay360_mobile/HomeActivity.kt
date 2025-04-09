@@ -13,6 +13,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import com.example.barangay360_mobile.util.SessionManager
 import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -148,8 +149,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     replaceFragment(AboutFragment())
                 }
                 R.id.nav_logout -> {
-                    // Handle logout action
-                    Toast.makeText(this, "Logout!", Toast.LENGTH_SHORT).show()
+                    // Replace this with the actual logout method call
+                    Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show()
+                    logout() // Call the logout method
                 }
             }
             // Close the navigation drawer after the delay
@@ -175,5 +177,18 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             super.onBackPressed()
         }
+    }
+
+    // Add this method to your existing HomeActivity
+// Call this when user wants to logout
+    private fun logout() {
+        val sessionManager = SessionManager(this)
+        sessionManager.clearSession()
+
+        // Navigate back to login screen
+        val intent = Intent(this, SignInActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }
