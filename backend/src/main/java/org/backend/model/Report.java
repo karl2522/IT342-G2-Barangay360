@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"post", "reporter"})
-@Table(name = "post_reports")
-public class PostReport {
+@ToString(exclude = {"post", "comment", "reporter"})
+@Table(name = "reports")
+public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,13 +28,18 @@ public class PostReport {
     private String rejectionReason;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "post_id", nullable = false)
-    @JsonIgnoreProperties({"comments", "likes"})
+    @JoinColumn(name = "post_id")
+    @JsonIgnoreProperties({"comments", "likes", "reports"})
     private ForumPost post;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "comment_id")
+    @JsonIgnoreProperties({"likes", "post", "reports", "hibernateLazyInitializer", "handler"})
+    private ForumComment comment;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties({"password", "roles", "email"})
+    @JsonIgnoreProperties({"password", "roles", "email", "hibernateLazyInitializer", "handler"})
     private User reporter;
 
     @Column(nullable = false)
@@ -48,9 +53,28 @@ public class PostReport {
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ReportType type;
+
     public enum ReportStatus {
         PENDING,
         APPROVED,
         REJECTED
     }
-} 
+
+    public enum ReportType {
+        POST,
+        COMMENT
+    }
+
+    // Helper method to check if this is a post report
+    public boolean isPostReport() {
+        return type == ReportType.POST && post != null;
+    }
+
+    // Helper method to check if this is a comment report
+    public boolean isCommentReport() {
+        return type == ReportType.COMMENT && comment != null;
+    }
+}
