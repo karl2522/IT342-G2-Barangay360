@@ -41,10 +41,10 @@ public class WebSecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        
+
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
-        
+
         return authProvider;
     }
 
@@ -76,10 +76,10 @@ public class WebSecurityConfig {
         configuration.setExposedHeaders(Arrays.asList("x-auth-token", "authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        
+
         return source;
     }
 
@@ -98,12 +98,21 @@ public class WebSecurityConfig {
                     .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/appeals").permitAll()
                     // Allow unauthenticated access to GET /api/events
                     .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/events").permitAll()
+                    // Allow access to GET /api/comments/{id} for report viewing
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/comments/**").permitAll()
+                    // Allow access to DELETE endpoints for report management
+                    .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/forum/posts/**").permitAll()
+                    .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/forum/comments/**").permitAll()
+                    // Allow access to report management endpoints
+                    .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/reports/post/delete/**").permitAll()
+                    .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/reports/comment/delete/**").permitAll()
                     // H2 Console
                     .requestMatchers("/h2-console/**").permitAll()
                     // Swagger UI and API docs endpoints
                     .requestMatchers("/swagger-ui.html").permitAll()
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
+                    .requestMatchers("/api-docs/**").permitAll()
                     .anyRequest().authenticated()
             )
             .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

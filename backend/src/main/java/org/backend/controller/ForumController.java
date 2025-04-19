@@ -39,7 +39,7 @@ public class ForumController {
             @RequestParam("content") String content,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         User author = userService.getUserById(userDetails.getId());
         ForumPost post = forumService.createPost(title, content, author, image);
         return ResponseEntity.status(HttpStatus.CREATED).body(post);
@@ -49,7 +49,7 @@ public class ForumController {
     public ResponseEntity<Page<ForumPost>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size);
         Page<ForumPost> posts = forumService.getAllPosts(pageable);
         return ResponseEntity.ok(posts);
@@ -66,7 +66,7 @@ public class ForumController {
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        
+
         User user = userService.getUserById(userId);
         Pageable pageable = PageRequest.of(page, size);
         Page<ForumPost> posts = forumService.getPostsByUser(user, pageable);
@@ -80,7 +80,7 @@ public class ForumController {
             @RequestParam("content") String content,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         User currentUser = userService.getUserById(userDetails.getId());
         ForumPost post = forumService.updatePost(postId, title, content, image, currentUser);
         return ResponseEntity.ok(post);
@@ -90,10 +90,14 @@ public class ForumController {
     public ResponseEntity<Map<String, String>> deletePost(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
-        User currentUser = userService.getUserById(userDetails.getId());
+
+        User currentUser = null;
+        if (userDetails != null) {
+            currentUser = userService.getUserById(userDetails.getId());
+        }
+
         forumService.deletePost(postId, currentUser);
-        
+
         Map<String, String> response = new HashMap<>();
         response.put("message", "Post deleted successfully");
         return ResponseEntity.ok(response);
@@ -103,7 +107,7 @@ public class ForumController {
     public ResponseEntity<ForumPost> toggleLikePost(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         User user = userService.getUserById(userDetails.getId());
         ForumPost post = forumService.toggleLikePost(postId, user);
         return ResponseEntity.ok(post);
@@ -115,7 +119,7 @@ public class ForumController {
             @PathVariable Long postId,
             @RequestParam("content") String content,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         User author = userService.getUserById(userDetails.getId());
         ForumComment comment = forumService.createComment(postId, content, author);
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
@@ -132,7 +136,7 @@ public class ForumController {
             @PathVariable Long commentId,
             @RequestParam("content") String content,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         User currentUser = userService.getUserById(userDetails.getId());
         ForumComment comment = forumService.updateComment(commentId, content, currentUser);
         return ResponseEntity.ok(comment);
@@ -142,10 +146,14 @@ public class ForumController {
     public ResponseEntity<Map<String, String>> deleteComment(
             @PathVariable Long commentId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
-        User currentUser = userService.getUserById(userDetails.getId());
+
+        User currentUser = null;
+        if (userDetails != null) {
+            currentUser = userService.getUserById(userDetails.getId());
+        }
+
         forumService.deleteComment(commentId, currentUser);
-        
+
         Map<String, String> response = new HashMap<>();
         response.put("message", "Comment deleted successfully");
         return ResponseEntity.ok(response);
@@ -155,19 +163,19 @@ public class ForumController {
     public ResponseEntity<ForumComment> toggleLikeComment(
             @PathVariable Long commentId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         User user = userService.getUserById(userDetails.getId());
         ForumComment comment = forumService.toggleLikeComment(commentId, user);
         return ResponseEntity.ok(comment);
     }
-    
+
     // Add a simple redirection for backward compatibility
     @PostMapping("/posts/{postId}/report")
     public ResponseEntity<Map<String, String>> reportPostRedirect(
             @PathVariable Long postId,
             @RequestParam("reason") String reason,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         logger.info("Redirecting report request to the new endpoint");
         Map<String, String> response = new HashMap<>();
         response.put("message", "Please use the new endpoint: /api/reports/post/" + postId);
