@@ -6,7 +6,9 @@ import org.backend.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface CommentReportRepository extends JpaRepository<CommentReport, Long> {
@@ -15,4 +17,8 @@ public interface CommentReportRepository extends JpaRepository<CommentReport, Lo
     Page<CommentReport> findByReporterOrderByCreatedAtDesc(User reporter, Pageable pageable);
     Page<CommentReport> findByStatusOrderByCreatedAtDesc(CommentReport.ReportStatus status, Pageable pageable);
     Page<CommentReport> findAllByOrderByCreatedAtDesc(Pageable pageable);
-} 
+
+    @Modifying
+    @Transactional
+    void deleteByComment(ForumComment comment);
+}

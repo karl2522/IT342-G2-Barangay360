@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -40,20 +41,16 @@ class RejectedServicesFragment : Fragment() {
             refreshData()
         }
 
-        // Set up navigation
-        view.findViewById<View>(R.id.btn_back).setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
-        }
 
-        // In each of the status fragments:
-        view.findViewById<View>(R.id.tab_request_services).setOnClickListener {
-            // Direct navigation to RequestServicesFragment
-            requireActivity().supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, ServicesFragment())
-                .addToBackStack(null)
-                .commit()
-        }
+        // Set up header title for Pending Services
+        val titleTextView = view.findViewById<TextView>(R.id.tv_title)
+        titleTextView.text = "Rejected Services"
 
+        // Set up back button click listener
+        val backButton = view.findViewById<ImageView>(R.id.btn_back)
+        backButton.setOnClickListener {
+            requireActivity().onBackPressed()
+        }
         // Load data
         loadRejectedServices()
 

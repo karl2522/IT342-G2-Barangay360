@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import { forumService } from '../../services/ForumService';
 import { useToast } from '../../contexts/ToastContext';
@@ -24,39 +24,40 @@ const ReportManagement = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [reportTypeFilter, setReportTypeFilter] = useState('ALL'); // ALL, POST, COMMENT
   const [manualDeletionInfo, setManualDeletionInfo] = useState(null);
-  const { user, handleApiRequest } = useContext(AuthContext);
-  
+  // We're using AuthContext but not directly using its properties
+  useContext(AuthContext);
+
   // Function to get reports data from backend with proper authentication
   const getReports = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).token : null;
-      
+
       if (!token) {
         showToast('Authentication token not found', 'error');
         return;
       }
-      
+
       // Use the combined all reports endpoint instead of separate endpoints
       let url = `http://localhost:8080/api/reports/all?page=${currentPage}&size=10`;
-      
+
       // Apply filters
       if (statusFilter !== 'ALL') {
         url = `${url}&status=${statusFilter}`;
       }
-      
+
       if (reportTypeFilter !== 'ALL') {
         url = `${url}&type=${reportTypeFilter}`;
       }
-      
+
       console.log('Fetching reports from URL:', url);
-      
+
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       console.log('Reports API response:', response.data);
       setReports(response.data.content);
       setTotalPages(response.data.totalPages);
@@ -67,12 +68,12 @@ const ReportManagement = () => {
       setLoading(false);
     }
   };
-  
+
   // Load reports when component mounts or filters change
   useEffect(() => {
     getReports();
   }, [currentPage, statusFilter, reportTypeFilter]);
-  
+
   // Helper function to check if a report is for a comment
   const isCommentReport = (report) => {
     return report && report.comment;
@@ -88,10 +89,10 @@ const ReportManagement = () => {
     setSelectedReport(report);
     setSelectedReportPost(null);
     setSelectedReportComment(null);
-    
+
     try {
       console.log('Viewing report details:', report);
-      
+
       // Determine report type and fetch corresponding content
       if (isPostReport(report)) {
         // This is a post report
@@ -104,7 +105,7 @@ const ReportManagement = () => {
         console.log('Fetching comment details for report ID:', report.id);
         const comment = await getCommentDetails(report.comment.id);
         setSelectedReportComment(comment);
-        
+
         // If we have a parent post ID, fetch the post too for context
         if (comment && comment.postId) {
           console.log('Fetching parent post details for comment ID:', comment.id);
@@ -117,24 +118,14 @@ const ReportManagement = () => {
       showToast('Error loading content details', 'error');
     }
   };
-  
+
   // Helper function to get comment details
   const getCommentDetails = async (commentId) => {
     try {
-      const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).token : null;
-      
-      if (!token) {
-        showToast('Authentication token not found', 'error');
-        return null;
-      }
-      
       console.log('Fetching comment details for comment ID:', commentId);
-      const response = await axios.get(`http://localhost:8080/api/comments/${commentId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
+      // Make the request without authentication header since this endpoint is configured to be public
+      const response = await axios.get(`http://localhost:8080/api/comments/${commentId}`);
+
       console.log('Comment details response:', response.data);
       return response.data;
     } catch (error) {
@@ -143,27 +134,27 @@ const ReportManagement = () => {
       return null;
     }
   };
-  
+
   // Function to close report details modal
   const handleCloseReportModal = () => {
     setSelectedReport(null);
     setSelectedReportPost(null);
     setSelectedReportComment(null);
   };
-  
+
   // Function to show approve confirmation modal
   const handleShowApproveModal = (report) => {
     setReportToAction(report);
     setShowApproveModal(true);
   };
-  
+
   // Function to show reject confirmation modal
   const handleShowRejectModal = (report) => {
     setReportToAction(report);
     setRejectionReason(''); // Reset rejection reason on modal open
     setShowRejectModal(true);
   };
-  
+
   // Function to cancel any action modal
   const handleCancelAction = () => {
     setReportToAction(null);
@@ -171,151 +162,126 @@ const ReportManagement = () => {
     setShowRejectModal(false);
     setRejectionReason(''); // Reset rejection reason on cancel
   };
-  
-  // Function to update report status - handle both post and comment reports
+
+  // Function to update report status using the unified endpoint
   const updateReportStatus = async (reportId, newStatus, reason = null) => {
     try {
-      const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).token : null;
-      
-      if (!token) {
-        showToast('Authentication token not found', 'error');
-        return Promise.reject('No token found');
-      }
-      
-      // Determine the correct URL based on report type
-      let url;
-      let reportType = 'content';
-      
-      if (reportToAction && isCommentReport(reportToAction)) {
-        // Comment report
-        reportType = 'comment';
-        url = `http://localhost:8080/api/reports/comment/${reportId}/status?status=${newStatus}`;
-        if (reason) {
-          url += `&rejectionReason=${encodeURIComponent(reason)}`;
+      console.log(`Updating report ${reportId} status to ${newStatus}${reason ? ' with reason' : ''}`);
+
+      // Use the forumService to update the report status
+      const result = await forumService.updateReportStatus(reportId, newStatus, reason);
+
+      if (result.success) {
+        console.log('Status update response:', result);
+        showToast(result.message || `Report ${newStatus.toLowerCase()} successfully`, 'success');
+
+        // Update the local state
+        setReports(reports.map(report => 
+          report.id === reportId ? { 
+            ...report, 
+            status: newStatus,
+            rejectionReason: reason || report.rejectionReason 
+          } : report
+        ));
+
+        // Close modal if the status was updated for the selected report
+        if (selectedReport && selectedReport.id === reportId) {
+          setSelectedReport({ 
+            ...selectedReport, 
+            status: newStatus,
+            rejectionReason: reason || selectedReport.rejectionReason 
+          });
         }
+
+        // Refresh reports list if filtering by status
+        if (statusFilter !== 'ALL') {
+          getReports();
+        }
+
+        // Reset action state
+        handleCancelAction();
+
+        // Return the updated report for further processing
+        return result.report;
       } else {
-        // Post report (default)
-        reportType = 'post';
-        url = `http://localhost:8080/api/reports/${reportId}/status?status=${newStatus}`;
-        if (reason) {
-          url += `&rejectionReason=${encodeURIComponent(reason)}`;
-        }
+        console.error(`Error updating report status:`, result.message);
+        showToast(result.message || `Error updating report status`, 'error');
+        return Promise.reject(new Error(result.message));
       }
-      
-      console.log(`Updating ${reportType} report status with URL:`, url);
-      
-      const response = await axios.put(url, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Status update response:', response.data);
-      showToast(`Report ${newStatus.toLowerCase()} successfully`, 'success');
-      
-      // Update the local state
-      setReports(reports.map(report => 
-        report.id === reportId ? { 
-          ...report, 
-          status: newStatus,
-          rejectionReason: reason || report.rejectionReason 
-        } : report
-      ));
-      
-      // Close modal if the status was updated for the selected report
-      if (selectedReport && selectedReport.id === reportId) {
-        setSelectedReport({ 
-          ...selectedReport, 
-          status: newStatus,
-          rejectionReason: reason || selectedReport.rejectionReason 
-        });
-      }
-      
-      // Refresh reports list if filtering by status
-      if (statusFilter !== 'ALL') {
-        getReports();
-      }
-      
-      // Reset action state
-      handleCancelAction();
-      
-      // Return the response for further processing
-      return response.data;
     } catch (error) {
-      console.error(`Error updating report status to ${newStatus}:`, error);
-      showToast(`Error updating report status`, 'error');
+      console.error(`Error in updateReportStatus:`, error);
+      showToast(`Error updating report status: ${error.message}`, 'error');
       return Promise.reject(error);
     }
   };
-  
+
   // Helper function to refresh the token
-  const refreshToken = () => {
+  const refreshToken = async () => {
     // Get the current token object 
     const tokenString = localStorage.getItem('token');
     if (!tokenString) {
       showToast('No token found. Please log in again.', 'error');
       return false;
     }
-    
+
     try {
       const tokenObj = JSON.parse(tokenString);
-      
+
       // Add a timestamp to force token refresh
       tokenObj.refreshedAt = new Date().getTime();
-      
+
       // Clear and re-set token
       localStorage.removeItem('token');
-      
-      // Wait a moment to ensure the token is cleared
-      setTimeout(() => {
-        localStorage.setItem('token', JSON.stringify(tokenObj));
-        console.log('Token refreshed with timestamp');
-      }, 100);
-      
-      return true;
+
+      // Return a promise that resolves when the token is refreshed
+      return new Promise((resolve) => {
+        // Wait a moment to ensure the token is cleared
+        setTimeout(() => {
+          localStorage.setItem('token', JSON.stringify(tokenObj));
+          console.log('Token refreshed with timestamp');
+          resolve(true);
+        }, 300); // Increased timeout to ensure token is properly refreshed
+      });
     } catch (error) {
       console.error('Error refreshing token:', error);
       return false;
     }
   };
-  
+
   // Function to handle report approval
   const handleApproveReport = async () => {
     if (!reportToAction) return;
-    
+
     try {
       // Refresh the token before starting the approval process
-      refreshToken();
-      
-      // Give the token refresh a moment to complete
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      // Wait for the token refresh to complete
+      await refreshToken();
+
       // First approve the report
       await updateReportStatus(reportToAction.id, 'APPROVED');
-      
+
       // Then delete the content using our specialized method for reported content
       console.log('Deleting content after report approval using specialized API:', reportToAction);
-      
+
       // Determine the content type based on report
       const contentType = isPostReport(reportToAction) ? 'post' : 'comment';
       const contentId = isPostReport(reportToAction) ? reportToAction.post.id : reportToAction.comment.id;
-      
+
       // Try to delete through the reports API first (this is a more direct approach)
       const deleteResult = await forumService.deleteReportedContent(
-        reportToAction.id, 
+        contentId, 
         contentType
       );
-      
+
       if (deleteResult.success) {
         showToast(`${contentType === 'post' ? 'Post' : 'Comment'} deleted successfully after report approval`, 'success');
         setManualDeletionInfo(null); // Clear any previous manual deletion info
       } else {
         // If specialized deletion fails, try the regular methods as fallback
         console.warn('Specialized deletion failed, attempting regular methods');
-        
+
         let regularDeleteResult;
-        
+
         if (contentType === 'post') {
           // Try regular post deletion
           regularDeleteResult = await forumService.deletePost(reportToAction.post.id);
@@ -323,7 +289,7 @@ const ReportManagement = () => {
           // Try regular comment deletion
           regularDeleteResult = await forumService.deleteComment(reportToAction.comment.id);
         }
-        
+
         if (regularDeleteResult.success) {
           showToast(`${contentType === 'post' ? 'Post' : 'Comment'} deleted successfully using standard method`, 'success');
           setManualDeletionInfo(null); // Clear any previous manual deletion info
@@ -333,7 +299,7 @@ const ReportManagement = () => {
             contentType === 'post' ? 'posts' : 'comments',
             contentType === 'post' ? reportToAction.post.id : reportToAction.comment.id
           );
-          
+
           if (simpleDeleteResult.success) {
             showToast(`${contentType === 'post' ? 'Post' : 'Comment'} deleted successfully using alternative method`, 'success');
             setManualDeletionInfo(null); // Clear any previous manual deletion info
@@ -344,29 +310,29 @@ const ReportManagement = () => {
               regularResult: regularDeleteResult,
               simpleResult: simpleDeleteResult
             });
-            
+
             // Generate manual deletion link
             const manualLink = generateManualDeletionLink(contentType, contentId);
-            
+
             setManualDeletionInfo({
               reportId: reportToAction.id,
               contentType: contentType,
               contentId: contentId,
               link: manualLink
             });
-            
+
             showToast(`Report approved, but automatic deletion failed. Manual deletion may be required.`, 'warning');
           }
         }
       }
-      
+
       // Close report modal if open
       if (selectedReport && selectedReport.id === reportToAction.id) {
         setSelectedReport(null);
         setSelectedReportPost(null);
         setSelectedReportComment(null);
       }
-      
+
       // Refresh reports list
       getReports();
     } catch (error) {
@@ -374,17 +340,28 @@ const ReportManagement = () => {
       showToast(`Error during report approval process`, 'error');
     }
   };
-  
+
   // Function to handle report rejection
-  const handleRejectReport = () => {
+  const handleRejectReport = async () => {
     if (!reportToAction) return;
     if (!rejectionReason.trim()) {
       showToast('Please provide a reason for rejection', 'error');
       return;
     }
-    updateReportStatus(reportToAction.id, 'REJECTED', rejectionReason);
+
+    try {
+      // Refresh the token before starting the rejection process
+      // Wait for the token refresh to complete
+      await refreshToken();
+
+      // Then reject the report
+      await updateReportStatus(reportToAction.id, 'REJECTED', rejectionReason);
+    } catch (error) {
+      console.error('Error in rejection process:', error);
+      showToast(`Error during report rejection process`, 'error');
+    }
   };
-  
+
   const formatDate = (dateString) => {
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true });
@@ -393,7 +370,7 @@ const ReportManagement = () => {
       return 'some time ago';
     }
   };
-  
+
   // Filter reports based on search term
   const filteredReports = reports.filter(report => {
     const searchContent = 
@@ -402,10 +379,10 @@ const ReportManagement = () => {
       (report.comment?.content || '').toLowerCase() + 
       (report.reporter?.firstName || '').toLowerCase() + 
       (report.reporter?.lastName || '').toLowerCase();
-    
+
     return searchContent.includes(searchTerm.toLowerCase());
   });
-  
+
   // Helper function to get content type badge
   const getContentTypeBadge = (report) => {
     if (report.comment) {
@@ -434,13 +411,13 @@ const ReportManagement = () => {
   // Get content description for report modal title
   const getReportContentDescription = () => {
     if (!selectedReport) return '';
-    
+
     if (isPostReport(selectedReport)) {
       return 'Post';
     } else if (isCommentReport(selectedReport)) {
       return 'Comment';
     }
-    
+
     return 'Content';
   };
 
@@ -456,7 +433,7 @@ const ReportManagement = () => {
     // This will create a special URL that the admin can click to directly delete the content
     const token = localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')).token : null;
     if (!token) return null;
-    
+
     const encodedToken = encodeURIComponent(token);
     return `http://localhost:8080/api/admin/${contentType}s/delete/${contentId}?token=${encodedToken}`;
   };
@@ -511,7 +488,7 @@ const ReportManagement = () => {
                     <option value="REJECTED">Rejected</option>
                   </select>
                 </div>
-                
+
                 <div className="flex items-center">
                   <label className="text-sm font-medium text-gray-700 mr-2">Type:</label>
                   <select
@@ -528,7 +505,7 @@ const ReportManagement = () => {
                     <option value="COMMENT">Comments</option>
                   </select>
                 </div>
-                
+
                 <button
                   onClick={applyFilters}
                   className="ml-2 px-3 py-2 bg-[#861A2D] text-white rounded-md hover:bg-[#9b3747] focus:outline-none"
@@ -688,18 +665,18 @@ const ReportManagement = () => {
                           <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </button>
-                      
+
                       {/* Pagination buttons */}
                       {[...Array(totalPages).keys()].map((page) => (
                         <button
-                          key={`page-${page}`}
+                          key={`pagination-page-${page}`}
                           onClick={() => setCurrentPage(page)}
                           className={`relative inline-flex items-center px-4 py-2 border ${currentPage === page ? 'bg-[#861A2D] text-white border-[#861A2D] z-10' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'} text-sm font-medium`}
                         >
                           {page + 1}
                         </button>
                       ))}
-                      
+
                       <button
                         onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                         disabled={currentPage === totalPages - 1}

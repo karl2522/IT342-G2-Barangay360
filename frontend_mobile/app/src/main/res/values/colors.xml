@@ -24,6 +24,12 @@
     <color name="category_services">#1976D2</color>
     <color name="category_maintenance">#FFA000</color>
 
+    <color name="surface_variant">#F5F5F5</color>
+    <color name="card_stroke">#E0E0E0</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="dark_overlay">#33000000</color>
+
     <!-- Add dark mode colors if not already present -->
     <color name="dark_background">#121212</color>
     <color name="dark_surface">#1E1E1E</color>

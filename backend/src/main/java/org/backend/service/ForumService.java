@@ -18,7 +18,7 @@ public interface ForumService {
     Page<ForumPost> getAllPosts(Pageable pageable);
     Page<ForumPost> getPostsByUser(User user, Pageable pageable);
     ForumPost toggleLikePost(Long postId, User user);
-    
+
     // Comment Operations
     ForumComment createComment(Long postId, String content, User author);
     ForumComment updateComment(Long commentId, String content, User currentUser);
@@ -26,16 +26,16 @@ public interface ForumService {
     List<ForumComment> getCommentsByPost(Long postId);
     Page<ForumComment> getCommentsByPost(Long postId, Pageable pageable);
     ForumComment toggleLikeComment(Long commentId, User user);
-    
+
     // Report Operations
     PostReport reportPost(Long postId, String reason, User reporter);
-    PostReport updateReportStatus(Long reportId, PostReport.ReportStatus status, User admin);
+    PostReport updateReportStatus(Long reportId, PostReport.ReportStatus status, String rejectionReason, User admin);
     PostReport getReportById(Long reportId);
     Page<PostReport> getAllReports(Pageable pageable);
     Page<PostReport> getReportsByStatus(PostReport.ReportStatus status, Pageable pageable);
     Page<PostReport> getReportsByUser(User reporter, Pageable pageable);
     Page<PostReport> getReportsByPost(Long postId, Pageable pageable);
-    
+
     // Comment Report Operations
     CommentReport reportComment(Long commentId, String reason, User reporter);
     CommentReport updateCommentReportStatus(Long reportId, CommentReport.ReportStatus status, String rejectionReason, User admin);

@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="?attr/colorSurface"
     tools:context=".AnnouncementFragment">
 
     <!-- Header -->
@@ -13,8 +13,9 @@
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFFFFF"
-        android:elevation="4dp">
+        android:background="?attr/colorSurface"
+        android:elevation="4dp"
+        >
 
         <TextView
             android:layout_width="wrap_content"
@@ -22,7 +23,7 @@
             android:layout_centerVertical="true"
             android:layout_marginStart="16dp"
             android:text="Announcements"
-            android:textColor="#212121"
+            android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -35,8 +36,8 @@
             android:layout_marginEnd="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Filter announcements"
-            android:src="@drawable/barangay360_logo"
-            app:tint="#757575" />
+            android:src="@drawable/announcement_filter"
+            app:tint="@color/text_secondary" />
     </RelativeLayout>
 
     <!-- Filter Chip Group - Hidden by default, shown when filter button clicked -->
@@ -45,7 +46,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/header"
-        android:background="#FFFFFF"
+        android:background="?attr/colorSurface"
         android:elevation="2dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
@@ -114,7 +115,7 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="8dp"
-            android:paddingBottom="16dp" />
+            android:paddingBottom="70dp" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- Empty state -->
@@ -132,7 +133,7 @@
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:src="@drawable/barangay360_logo"
-            app:tint="#BDBDBD" />
+            app:tint="@color/text_secondary" />
 
         <TextView
             android:layout_width="match_parent"
@@ -140,7 +141,7 @@
             android:layout_marginTop="16dp"
             android:gravity="center"
             android:text="No announcements yet"
-            android:textColor="#757575"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -150,7 +151,7 @@
             android:layout_marginTop="8dp"
             android:gravity="center"
             android:text="Check back later for updates from your barangay"
-            android:textColor="#757575"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp" />
     </LinearLayout>
 
