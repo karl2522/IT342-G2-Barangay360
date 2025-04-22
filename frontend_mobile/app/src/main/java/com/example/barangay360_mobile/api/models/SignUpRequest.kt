@@ -8,5 +8,5 @@ data class SignUpRequest(
     val lastName: String,
     val address: String? = null,
     val phone: String? = null,
-    val roles: Set<String>? = null
+    val roles: Set<String>? = setOf("resident") // Default role for mobile users
 )

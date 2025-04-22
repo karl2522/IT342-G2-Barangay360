@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="service_types">
+        <item>Barangay Certificate</item>
+        <item>Barangay Clearance</item>
+        <item>Barangay ID Card</item>
+        <item>Business Permit</item>
+        <item>Certificate of Residency</item>
+        <item>Certificate of Indigency</item>
+    </string-array>
+</resources> 

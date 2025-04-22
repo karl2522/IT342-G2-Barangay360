@@ -4,6 +4,7 @@ import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation';
 import { webSocketService } from '../../services/WebSocketService';
 import { serviceRequestService } from '../../services/ServiceRequestService';
+import { forumService } from '../../services/ForumService';
 import { FaUsers, FaListAlt, FaExclamationTriangle, FaFileAlt, FaInbox, FaUserShield, FaHandPaper, FaCommentDots } from 'react-icons/fa';
 import axios from 'axios';
 
@@ -49,12 +50,12 @@ const OfficialDashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch residents
         const residentsResponse = await axios.get(`${API_URL}/users/residents`, getAuthHeader());
         console.log('FULL RESIDENTS RESPONSE:', residentsResponse);
         console.log('RESIDENTS DATA ARRAY:', residentsResponse.data);
-        
+
         if (residentsResponse.data && Array.isArray(residentsResponse.data)) {
           setResidents(residentsResponse.data.slice(0, 6)); // Get first 6 for display
           setTotalResidents(residentsResponse.data.length);
@@ -63,79 +64,36 @@ const OfficialDashboard = () => {
           setResidents([]);
           setTotalResidents(0);
         }
-        
+
         // Fetch forum posts
         const postsResponse = await axios.get(`${API_URL}/forum/posts?page=0&size=3`, getAuthHeader());
         setPosts(postsResponse.data.content || []);
-        
+
         // Fetch service requests
         const requestsResponse = await serviceRequestService.getAllServiceRequests();
         setRequests(requestsResponse.slice(0, 3)); // Get first 3 for display
-        
-        // Fetch reports with detailed debugging
-        console.log('Fetching reports from API...');
+
+        // Fetch reports using the forumService
+        console.log('Fetching reports from API using forumService...');
         try {
-          // First try the '/reports/all' endpoint
-          const reportsResponse = await axios.get(`${API_URL}/reports/all?page=0&size=3`, getAuthHeader());
-          console.log('REPORTS API RESPONSE (all):', reportsResponse);
-          
-          // Check if we got valid data
-          if (reportsResponse.data && (reportsResponse.data.items || reportsResponse.data.content)) {
-            const reportItems = reportsResponse.data.items || reportsResponse.data.content || [];
-            console.log('Report items extracted:', reportItems);
-            setReports(reportItems);
-          } else if (Array.isArray(reportsResponse.data)) {
-            // Handle case where API returns array directly
-            console.log('Reports returned as direct array');
-            setReports(reportsResponse.data.slice(0, 3));
+          const reportsResponse = await forumService.getLatestReports(3);
+          console.log('REPORTS API RESPONSE:', reportsResponse);
+
+          if (reportsResponse.success && reportsResponse.content) {
+            setReports(reportsResponse.content);
           } else {
-            console.error('Unexpected reports data format from /reports/all');
-            // Try alternative endpoints
-            try {
-              const altReportsResponse = await axios.get(`${API_URL}/reports?page=0&size=3`, getAuthHeader());
-              console.log('REPORTS API RESPONSE (alternative):', altReportsResponse);
-              
-              if (altReportsResponse.data && (altReportsResponse.data.items || altReportsResponse.data.content)) {
-                const reportItems = altReportsResponse.data.items || altReportsResponse.data.content || [];
-                console.log('Report items extracted from alternative endpoint:', reportItems);
-                setReports(reportItems);
-              } else if (Array.isArray(altReportsResponse.data)) {
-                console.log('Reports returned as direct array from alternative endpoint');
-                setReports(altReportsResponse.data.slice(0, 3));
-              } else {
-                console.error('Failed to get reports from alternative endpoint');
-                setReports([]);
-              }
-            } catch (altError) {
-              console.error('Error fetching from alternative reports endpoint:', altError);
-              setReports([]);
-            }
+            console.error('Failed to fetch reports:', reportsResponse.message);
+            setReports([]);
           }
         } catch (reportError) {
           console.error('Error fetching reports:', reportError);
-          // Try fallback without pagination
-          try {
-            console.log('Trying fallback reports endpoint...');
-            const fallbackResponse = await axios.get(`${API_URL}/reports`, getAuthHeader());
-            console.log('REPORTS FALLBACK RESPONSE:', fallbackResponse);
-            if (fallbackResponse.data) {
-              const reportData = Array.isArray(fallbackResponse.data) 
-                ? fallbackResponse.data 
-                : fallbackResponse.data.items || fallbackResponse.data.content || [];
-              setReports(reportData.slice(0, 3));
-            } else {
-              setReports([]);
-            }
-          } catch (fallbackError) {
-            console.error('Error with fallback reports endpoint:', fallbackError);
-            setReports([]);
-          }
+          setReports([]);
         }
-        
+
         // Fetch appeals
         const appealsResponse = await axios.get(`${API_URL}/appeals`, getAuthHeader());
         setAppeals(appealsResponse.data.slice(0, 3)); // Get first 3 for display
-        
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -155,7 +113,7 @@ const OfficialDashboard = () => {
   // Function to format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'Recently';
-    
+
     try {
       const date = new Date(dateString);
       // Check if the date is valid before formatting
@@ -163,11 +121,11 @@ const OfficialDashboard = () => {
         console.warn('Invalid date:', dateString);
         return 'Recently';
       }
-      
+
       // Use relative time format
       const now = new Date();
       const diffInSeconds = Math.floor((now - date) / 1000);
-      
+
       if (diffInSeconds < 60) {
         return 'Just now';
       } else if (diffInSeconds < 3600) {
@@ -240,30 +198,30 @@ const OfficialDashboard = () => {
                         // Super detailed resident logging
                         console.log(`------ RESIDENT #${index + 1} ------`);
                         console.log('FULL OBJECT:', JSON.stringify(resident, null, 2));
-                        
+
                         // Get all keys and values for debugging
                         const allKeys = [];
                         const allValues = {};
-                        
+
                         // Recursive function to find all keys in an object
                         const findAllKeys = (obj, prefix = '') => {
                           if (!obj || typeof obj !== 'object') return;
-                          
+
                           Object.keys(obj).forEach(key => {
                             const fullKey = prefix ? `${prefix}.${key}` : key;
                             allKeys.push(fullKey);
                             allValues[fullKey] = obj[key];
-                            
+
                             if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
                               findAllKeys(obj[key], fullKey);
                             }
                           });
                         };
-                        
+
                         findAllKeys(resident);
                         console.log('ALL KEYS:', allKeys);
                         console.log('ALL VALUES:', allValues);
-                        
+
                         // Look for any key that might contain a name
                         const nameKeys = allKeys.filter(key => 
                           key.toLowerCase().includes('name') || 
@@ -271,15 +229,15 @@ const OfficialDashboard = () => {
                           key.toLowerCase() === 'login'
                         );
                         console.log('POTENTIAL NAME KEYS:', nameKeys, nameKeys.map(k => allValues[k]));
-                        
+
                         // Extract name using all the information we've gathered
                         let displayName = 'Unknown';
-                        
+
                         // Check if we have any name keys with string values
                         const validNameKeys = nameKeys.filter(key => 
                           typeof allValues[key] === 'string' && allValues[key].trim() !== ''
                         );
-                        
+
                         if (validNameKeys.length > 0) {
                           // Prioritize keys in a reasonable order
                           const priorityOrder = [
@@ -287,7 +245,7 @@ const OfficialDashboard = () => {
                             'firstName lastName', 'first_name last_name',
                             'username', 'user_name', 'login'
                           ];
-                          
+
                           // Try to find a key based on our priority
                           let bestKey = null;
                           for (const pattern of priorityOrder) {
@@ -299,7 +257,7 @@ const OfficialDashboard = () => {
                               break;
                             }
                           }
-                          
+
                           // If we found a best key, use it, otherwise use the first valid key
                           if (bestKey) {
                             displayName = allValues[bestKey];
@@ -339,7 +297,7 @@ const OfficialDashboard = () => {
                             }
                           }
                         }
-                        
+
                         // Extract email as a fallback for display name
                         let email = '';
                         for (const key of allKeys) {
@@ -354,7 +312,7 @@ const OfficialDashboard = () => {
                             break;
                           }
                         }
-                        
+
                         // Try to find date fields
                         const dateKeys = allKeys.filter(key => 
                           key.toLowerCase().includes('date') || 
@@ -363,7 +321,7 @@ const OfficialDashboard = () => {
                           key.toLowerCase().includes('joined')
                         );
                         console.log('POTENTIAL DATE KEYS:', dateKeys, dateKeys.map(k => allValues[k]));
-                        
+
                         // Try to find a valid date from any of our potential date keys
                         let joinDate = 'N/A';
                         for (const key of dateKeys) {
@@ -379,10 +337,10 @@ const OfficialDashboard = () => {
                             }
                           }
                         }
-                        
+
                         // Fallback ID for key
                         const idValue = resident.id || resident._id || index;
-                        
+
                         return (
                           <div key={idValue} className="p-3 bg-gray-50 rounded-md border border-gray-200">
                             <div className="flex items-center justify-between">
@@ -469,18 +427,18 @@ const OfficialDashboard = () => {
                         {requests.map(request => {
                           // Log the service request structure to see fields
                           console.log('Service request structure:', request);
-                          
+
                           // Get request type
                           const requestType = request.type || request.serviceType || 'Service Request';
-                          
+
                           // Initialize date format values
                           let relativeTime = 'N/A';
-                          
+
                           // Try to get a valid date
                           const dateFields = ['createdAt', 'created_at', 'dateCreated', 'date_created', 
                                             'createdDate', 'created_date', 'date', 'requestDate', 'timestamp'];
                           let validDate = null;
-                          
+
                           for (const field of dateFields) {
                             if (request[field]) {
                               try {
@@ -494,13 +452,13 @@ const OfficialDashboard = () => {
                               }
                             }
                           }
-                          
+
                           // If we found a valid date, calculate relative time
                           if (validDate) {
                             // Calculate relative time
                             const now = new Date();
                             const diffInSeconds = Math.floor((now - validDate) / 1000);
-                            
+
                             if (diffInSeconds < 60) {
                               relativeTime = 'Just now';
                             } else if (diffInSeconds < 3600) {
@@ -514,11 +472,11 @@ const OfficialDashboard = () => {
                               relativeTime = `${days} ${days === 1 ? 'day' : 'days'} ago`;
                             }
                           }
-                          
+
                           // Get the requester name directly from residentName field
                           // This matches what we see in the console output
                           let requesterName = request.residentName || 'Unknown';
-                          
+
                           // If residentName is not available, try other fallbacks
                           if (requesterName === 'Unknown') {
                             if (request.requesterName) {
@@ -534,7 +492,7 @@ const OfficialDashboard = () => {
                               requesterName = request.residentEmail.split('@')[0];
                             }
                           }
-                          
+
                           // Get icon based on service type
                           let typeIcon;
                           const type = requestType.toLowerCase();
@@ -551,7 +509,7 @@ const OfficialDashboard = () => {
                           } else {
                             typeIcon = 'bg-gray-100 text-gray-800';
                           }
-                          
+
                           return (
                             <li key={request.id} className="p-3 bg-gray-50 rounded-md border border-gray-200">
                               <div className="flex items-center justify-between mb-2">
@@ -650,13 +608,13 @@ const OfficialDashboard = () => {
                           .map(report => {
                             // Log the report data structure 
                             console.log('Report data:', report);
-                            
+
                             // Determine if this is a comment report
                             const isCommentReport = report.comment || report.commentId;
-                            
+
                             // Extract title depending on report type
                             let title = 'Untitled';
-                            
+
                             if (isCommentReport) {
                               // For comment reports, show comment text or post title it belongs to
                               if (report.comment && report.comment.content) {
@@ -677,7 +635,7 @@ const OfficialDashboard = () => {
                                 ? report.post.title 
                                 : 'Untitled Post';
                             }
-                            
+
                             // Extract reporter name from the nested reporter object
                             let reporterName = 'Unknown';
                             if (report.reporter) {
@@ -687,7 +645,7 @@ const OfficialDashboard = () => {
                                 reporterName = report.reporter.username;
                               }
                             }
-                            
+
                             // Get report date
                             let reportDate = 'N/A';
                             if (report.createdAt) {
@@ -700,13 +658,13 @@ const OfficialDashboard = () => {
                                 console.error('Error parsing report date:', error);
                               }
                             }
-                            
+
                             // Get the report reason
                             const reportReason = report.reason || '';
-                            
+
                             // Determine report status
                             const reportStatus = report.status || 'PENDING';
-                            
+
                             return (
                               <li key={report.id} className="p-3 bg-gray-50 rounded-md border border-gray-200">
                                 <div className="flex flex-col space-y-2">

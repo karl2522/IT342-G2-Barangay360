@@ -24,6 +24,9 @@ public class PostReport {
     @Column(nullable = false, columnDefinition = "CLOB")
     private String reason;
 
+    @Column(columnDefinition = "CLOB")
+    private String rejectionReason;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "post_id", nullable = false)
     @JsonIgnoreProperties({"comments", "likes"})

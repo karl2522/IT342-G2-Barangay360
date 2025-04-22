@@ -1,9 +1,10 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation.jsx';
 import { serviceRequestService } from '../../services/ServiceRequestService';
 import { useToast } from '../../contexts/ToastContext';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 
 const Services = () => {
   const { user } = useContext(AuthContext);
@@ -27,6 +28,8 @@ const Services = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [requestToCancel, setRequestToCancel] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [qrValue, setQrValue] = useState('');
+  const qrCodeRef = useRef(null);
 
   // Load user's requests from the database on component mount
   useEffect(() => {
@@ -71,6 +74,34 @@ const Services = () => {
         ...errors,
         [name]: ''
       });
+    }
+
+    // Generate QR code when service type is selected
+    if (name === 'serviceType' && value) {
+      const qrData = {
+        userId: user?.id || '',
+        userName: user ? `${user.firstName} ${user.lastName}` : '',
+        serviceType: value,
+        serviceDescription: serviceTypes.find(s => s.value === value)?.description || '',
+        timestamp: new Date().toISOString(),
+        requestId: `REQ-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+      };
+      setQrValue(JSON.stringify(qrData));
+    }
+  };
+
+  // Function to download QR code as image
+  const downloadQRCode = () => {
+    if (qrCodeRef.current) {
+      const canvas = qrCodeRef.current;
+      const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngUrl;
+      downloadLink.download = `${formData.serviceType.replace(/\s+/g, '_')}_QRCode.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     }
   };
 
@@ -266,6 +297,23 @@ const Services = () => {
     return `${diffHrs}h ${diffMins}m remaining`;
   };
 
+  // Close modal - reset form data and QR code state
+  const closeModal = () => {
+    if (!isSubmitting) {
+      setShowModal(false);
+      if (isEditing) {
+        setIsEditing(false);
+      }
+      setFormData({
+        serviceType: '',
+        purpose: '',
+        details: '',
+        contactNumber: '',
+        address: '',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex w-full">
       <Sidebar isOfficial={false} />
@@ -449,25 +497,11 @@ const Services = () => {
         </main>
       </div>
 
-      {/* Modal for New/Edit Service Request */}
+      {/* Modal for New Service Request */}
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 py-6 text-center">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => {
-              if (!isSubmitting) {
-                setShowModal(false);
-                if (isEditing) {
-                  setIsEditing(false);
-                  setFormData({
-                    serviceType: '',
-                    purpose: '',
-                    details: '',
-                    contactNumber: '',
-                    address: '',
-                  });
-                }
-              }
-            }}>
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={closeModal}>
               <div className="absolute inset-0 bg-gray-900 opacity-75"></div>
             </div>
             
@@ -476,24 +510,10 @@ const Services = () => {
               <div className="bg-[#861A2D]/5 px-6 py-4 border-b border-gray-200">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-semibold text-[#861A2D]">
-                    {isEditing ? 'Edit Service Request' : 'New Service Request'}
+                    {isEditing ? 'Edit Service Request' : 'Request Barangay Service'}
                   </h3>
                   <button
-                    onClick={() => {
-                      if (!isSubmitting) {
-                        setShowModal(false);
-                        if (isEditing) {
-                          setIsEditing(false);
-                          setFormData({
-                            serviceType: '',
-                            purpose: '',
-                            details: '',
-                            contactNumber: '',
-                            address: '',
-                          });
-                        }
-                      }
-                    }}
+                    onClick={closeModal}
                     className="text-gray-400 hover:text-[#861A2D] focus:outline-none transition-colors"
                     disabled={isSubmitting}
                   >
@@ -502,186 +522,333 @@ const Services = () => {
                     </svg>
                   </button>
                 </div>
-                {isEditing && (
+                {isEditing ? (
                   <p className="mt-1 text-sm text-gray-600">
                     You can edit this request within 24 hours of submission.
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm text-gray-600">
+                    Select a service type, then scan the QR code with the Barangay360 mobile app to complete your request.
                   </p>
                 )}
               </div>
                 
               <div className="px-6 py-5">
-                <form onSubmit={handleSubmit}>
-                  {/* Service Type */}
-                  <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Service Type <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="serviceType"
-                        value={formData.serviceType}
-                        onChange={handleChange}
-                        className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors appearance-none ${
-                          errors.serviceType ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                      >
-                        <option value="">Select a service type</option>
-                        {serviceTypes.map((service) => (
-                          <option key={service.value} value={service.value}>
-                            {service.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                {isEditing ? (
+                  <form onSubmit={handleSubmit}>
+                    {/* Keep the editing form for existing requests */}
+                    {/* Service Type */}
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Service Type <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          name="serviceType"
+                          value={formData.serviceType}
+                          onChange={handleChange}
+                          className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors appearance-none ${
+                            errors.serviceType ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Select a service type</option>
+                          {serviceTypes.map((service) => (
+                            <option key={service.value} value={service.value}>
+                              {service.label}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
                       </div>
+                      {errors.serviceType && (
+                        <p className="mt-1 text-xs text-red-500">{errors.serviceType}</p>
+                      )}
+                      {formData.serviceType && (
+                        <p className="mt-2 text-sm text-gray-500 bg-gray-50 p-2 rounded-md italic">
+                          {serviceTypes.find(s => s.value === formData.serviceType)?.description}
+                        </p>
+                      )}
                     </div>
-                    {errors.serviceType && (
-                      <p className="mt-1 text-xs text-red-500">{errors.serviceType}</p>
-                    )}
-                    {formData.serviceType && (
-                      <p className="mt-2 text-sm text-gray-500 bg-gray-50 p-2 rounded-md italic">
-                        {serviceTypes.find(s => s.value === formData.serviceType)?.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Purpose */}
-                  <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Purpose <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="purpose"
-                      value={formData.purpose}
-                      onChange={handleChange}
-                      placeholder="e.g., Employment, School Requirement, etc."
-                      className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                        errors.purpose ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                    {errors.purpose && (
-                      <p className="mt-1 text-xs text-red-500">{errors.purpose}</p>
-                    )}
-                  </div>
-
-                  {/* Details */}
-                  <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Additional Details <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      name="details"
-                      value={formData.details}
-                      onChange={handleChange}
-                      rows="3"
-                      placeholder="Provide any additional information regarding your request"
-                      className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                        errors.details ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    ></textarea>
-                    {errors.details && (
-                      <p className="mt-1 text-xs text-red-500">{errors.details}</p>
-                    )}
-                  </div>
-
-                  <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Contact Number <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                      </div>
+                    
+                    {/* Purpose */}
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Purpose <span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="text"
-                        name="contactNumber"
-                        value={formData.contactNumber}
+                        name="purpose"
+                        value={formData.purpose}
                         onChange={handleChange}
-                        placeholder="+63 912 345 6789"
-                        className={`w-full pl-10 p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                          errors.contactNumber ? 'border-red-500' : 'border-gray-300'
+                        placeholder="e.g., Employment, School Requirement, etc."
+                        className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
+                          errors.purpose ? 'border-red-500' : 'border-gray-300'
                         }`}
                       />
+                      {errors.purpose && (
+                        <p className="mt-1 text-xs text-red-500">{errors.purpose}</p>
+                      )}
                     </div>
-                    {errors.contactNumber && (
-                      <p className="mt-1 text-xs text-red-500">{errors.contactNumber}</p>
-                    )}
-                  </div>
 
-                  <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Address <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute top-3 left-0 flex items-start pl-3 pointer-events-none">
-                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </div>
+                    {/* Details */}
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Additional Details <span className="text-red-500">*</span>
+                      </label>
                       <textarea
-                        name="address"
-                        value={formData.address}
+                        name="details"
+                        value={formData.details}
                         onChange={handleChange}
                         rows="3"
-                        placeholder="Your complete address within the barangay"
-                        className={`w-full pl-10 p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                          errors.address ? 'border-red-500' : 'border-gray-300'
+                        placeholder="Provide any additional information regarding your request"
+                        className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
+                          errors.details ? 'border-red-500' : 'border-gray-300'
                         }`}
                       ></textarea>
-                    </div>
-                    {errors.address && (
-                      <p className="mt-1 text-xs text-red-500">{errors.address}</p>
-                    )}
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowModal(false);
-                        if (isEditing) {
-                          setIsEditing(false);
-                          setFormData({
-                            serviceType: '',
-                            purpose: '',
-                            details: '',
-                            contactNumber: '',
-                            address: '',
-                          });
-                        }
-                      }}
-                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isSubmitting ? (
-                        <span className="flex items-center justify-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          {isEditing ? 'Updating...' : 'Submitting...'}
-                        </span>
-                      ) : (
-                        isEditing ? 'Update Request' : 'Submit Request'
+                      {errors.details && (
+                        <p className="mt-1 text-xs text-red-500">{errors.details}</p>
                       )}
-                    </button>
+                    </div>
+
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Contact Number <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          name="contactNumber"
+                          value={formData.contactNumber}
+                          onChange={handleChange}
+                          placeholder="+63 912 345 6789"
+                          className={`w-full pl-10 p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
+                            errors.contactNumber ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                      {errors.contactNumber && (
+                        <p className="mt-1 text-xs text-red-500">{errors.contactNumber}</p>
+                      )}
+                    </div>
+
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Address <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute top-3 left-0 flex items-start pl-3 pointer-events-none">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                        <textarea
+                          name="address"
+                          value={formData.address}
+                          onChange={handleChange}
+                          rows="3"
+                          placeholder="Your complete address within the barangay"
+                          className={`w-full pl-10 p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
+                            errors.address ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                        ></textarea>
+                      </div>
+                      {errors.address && (
+                        <p className="mt-1 text-xs text-red-500">{errors.address}</p>
+                      )}
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                      <button
+                        type="button"
+                        onClick={closeModal}
+                        className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isSubmitting ? (
+                          <span className="flex items-center justify-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Updating...
+                          </span>
+                        ) : (
+                          'Update Request'
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div>
+                    {/* Service Type Selection */}
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Service Type <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          name="serviceType"
+                          value={formData.serviceType}
+                          onChange={handleChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors appearance-none"
+                        >
+                          <option value="">Select a service type</option>
+                          {serviceTypes.map((service) => (
+                            <option key={service.value} value={service.value}>
+                              {service.label}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                      {formData.serviceType && (
+                        <p className="mt-2 text-sm text-gray-500 bg-gray-50 p-2 rounded-md italic">
+                          {serviceTypes.find(s => s.value === formData.serviceType)?.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {formData.serviceType && (
+                      <div className="mt-6 flex flex-col items-center">
+                        {/* Service Title */}
+                        <div className="bg-[#861A2D]/10 p-3 rounded-md mb-6 text-center w-full max-w-sm">
+                          <p className="font-medium text-lg text-[#861A2D] mb-1">
+                            {formData.serviceType}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {user ? `For ${user.firstName} ${user.lastName}` : ''}
+                          </p>
+                        </div>
+                        
+                        {/* QR Code Section - Full Width and Larger */}
+                        <div className="hidden">
+                          <QRCodeCanvas
+                            ref={qrCodeRef}
+                            value={qrValue}
+                            size={250}
+                            bgColor={"#ffffff"}
+                            fgColor={"#000000"}
+                            level={"H"}
+                            includeMargin={true}
+                          />
+                        </div>
+                        
+                        <div className="relative mb-8">
+                          <div className="bg-white p-6 rounded-lg border-4 border-[#861A2D]/20 shadow-md relative group">
+                            <div className="relative">
+                              <QRCodeSVG
+                                value={qrValue}
+                                size={250}
+                                bgColor={"#ffffff"}
+                                fgColor={"#000000"}
+                                level={"H"}
+                                includeMargin={true}
+                              />
+                              {/* Remove the logo overlay to ensure reliable scanning */}
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                              <button
+                                onClick={downloadQRCode}
+                                className="bg-white text-[#861A2D] px-4 py-2 rounded-md font-medium text-sm flex items-center"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Download QR Code
+                              </button>
+                            </div>
+                          </div>
+                          <div className="text-xs text-center text-gray-500 mt-2">
+                            Hover over QR code to download
+                          </div>
+                        </div>
+                        
+                        {/* Instructions Cards - Simplified and Spaced */}
+                        <div className="max-w-md w-full space-y-4 mt-2">
+                          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-md">
+                            <div className="flex">
+                              <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <div className="ml-3">
+                                <p className="text-sm text-blue-700 font-medium mb-1">
+                                  How to use:
+                                </p>
+                                <ol className="list-decimal pl-5 text-sm text-blue-700 space-y-1">
+                                  <li>Open the Barangay360 mobile app</li>
+                                  <li>Go to &quot;Services&quot; section</li>
+                                  <li>Tap the &quot;Scan QR&quot; button</li>
+                                  <li>Point your camera at this QR code</li>
+                                  <li>Complete the form on your mobile device</li>
+                                </ol>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-md">
+                            <div className="flex">
+                              <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <div className="ml-3">
+                                <p className="text-sm text-yellow-700">
+                                  <span className="font-medium">Important:</span> This QR code is valid for 24 hours. You&apos;ll need to complete and submit the form on your mobile device.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!formData.serviceType && (
+                      <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Service Type</h3>
+                        <p className="text-gray-500 max-w-sm">
+                          Choose a service type from the dropdown above to generate a QR code for mobile scanning
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={closeModal}
+                        className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
-                </form>
+                )}
               </div>
             </div>
           </div>

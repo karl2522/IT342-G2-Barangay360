@@ -59,6 +59,10 @@ public class ForumPost {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
+    @JsonIgnoreProperties("post")
+    private List<Report> reports;
+
     public void addComment(ForumComment comment) {
         comments.add(comment);
         comment.setPost(this);
