@@ -21,6 +21,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
+import org.json.JSONObject
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -35,6 +36,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
     private lateinit var qrContentText: TextView
     private lateinit var closeButton: Button
     private lateinit var visitWebsiteButton: Button
+    private lateinit var proceedButton: Button
 
     private var camera: Camera? = null
     private var cameraProvider: ProcessCameraProvider? = null
@@ -46,6 +48,14 @@ class QRCodeScannerActivity : AppCompatActivity() {
     // Flag to prevent duplicate scans
     private var isScanning = true
     private var detectedUrl = ""
+    private var isServiceQrCode = false
+    private var serviceData: JSONObject? = null
+
+    companion object {
+        const val QR_TYPE_SERVICE = "service"
+        const val QR_KEY_SERVICE_TYPE = "serviceType"
+        const val QR_KEY_PURPOSE = "purpose"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +69,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
         qrContentText = findViewById(R.id.qrContentText)
         closeButton = findViewById(R.id.closeButton)
         visitWebsiteButton = findViewById(R.id.visitWebsiteButton)
+        proceedButton = findViewById(R.id.proceedButton)
 
         // Configure previewView for better performance
         previewView.implementationMode = PreviewView.ImplementationMode.PERFORMANCE
@@ -82,6 +93,13 @@ class QRCodeScannerActivity : AppCompatActivity() {
             }
         }
 
+        // Set up proceed button for service request
+        proceedButton.setOnClickListener {
+            if (serviceData != null) {
+                navigateToServiceRequestForm()
+            }
+        }
+
         // Create camera executor
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -90,6 +108,19 @@ class QRCodeScannerActivity : AppCompatActivity() {
             startCamera()
         } else {
             requestCameraPermission()
+        }
+    }
+
+    private fun navigateToServiceRequestForm() {
+        serviceData?.let { data ->
+            val intent = Intent(this, HomeActivity::class.java).apply {
+                putExtra("navigate_to", "service_request")
+                putExtra("service_type", data.optString(QR_KEY_SERVICE_TYPE, ""))
+                putExtra("purpose", data.optString(QR_KEY_PURPOSE, ""))
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+            startActivity(intent)
+            finish()
         }
     }
 
@@ -224,18 +255,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
                         if (isScanning) {
                             isScanning = false
                             runOnUiThread {
-                                // Show the result
-                                qrContentText.text = qrResult
-                                detectedUrl = qrResult  // Save the URL
-                                resultCard.visibility = View.VISIBLE
-
-                                // Check if the result is a URL and show the visit website button if it is
-                                if (isValidUrl(qrResult)) {
-                                    visitWebsiteButton.visibility = View.VISIBLE
-                                    // Don't automatically show dialog - let user click the button
-                                } else {
-                                    visitWebsiteButton.visibility = View.GONE
-                                }
+                                processQrResult(qrResult)
                             }
                         }
                     })
@@ -251,6 +271,54 @@ class QRCodeScannerActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             Toast.makeText(this, "Use case binding failed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun processQrResult(qrResult: String) {
+        // Show the result
+        qrContentText.text = qrResult
+        detectedUrl = qrResult  // Save the URL
+        resultCard.visibility = View.VISIBLE
+
+        // Try to parse the result as JSON
+        try {
+            val jsonObject = JSONObject(qrResult)
+            val qrType = jsonObject.optString("type")
+            
+            if (qrType == QR_TYPE_SERVICE) {
+                // This is a service request QR code
+                isServiceQrCode = true
+                serviceData = jsonObject
+                
+                // Update UI to show service-specific information
+                qrContentText.text = "Service Request: ${jsonObject.optString(QR_KEY_SERVICE_TYPE)}"
+                visitWebsiteButton.visibility = View.GONE
+                proceedButton.visibility = View.VISIBLE
+            } else {
+                // Not a service QR code
+                isServiceQrCode = false
+                serviceData = null
+                proceedButton.visibility = View.GONE
+                
+                // Check if the result is a URL and show the visit website button if it is
+                if (isValidUrl(qrResult)) {
+                    visitWebsiteButton.visibility = View.VISIBLE
+                } else {
+                    visitWebsiteButton.visibility = View.GONE
+                }
+            }
+        } catch (e: Exception) {
+            // Not a JSON object, handle as normal QR code
+            isServiceQrCode = false
+            serviceData = null
+            proceedButton.visibility = View.GONE
+            
+            // Check if the result is a URL and show the visit website button if it is
+            if (isValidUrl(qrResult)) {
+                visitWebsiteButton.visibility = View.VISIBLE
+            } else {
+                visitWebsiteButton.visibility = View.GONE
+            }
         }
     }
 

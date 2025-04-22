@@ -6,15 +6,14 @@ import okhttp3.Response
 
 class AuthInterceptor(private val sessionManager: SessionManager) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val originalRequest = chain.request()
-
+        val requestBuilder = chain.request().newBuilder()
+        
+        // Get the token from session manager
         sessionManager.getAuthToken()?.let { token ->
-            val newRequest = originalRequest.newBuilder()
-                .header("Authorization", "Bearer $token")
-                .build()
-            return chain.proceed(newRequest)
+            // Add the token as Bearer token in Authorization header
+            requestBuilder.addHeader("Authorization", "Bearer $token")
         }
-
-        return chain.proceed(originalRequest)
+        
+        return chain.proceed(requestBuilder.build())
     }
 }

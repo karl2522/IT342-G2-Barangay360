@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true", allowedHeaders = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:8080"}, maxAge = 3600)
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "User Management", description = "User management APIs")
@@ -178,6 +178,31 @@ public class UserController {
             return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error updating profile: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('USER') or hasRole('OFFICIAL') or hasRole('ADMIN')")
+    @Operation(summary = "Get user profile", description = "Get user profile information")
+    public ResponseEntity<?> getUserProfile(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        try {
+            // Check if user is requesting their own profile or is an admin/official
+            if (!userDetails.getId().equals(userId) && !userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_OFFICIAL"))) {
+                return ResponseEntity.status(403).body(new MessageResponse("You can only view your own profile"));
+            }
+
+            User user = userService.getUserById(userId);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error retrieving profile: " + e.getMessage()));
         }
     }
 } 
