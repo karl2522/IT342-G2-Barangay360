@@ -9,9 +9,16 @@ import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 
 class RequestServicesFragment : Fragment() {
+
+    private lateinit var serviceTypeDropdown: AutoCompleteTextView
+    private lateinit var purposeEditText: TextInputEditText
+    private lateinit var additionalDetailsEditText: TextInputEditText
+    private lateinit var contactNumberEditText: TextInputEditText
+    private lateinit var addressEditText: TextInputEditText
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -23,6 +30,13 @@ class RequestServicesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Initialize form fields
+        serviceTypeDropdown = view.findViewById(R.id.service_type_dropdown)
+        purposeEditText = view.findViewById(R.id.purpose_input)
+        additionalDetailsEditText = view.findViewById(R.id.additional_details_input)
+        contactNumberEditText = view.findViewById(R.id.contact_number_input)
+        addressEditText = view.findViewById(R.id.address_input)
 
         // Setup service type dropdowns
         setupDropdowns(view)
@@ -39,17 +53,35 @@ class RequestServicesFragment : Fragment() {
         }
     }
 
+    /**
+     * Pre-fill the service request form with data from a QR code
+     */
+    fun prefillServiceForm(serviceType: String, purpose: String) {
+        if (isAdded && ::serviceTypeDropdown.isInitialized) {
+            // Set service type if it's one of the available options
+            val serviceTypes = resources.getStringArray(R.array.service_types)
+            if (serviceType.isNotEmpty() && serviceTypes.contains(serviceType)) {
+                serviceTypeDropdown.setText(serviceType, false)
+            }
+            
+            // Set purpose if provided
+            if (purpose.isNotEmpty() && ::purposeEditText.isInitialized) {
+                purposeEditText.setText(purpose)
+            }
+            
+            // Show toast to inform user
+            Toast.makeText(
+                requireContext(),
+                "Service request form pre-filled from QR code",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     // Update setupDropdowns method to include all service types
     private fun setupDropdowns(view: View) {
         // Service type options
-        val serviceTypes = arrayOf(
-            "Barangay Certificate",
-            "Barangay Clearance",
-            "Barangay ID Card",
-            "Business Permit",
-            "Certificate of Residency",
-            "Certificate of Indigency"
-        )
+        val serviceTypes = requireContext().resources.getStringArray(R.array.service_types)
 
         // Setup service type dropdown
         val dropdown = view.findViewById<AutoCompleteTextView>(R.id.service_type_dropdown)

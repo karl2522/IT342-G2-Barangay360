@@ -12,16 +12,34 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/barangay360_text_shadow"/>
+    
+    <!-- User profile image (could be circular) -->
+    <ImageView
+        android:id="@+id/nav_header_profile_image"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="12dp"
+        android:padding="5dp"
+        android:background="@drawable/circle_background"
+        android:src="@drawable/default_profile_icon"
+        android:contentDescription="Profile image"/>
+    
+    <!-- User full name -->
     <TextView
+        android:id="@+id/nav_header_username"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Android Knowledge"
+        android:text="User Name"
         android:textColor="@color/white"
+        android:textSize="16sp"
         android:textStyle="bold"/>
+    
+    <!-- User email -->
     <TextView
+        android:id="@+id/nav_header_email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="contact@androidknowledge.com"
+        android:text="user@example.com"
         android:textColor="@color/white"
         android:textSize="14sp"
         android:layout_marginBottom="16dp"/>

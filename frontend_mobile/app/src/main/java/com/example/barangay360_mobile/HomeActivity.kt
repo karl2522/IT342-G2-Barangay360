@@ -6,6 +6,8 @@ import com.example.barangay360_mobile.util.ThemeManager
 import android.os.Handler
 import android.os.Looper
 import android.view.MenuItem
+import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -24,13 +26,17 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var bottomNavigationView: BottomNavigationView
     private lateinit var fab: FloatingActionButton
-    private lateinit var bottomAppBar: BottomAppBar  // Add this declaration
+    private lateinit var bottomAppBar: BottomAppBar
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.initialize(this)
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        // Initialize SessionManager
+        sessionManager = SessionManager(this)
 
         // Setup toolbar
         val toolbar: Toolbar = findViewById(R.id.toolbar)
@@ -41,6 +47,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
 
+        // Setup navigation header with user data
+        setupNavigationHeader(navigationView)
+
         // Add hamburger icon for drawer
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar,
@@ -49,7 +58,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
-        // Initialize bottomAppBar - Add this line
+        // Initialize bottomAppBar
         bottomAppBar = findViewById(R.id.bottomAppBar)
 
         // Setup floating action button for QR scanner
@@ -93,8 +102,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        // If this is the first time the activity is loaded, show the home fragment
-        if (savedInstanceState == null) {
+        // Check if we need to handle navigation from QR code scanner
+        handleIntent(intent)
+
+        // If this is the first time the activity is loaded and we're not handling a QR code intent,
+        // show the home fragment
+        if (savedInstanceState == null && !intent.hasExtra("navigate_to")) {
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment()).commit()
             navigationView.setCheckedItem(R.id.nav_home)
             bottomNavigationView.selectedItemId = R.id.home
@@ -110,6 +123,64 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             bottomAppBar.setBackgroundColor(getColor(R.color.white))
             bottomNavigationView.setBackgroundColor(getColor(R.color.white))
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        if (intent.hasExtra("navigate_to")) {
+            when (intent.getStringExtra("navigate_to")) {
+                "service_request" -> {
+                    // Navigate to ServicesFragment
+                    val servicesFragment = ServicesFragment()
+                    replaceFragment(servicesFragment)
+                    
+                    // Set bottom navigation to services tab
+                    bottomNavigationView.selectedItemId = R.id.services
+                    
+                    // Wait for ServicesFragment to be fully created and initialized
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        // Access the ViewPager to navigate to RequestServicesFragment
+                        if (servicesFragment.isAdded && ::bottomNavigationView.isInitialized) {
+                            // ViewPager is at position 0 for RequestServicesFragment
+                            servicesFragment.viewPager.currentItem = 0
+                            
+                            // Create bundle with service data
+                            val serviceType = intent.getStringExtra("service_type") ?: ""
+                            val purpose = intent.getStringExtra("purpose") ?: ""
+                            
+                            // Find the RequestServicesFragment that's active
+                            val requestServicesFragment = supportFragmentManager.findFragmentByTag("f0")
+                                as? RequestServicesFragment
+                                
+                            // If we found it, pre-fill the form
+                            requestServicesFragment?.prefillServiceForm(serviceType, purpose)
+                        }
+                    }, 500)
+                }
+            }
+        }
+    }
+
+    private fun setupNavigationHeader(navigationView: NavigationView) {
+        // Get the header view
+        val headerView = navigationView.getHeaderView(0)
+        
+        // Get references to the header's TextViews
+        val usernameTextView = headerView.findViewById<TextView>(R.id.nav_header_username)
+        val emailTextView = headerView.findViewById<TextView>(R.id.nav_header_email)
+        
+        // Get user data from SessionManager
+        val firstName = sessionManager.getFirstName() ?: ""
+        val lastName = sessionManager.getLastName() ?: ""
+        val email = sessionManager.getUserEmail() ?: ""
+        
+        // Display user data in the header
+        usernameTextView.text = "$firstName $lastName"
+        emailTextView.text = email
     }
 
     // Handle navigation item selection from the navigation drawer
