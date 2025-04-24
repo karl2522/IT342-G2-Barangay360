@@ -12,7 +12,7 @@ object ApiClient {
     // Update to match your Spring Boot server
     // For emulator, use 10.0.2.2 to reach host machine's localhost
     // For physical devices on same WiFi network, use computer's actual IP address
-    private const val BASE_URL = "http://192.168.1.2:8080/"
+    private const val BASE_URL = "http://192.168.56.1:8080/"
     
     private lateinit var sessionManager: SessionManager
     
