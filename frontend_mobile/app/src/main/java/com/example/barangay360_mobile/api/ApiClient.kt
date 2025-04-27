@@ -120,4 +120,8 @@ object ApiClient {
         // Assuming announcements require authentication. If not, use authRetrofit
         apiRetrofit.create(AnnouncementService::class.java)
     }
+
+    val serviceRequestService: ServiceRequestService by lazy {
+        apiRetrofit.create(ServiceRequestService::class.java)
+    }
 }
