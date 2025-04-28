@@ -6,6 +6,8 @@ import com.example.barangay360_mobile.util.ThemeManager
 import android.os.Handler
 import android.os.Looper
 import android.view.MenuItem
+import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +15,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import com.example.barangay360_mobile.util.SessionManager
 import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -23,13 +26,17 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var bottomNavigationView: BottomNavigationView
     private lateinit var fab: FloatingActionButton
-    private lateinit var bottomAppBar: BottomAppBar  // Add this declaration
+    private lateinit var bottomAppBar: BottomAppBar
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.initialize(this)
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        // Initialize SessionManager
+        sessionManager = SessionManager(this)
 
         // Setup toolbar
         val toolbar: Toolbar = findViewById(R.id.toolbar)
@@ -40,6 +47,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
 
+        // Setup navigation header with user data
+        setupNavigationHeader(navigationView)
+
         // Add hamburger icon for drawer
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar,
@@ -48,7 +58,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
-        // Initialize bottomAppBar - Add this line
+        // Initialize bottomAppBar
         bottomAppBar = findViewById(R.id.bottomAppBar)
 
         // Setup floating action button for QR scanner
@@ -66,34 +76,35 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         bottomNavigationView.menu.getItem(2).isEnabled = false // Disable the middle item (camera placeholder)
 
         bottomNavigationView.setOnItemSelectedListener { item ->
+            var selectedFragment: Fragment? = null // Initialize as null
             when (item.itemId) {
                 R.id.home -> {
-                    // Navigate to HomeFragment
-                    replaceFragment(HomeFragment())
-                    true
+                    selectedFragment = HomeFragment()
                 }
                 R.id.announcements -> {
-                    // Navigate to AnnouncementFragment
-                    replaceFragment(AnnouncementFragment())
-                    true
+                    selectedFragment = AnnouncementFragment()
                 }
                 R.id.services -> {
-                    // Navigate to ServicesFragment
-                    replaceFragment(ServicesFragment())
-                    true
+                    selectedFragment = ServicesFragment() // This now contains MyServicesFragment
                 }
                 R.id.profile -> {
-                    // Navigate to ProfileFragment
-                    replaceFragment(ProfileFragment())
-                    true
+                    selectedFragment = ProfileFragment()
                 }
-
-                else -> false
             }
+            // Replace fragment if one was selected
+            selectedFragment?.let {
+                replaceFragment(it)
+                true // Return true as the selection was handled
+            } ?: false // Return false if no fragment was selected (e.g., placeholder item)
         }
 
-        // If this is the first time the activity is loaded, show the home fragment
-        if (savedInstanceState == null) {
+
+        // Check if we need to handle navigation from QR code scanner
+        handleIntent(intent)
+
+        // If this is the first time the activity is loaded and we're not handling a QR code intent,
+        // show the home fragment
+        if (savedInstanceState == null && !intent.hasExtra("navigate_to")) {
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment()).commit()
             navigationView.setCheckedItem(R.id.nav_home)
             bottomNavigationView.selectedItemId = R.id.home
@@ -102,7 +113,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Force correct appearance mode based on current theme
         if (ThemeManager.isDarkModeEnabled(this)) {
             // In dark mode - ensure UI components use dark styling
-            // (They should do this automatically with proper theme settings)
         } else {
             // In light mode - force light styling
             navigationView.setBackgroundColor(getColor(R.color.white))
@@ -111,56 +121,115 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    // Handle navigation item selection from the navigation drawer
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Highlight the selected item immediately for visual feedback
-        item.isChecked = true
-
-        // Create handler for delayed operations
-        val handler = Handler(Looper.getMainLooper())
-
-        // Wait 1 second before executing navigation
-        handler.postDelayed({
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    // Navigate to HomeFragment
-                    replaceFragment(HomeFragment())
-                    bottomNavigationView.selectedItemId = R.id.home
-                }
-                R.id.nav_services -> {
-                    // Navigate to SettingsFragment
-                    replaceFragment(ServicesFragment())
-                }
-                R.id.nav_announcements -> {
-                    // Navigate to SettingsFragment
-                    replaceFragment(AnnouncementFragment())
-                }
-                R.id.nav_profile -> {
-                    // Navigate to ShareFragment
-                    replaceFragment(ProfileFragment())
-                }
-                R.id.nav_settings -> {
-                    // Navigate to SettingsFragment
-                    replaceFragment(SettingsFragment())
-                }
-                R.id.nav_about -> {
-                    // Navigate to AboutFragment
-                    replaceFragment(AboutFragment())
-                }
-                R.id.nav_logout -> {
-                    // Handle logout action
-                    Toast.makeText(this, "Logout!", Toast.LENGTH_SHORT).show()
-                }
-            }
-            // Close the navigation drawer after the delay
-            drawerLayout.closeDrawer(GravityCompat.START)
-        }, 300) // 3 millisecond delay (300ms)
-
-        // Don't close the drawer immediately - it will close after delay
-        return true
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // Update the activity's intent
+        handleIntent(intent)
     }
 
-    // Replace the current fragment with the specified fragment
+
+    private fun handleIntent(intent: Intent?) {
+        intent?.let {
+            if (it.hasExtra("navigate_to")) {
+                when (it.getStringExtra("navigate_to")) {
+                    "service_request" -> {
+                        // Get the data from the intent
+                        val serviceType = it.getStringExtra("service_type") ?: ""
+                        val purpose = it.getStringExtra("purpose") ?: ""
+
+                        // Create a bundle to pass data
+                        val args = Bundle().apply {
+                            putString("service_type", serviceType)
+                            putString("purpose", purpose)
+                        }
+
+                        // Navigate to ServicesFragment (which loads MyServicesFragment)
+                        val servicesFragment = ServicesFragment()
+                        // servicesFragment.arguments = args // Pass arguments if ServicesFragment needs them (it doesn't currently)
+                        replaceFragment(servicesFragment)
+
+                        // Set bottom navigation to services tab
+                        bottomNavigationView.selectedItemId = R.id.services
+
+                        // Use Fragment Result API or ViewModel for safer communication instead of Handler
+                        // Set the result to be received by MyServicesFragment or RequestServicesFragment
+                        supportFragmentManager.setFragmentResult("qrServiceData", args)
+
+
+                        // Remove the handled extra to prevent re-processing on config change
+                        it.removeExtra("navigate_to")
+                    }
+                    // Handle other navigation cases if needed
+                }
+            }
+        }
+    }
+
+    private fun setupNavigationHeader(navigationView: NavigationView) {
+        val headerView = navigationView.getHeaderView(0)
+        val usernameTextView = headerView.findViewById<TextView>(R.id.nav_header_username)
+        val emailTextView = headerView.findViewById<TextView>(R.id.nav_header_email)
+
+        val firstName = sessionManager.getFirstName() ?: ""
+        val lastName = sessionManager.getLastName() ?: ""
+        val email = sessionManager.getUserEmail() ?: ""
+
+        val fullName = "$firstName $lastName".trim()
+        usernameTextView.text = if (fullName.isNotEmpty()) fullName else "User" // Fallback name
+        emailTextView.text = email
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        var selectedFragment: Fragment? = null
+        var selectedBottomNavId: Int? = null // Track corresponding bottom nav item
+
+        when (item.itemId) {
+            R.id.nav_home -> {
+                selectedFragment = HomeFragment()
+                selectedBottomNavId = R.id.home
+            }
+            R.id.nav_services -> {
+                selectedFragment = ServicesFragment()
+                selectedBottomNavId = R.id.services // Select services bottom nav item
+            }
+            R.id.nav_announcements -> {
+                selectedFragment = AnnouncementFragment()
+                selectedBottomNavId = R.id.announcements
+            }
+            R.id.nav_profile -> {
+                selectedFragment = ProfileFragment()
+                selectedBottomNavId = R.id.profile
+            }
+            R.id.nav_settings -> {
+                selectedFragment = SettingsFragment()
+                // No direct bottom nav item for settings, keep selection as is or default to home?
+                // Keep current selection: selectedBottomNavId = bottomNavigationView.selectedItemId
+                // Or default to home: selectedBottomNavId = R.id.home
+            }
+            R.id.nav_about -> {
+                selectedFragment = AboutFragment()
+                // No direct bottom nav item for about
+            }
+            R.id.nav_logout -> {
+                logout()
+            }
+        }
+
+        selectedFragment?.let {
+            replaceFragment(it)
+        }
+
+        // Update bottom nav selection if a corresponding item exists
+        selectedBottomNavId?.let {
+            bottomNavigationView.selectedItemId = it
+        }
+
+
+        drawerLayout.closeDrawer(GravityCompat.START)
+        return true // Return true to display the item as selected
+    }
+
+
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction().replace(
             R.id.fragment_container,
@@ -168,12 +237,32 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         ).commit()
     }
 
-    // Handle back button press
     override fun onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START)
         } else {
-            super.onBackPressed()
+            // Check if the current fragment is NOT HomeFragment
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+            if (currentFragment !is HomeFragment) {
+                // If not Home, navigate to Home
+                replaceFragment(HomeFragment())
+                bottomNavigationView.selectedItemId = R.id.home // Update bottom nav
+                // Ensure the drawer menu item is also checked if needed
+                val navigationView: NavigationView = findViewById(R.id.nav_view)
+                navigationView.setCheckedItem(R.id.nav_home)
+            } else {
+                // If already on Home, perform default back action (exit app)
+                super.onBackPressed()
+            }
         }
+    }
+
+
+    private fun logout() {
+        sessionManager.clearSession()
+        val intent = Intent(this, SignInActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finishAffinity() // Close all activities in the task associated with this activity
     }
 }

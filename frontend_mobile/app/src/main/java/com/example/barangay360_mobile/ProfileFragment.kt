@@ -13,13 +13,26 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.barangay360_mobile.api.ApiClient
+import com.example.barangay360_mobile.api.models.UserProfile
+import com.example.barangay360_mobile.util.SessionManager
+import kotlinx.coroutines.launch
 
 class ProfileFragment : Fragment() {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var profileRole: TextView
     private lateinit var adminSection: LinearLayout
+    private lateinit var profileName: TextView
+    private lateinit var profileId: TextView
+    private lateinit var profilePhone: TextView
+    private lateinit var profileEmail: TextView
+    private lateinit var profileAddress: TextView
+    private lateinit var sessionManager: SessionManager
+    
+    private var userProfile: UserProfile? = null
 
     @SuppressLint("MissingInflatedId")
     override fun onCreateView(
@@ -28,6 +41,9 @@ class ProfileFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
+
+        // Initialize SessionManager
+        sessionManager = SessionManager(requireContext())
 
         // Initialize SwipeRefreshLayout
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
@@ -41,7 +57,7 @@ class ProfileFragment : Fragment() {
 
         // Set up refresh listener
         swipeRefreshLayout.setOnRefreshListener {
-            refreshHomeContent()
+            fetchUserProfile()
         }
 
         // Set up Edit Profile button click listener
@@ -56,16 +72,14 @@ class ProfileFragment : Fragment() {
             requireActivity().onBackPressed()
         }
 
-        // Setup menu button
-        view.findViewById<ImageView>(R.id.profile_btn_menu)?.setOnClickListener {
-            // Show options menu
-            Toast.makeText(context, "Menu options", Toast.LENGTH_SHORT).show()
-            // You can implement a popup menu here
-        }
-
-        // Initialize role-related views
+        // Initialize profile views
         profileRole = view.findViewById(R.id.profile_role)
         adminSection = view.findViewById(R.id.admin_section)
+        profileName = view.findViewById(R.id.profile_name)
+        profileId = view.findViewById(R.id.profile_id)
+        profilePhone = view.findViewById(R.id.profile_phone)
+        profileEmail = view.findViewById(R.id.profile_email)
+        profileAddress = view.findViewById(R.id.profile_address)
 
         return view
     }
@@ -73,8 +87,8 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Setup role-based UI after views are created
-        setupRoleBasedUI()
+        // Fetch user profile
+        fetchUserProfile()
 
         // Set up account settings buttons
         setupAccountButtons(view)
@@ -91,8 +105,7 @@ class ProfileFragment : Fragment() {
         }
 
         view.findViewById<Button>(R.id.btn_logout)?.setOnClickListener {
-            Toast.makeText(context, "Logout clicked", Toast.LENGTH_SHORT).show()
-            // TODO: Implement actual logout functionality
+            logout()
         }
 
         // Setup admin-specific buttons
@@ -103,6 +116,19 @@ class ProfileFragment : Fragment() {
         view.findViewById<Button>(R.id.btn_system_settings)?.setOnClickListener {
             Toast.makeText(context, "System Settings clicked", Toast.LENGTH_SHORT).show()
         }
+    }
+    
+    private fun logout() {
+        Toast.makeText(context, "Logging out...", Toast.LENGTH_SHORT).show()
+        
+        // Clear session data
+        sessionManager.clearSession()
+        
+        // Navigate to sign in screen
+        val intent = android.content.Intent(requireContext(), SignInActivity::class.java)
+        intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        requireActivity().finish()
     }
 
     private fun navigateToEditProfile() {
@@ -117,34 +143,93 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun refreshHomeContent() {
-        // Simulate network delay
-        swipeRefreshLayout.postDelayed({
-            // When done, hide the refresh indicator
-            swipeRefreshLayout.isRefreshing = false
+    private fun fetchUserProfile() {
+        // Show refresh indicator
+        swipeRefreshLayout.isRefreshing = true
 
-            // Optional: Show a confirmation toast
-            Toast.makeText(context, "Profile refreshed", Toast.LENGTH_SHORT).show()
-        }, 1500) // Simulate a 1.5 second refresh operation
+        // Get user ID and token from session
+        val userId = sessionManager.getUserId()
+        val token = sessionManager.getAuthToken()
+
+        if (userId == null || token == null) {
+            swipeRefreshLayout.isRefreshing = false
+            Toast.makeText(context, "User not authenticated. Please login again.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Fetch user profile from API
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.userService.getUserProfile(userId, "Bearer $token")
+
+                if (response.isSuccessful) {
+                    userProfile = response.body()
+                    userProfile?.let { profile ->
+                        updateUI(profile)
+                    }
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Failed to load profile: ${response.message()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    context,
+                    "Error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } finally {
+                swipeRefreshLayout.isRefreshing = false
+            }
+        }
+    }
+
+
+    private fun updateUI(profile: UserProfile) {
+        // Update profile information
+        profileName.text = "${profile.firstName} ${profile.lastName}"
+        profileId.text = "Resident ID: BRG-${profile.id}"
+        profilePhone.text = profile.phone ?: "No phone number"
+        profileEmail.text = profile.email
+        profileAddress.text = profile.address ?: "No address"
+        
+        // Determine user role and set up role-based UI
+        val isOfficial = profile.roles.any { it.name.contains("ROLE_OFFICIAL") }
+        val isAdmin = profile.roles.any { it.name.contains("ROLE_ADMIN") }
+        
+        when {
+            isAdmin -> {
+                profileRole.text = "Admin"
+                setupRoleBasedUI("Admin")
+            }
+            isOfficial -> {
+                profileRole.text = "Official"
+                setupRoleBasedUI("Official") 
+            }
+            else -> {
+                profileRole.text = "Resident"
+                setupRoleBasedUI("Resident")
+            }
+        }
     }
 
     // Show or hide admin sections based on user role
-    private fun setupRoleBasedUI() {
-        // Get the role from your user data
-        val userRole = "Admin" // or "Resident" - replace with your actual data source
-
+    private fun setupRoleBasedUI(userRole: String) {
         // Only proceed if the views are properly initialized
         if (::profileRole.isInitialized && ::adminSection.isInitialized) {
             // Set the role text
             profileRole.text = userRole
 
-            // Show admin section if the user is an admin
-            if (userRole == "Admin") {
+            // Show admin section if the user is an admin or official
+            if (userRole == "Admin" || userRole == "Official") {
                 adminSection.visibility = View.VISIBLE
 
-                // Change role badge background to a different color for admin
+                // Change role badge background to a different color for admin/official
                 val adminBadgeBg = GradientDrawable()
-                adminBadgeBg.setColor(ContextCompat.getColor(requireContext(), R.color.purple_500))
+                val colorRes = if (userRole == "Admin") R.color.purple_500 else R.color.maroon
+                adminBadgeBg.setColor(ContextCompat.getColor(requireContext(), colorRes))
                 // Replace the problematic line with a direct value
                 adminBadgeBg.cornerRadius = 8f * resources.displayMetrics.density // 8dp converted to pixels
                 profileRole.background = adminBadgeBg

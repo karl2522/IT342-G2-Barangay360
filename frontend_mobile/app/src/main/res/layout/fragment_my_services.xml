@@ -1,64 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FFFFFF">
-
-    <!-- Content Area -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_services"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingStart="25dp"
-        android:paddingTop="25dp"
-        android:paddingEnd="25dp"
-        android:paddingBottom="110dp"
-        android:clipToPadding="false"
-        android:overScrollMode="never"
-        tools:listitem="@layout/item_service" />
-
-    <!-- Empty state view -->
-    <LinearLayout
-        android:id="@+id/empty_state_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:layout_marginBottom="56dp"
-        android:visibility="gone">
+        android:background="?attr/colorSurface">
 
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@android:drawable/ic_dialog_info"
-            app:tint="#9E9E9E" />
-
-        <TextView
-            android:layout_width="wrap_content"
+    <HorizontalScrollView
+            android:id="@+id/filter_scroll_view"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="No service requests yet"
-            android:textColor="#212121"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:scrollbars="none"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:clipToPadding="false"
+            android:background="?attr/colorSurface"
+            android:elevation="2dp">
 
-        <Button
-            android:id="@+id/btn_create_request"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/btn_submit_background"
-            android:paddingStart="24dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="24dp"
-            android:paddingBottom="12dp"
-            android:text="Request a Service"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-</FrameLayout>
+        <com.google.android.material.chip.ChipGroup
+                android:id="@+id/service_filter_chip_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true"
+                app:singleSelection="true"
+                app:checkedChip="@+id/chip_filter_all"> <com.google.android.material.chip.Chip
+                android:id="@+id/chip_filter_all"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All"
+                android:checkable="true"
+                android:checked="true"/>
+
+            <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_filter_pending"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pending"
+                    android:checkable="true"/>
+
+            <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_filter_approved"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Approved"
+                    android:checkable="true"/>
+
+            <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_filter_rejected"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rejected"
+                    android:checkable="true"/>
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/my_services_swipe_refresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_services"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingStart="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="100dp"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    tools:listitem="@layout/item_service" /> <LinearLayout
+                android:id="@+id/empty_state_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:layout_marginBottom="56dp"
+                android:visibility="gone">
+
+            <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/request_icon"
+                    app:tint="@color/text_secondary" />
+
+            <TextView
+                    android:id="@+id/empty_state_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="You currently have no services requested"
+                    android:textAlignment="center"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+            <Button
+                    android:id="@+id/btn_create_request"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:backgroundTint="@color/maroon"
+                    android:paddingStart="24dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="24dp"
+                    android:paddingBottom="12dp"
+                    android:text="Request a Service"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+        </LinearLayout>
+
+            <ProgressBar
+                    android:id="@+id/my_services_progress_bar"
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:visibility="gone"
+                    android:elevation="10dp"/>
+
+        </RelativeLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</LinearLayout>

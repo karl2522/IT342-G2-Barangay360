@@ -14,7 +14,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 
 class ServicesFragment : Fragment() {
     private lateinit var tabLayout: TabLayout
-    lateinit var viewPager: ViewPager2
+    lateinit var viewPager: ViewPager2 // Made lateinit public for potential external access if needed later
     private lateinit var titleTextView: TextView
     private lateinit var backButton: ImageView
 
@@ -59,6 +59,7 @@ class ServicesFragment : Fragment() {
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 when(tab.position) {
+                    // Keep title consistent or change as needed
                     0 -> titleTextView.text = "Services"
                     1 -> titleTextView.text = "Services"
                 }
@@ -73,13 +74,13 @@ class ServicesFragment : Fragment() {
     private inner class ServicesPagerAdapter(fragment: Fragment) :
         FragmentStateAdapter(fragment) {
 
-        override fun getItemCount(): Int = 2
+        override fun getItemCount(): Int = 2 // We have two tabs
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
                 0 -> RequestServicesFragment()
                 1 -> MyServicesFragment()
-                else -> RequestServicesFragment()
+                else -> RequestServicesFragment() // Default case
             }
         }
     }

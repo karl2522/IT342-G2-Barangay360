@@ -1,157 +1,257 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/relativeLayout"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:background="@drawable/register_background">
 
-    <!-- Logo centered at the top with margin -->
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="170dp"
-        android:layout_height="150dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="80dp"
-        android:src="@drawable/barangay360_logo" />
-
-    <!-- Welcome text below logo -->
-    <TextView
-        android:id="@+id/signup_welcome_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/logo"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:fontFamily="@font/poppins_semibold"
-        android:text="Welcome to Barangay360"
-        android:textColor="@color/black"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
-    <!-- Subtitle below welcome text -->
-    <TextView
-        android:id="@+id/signup_here_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/signup_welcome_text"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="8dp"
-        android:fontFamily="@font/poppins"
-        android:text="Sign up your account here"
-        android:textColor="@color/black"
-        android:textSize="15dp" />
-
-    <!-- Name input field -->
-    <EditText
-        android:id="@+id/signup_name"
+    <RelativeLayout
+        android:id="@+id/relativeLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/signup_here_text"
-        android:layout_marginHorizontal="60dp"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/rounded"
-        android:ems="10"
-        android:fontFamily="@font/poppins"
-        android:hint="Name"
-        android:inputType="text"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp"
-        android:textColor="@color/black" />
+        android:paddingBottom="24dp">
 
-    <!-- Email input field -->
-    <EditText
-        android:id="@+id/signup_email"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/signup_name"
-        android:layout_marginHorizontal="60dp"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/rounded"
-        android:ems="10"
-        android:fontFamily="@font/poppins"
-        android:hint="Email"
-        android:inputType="textEmailAddress"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp"
-        android:textColor="@color/black" />
+        <!-- Logo centered at the top with margin -->
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="150dp"
+            android:layout_height="130dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="40dp"
+            android:src="@drawable/barangay360_logo" />
 
-    <!-- Password input field -->
-    <EditText
-        android:id="@+id/signup_password"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/signup_email"
-        android:layout_marginHorizontal="60dp"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/rounded"
-        android:ems="10"
-        android:fontFamily="@font/poppins"
-        android:hint="Password"
-        android:inputType="textPassword"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp"
-        android:textColor="@color/black" />
+        <!-- Welcome text below logo -->
+        <TextView
+            android:id="@+id/signup_welcome_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/logo"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="Welcome to Barangay360"
+            android:textColor="@color/black"
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
-    <!-- Confirm Password input field -->
-    <EditText
-        android:id="@+id/signup_confirmpassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/signup_password"
-        android:layout_marginHorizontal="60dp"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/rounded"
-        android:ems="10"
-        android:fontFamily="@font/poppins"
-        android:hint="Confirm Password"
-        android:inputType="textPassword"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp"
-        android:textColor="@color/black" />
+        <!-- Subtitle below welcome text -->
+        <TextView
+            android:id="@+id/signup_here_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/signup_welcome_text"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif"
+            android:text="Create your account"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
 
-    <!-- Signup button -->
-    <Button
-        android:id="@+id/signup_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/signup_confirmpassword"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="24dp"
-        android:minWidth="200dp"
-        android:paddingVertical="10dp"
-        android:text="Sign up" />
+        <!-- Form Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/signup_here_text"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical">
 
-    <!-- Already have account text -->
-    <TextView
-        android:id="@+id/already_account_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/signup_button"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="4dp"
-        android:layout_toStartOf="@id/already_account_signin_text"
-        android:fontFamily="@font/poppins"
-        android:text="Already have an account?"
-        android:textColor="@color/black"
-        android:textSize="15dp" />
+            <!-- First Name and Last Name Fields with floating labels -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/signup_firstname_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="First Name"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/signup_firstname"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:fontFamily="sans-serif"
+                        android:textColor="@color/black"
+                        android:textSize="15sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+                
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/signup_lastname_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:hint="Last Name"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/signup_lastname"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:fontFamily="sans-serif"
+                        android:textColor="@color/black"
+                        android:textSize="15sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
 
-    <!-- Sign In text button -->
-    <TextView
-        android:id="@+id/already_account_signin_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/signup_button"
-        android:layout_alignBaseline="@id/already_account_text"
-        android:layout_marginLeft="10dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:fontFamily="@font/poppins"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="93dp"
-        android:text="Sign In"
-        android:textColor="@color/maroon"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+            <!-- Username field with floating label -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/signup_username_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Username"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signup_username"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:fontFamily="sans-serif"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-</RelativeLayout>
+            <!-- Email field with floating label -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/signup_email_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Email"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signup_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:fontFamily="sans-serif"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Password field with floating label -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/signup_password_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Password"
+                app:passwordToggleEnabled="true"
+                app:helperText="At least 6 characters"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signup_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:fontFamily="sans-serif"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Address field with floating label -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/signup_address_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Address"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signup_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPostalAddress"
+                    android:fontFamily="sans-serif"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+            
+            <!-- Phone field with floating label -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/signup_phone_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Phone Number"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signup_phone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="phone"
+                    android:fontFamily="sans-serif"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Signup button -->
+            <Button
+                android:id="@+id/signup_button"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/button_primary"
+                android:elevation="2dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="Sign up"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <!-- Already have account container -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <!-- Already have account text -->
+                <TextView
+                    android:id="@+id/already_account_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="Already have an account? "
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <!-- Sign In text button -->
+                <TextView
+                    android:id="@+id/already_account_signin_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Sign In"
+                    android:textColor="@color/maroon"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Progress indicator -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone" />
+
+    </RelativeLayout>
+</ScrollView>

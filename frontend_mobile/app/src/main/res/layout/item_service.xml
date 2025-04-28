@@ -1,66 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/service_card_root"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="@color/surface_variant" app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground">
 
-        <TextView
-            android:id="@+id/service_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Barangay Clearance"
-            android:textColor="#212121"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/service_date"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/service_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mar 25, 2025"
-            android:textColor="#9E9E9E"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/service_description"
+    <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="This is a sample description for the service request. It provides details about what the resident needs."
-            android:textColor="#757575"
-            android:textSize="12sp"
-            app:layout_constraintTop_toBottomOf="@id/service_title" />
+            android:padding="16dp">
 
         <TextView
-            android:id="@+id/service_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_status_pending"
-            android:paddingStart="16dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="8dp"
-            android:text="Pending"
-            android:textColor="#212121"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/service_description" />
+                android:id="@+id/service_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Barangay Clearance"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@id/service_date"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                android:layout_marginEnd="8dp"/>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+                android:id="@+id/service_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mar 25, 2025"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/service_title"
+                app:layout_constraintBottom_toBottomOf="@id/service_title"/>
+
+        <TextView
+                android:id="@+id/service_description"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Purpose: For employment application requirements."
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                app:layout_constraintTop_toBottomOf="@id/service_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+                android:id="@+id/service_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_status_pending" android:paddingStart="12dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="4dp"
+                android:text="Pending"
+                android:textColor="@color/pending_text" android:textSize="12sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/service_description"
+                app:layout_constraintBottom_toBottomOf="parent"/> </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

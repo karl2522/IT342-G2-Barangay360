@@ -1,56 +1,47 @@
 package com.example.barangay360_mobile
 
-import android.graphics.Color
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.cardview.widget.CardView
-import androidx.core.content.ContextCompat
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
+//import com.bumptech.glide.Glide // Add Glide dependency if you want to load images
+import com.example.barangay360_mobile.api.ApiClient
+import com.example.barangay360_mobile.api.models.AnnouncementResponse
+import com.example.barangay360_mobile.util.SessionManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import kotlinx.coroutines.launch
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 class AnnouncementFragment : Fragment() {
 
     // UI Components
-    private lateinit var btnFilter: ImageButton
-    private lateinit var filterScroll: View
-    private lateinit var chipGroup: ChipGroup
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyStateView: LinearLayout
     private lateinit var progressBar: ProgressBar
     private lateinit var fabAddAnnouncement: FloatingActionButton
+    private lateinit var announcementsAdapter: AnnouncementAdapter // Use ListAdapter
+    private lateinit var sessionManager: SessionManager // Add SessionManager
 
-    // Category types
-    private val CATEGORY_ALL = "All"
-    private val CATEGORY_EMERGENCY = "Emergency"
-    private val CATEGORY_EVENTS = "Events"
-    private val CATEGORY_SERVICES = "Services"
-    private val CATEGORY_MAINTENANCE = "Maintenance"
 
-    // Category colors
-    private val COLOR_EMERGENCY = "#D32F2F" // Red
-    private val COLOR_EVENTS = "#388E3C" // Green
-    private val COLOR_SERVICES = "#1976D2" // Blue
-    private val COLOR_MAINTENANCE = "#FFA000" // Amber
-
-    // Current filter category
-    private var currentCategory = CATEGORY_ALL
+    // Removed filtering variables
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -58,204 +49,138 @@ class AnnouncementFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_announcement, container, false)
 
+        sessionManager = SessionManager(requireContext()) // Initialize SessionManager
+
         // Initialize UI components
-        btnFilter = view.findViewById(R.id.btn_filter)
-        filterScroll = view.findViewById(R.id.filter_scroll)
-        chipGroup = view.findViewById(R.id.filter_chip_group)
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
         recyclerView = view.findViewById(R.id.recycler_announcements)
         emptyStateView = view.findViewById(R.id.empty_state)
         progressBar = view.findViewById(R.id.progress_bar)
         fabAddAnnouncement = view.findViewById(R.id.fab_add_announcement)
 
-        // Set up RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(context)
+        setupRecyclerView()
+        setupSwipeRefresh()
 
-        // Setup filter button click
-        btnFilter.setOnClickListener {
-            toggleFilterVisibility()
-        }
-
-        // Setup chip group listener
-        setupFilterChips()
-
-        // Setup swipe refresh
-        swipeRefreshLayout.setColorSchemeResources(R.color.maroon)
-        swipeRefreshLayout.setOnRefreshListener {
-            loadAnnouncements()
-        }
-
-        // Check if user is an admin/official to show FAB
+        // Check if user is an admin/official to show FAB (adjust logic as needed)
         checkUserRole()
 
-        // Setup FAB click
+        // Setup FAB click (implement actual navigation/dialog later)
         fabAddAnnouncement.setOnClickListener {
-            showAddAnnouncementDialog()
+            // Example: Navigate to a CreateAnnouncementFragment
+            // findNavController().navigate(R.id.action_announcementFragment_to_createAnnouncementFragment)
+            if (isAdded) Toast.makeText(context, "Create announcement feature coming soon", Toast.LENGTH_SHORT).show()
         }
-
-        // Initial data load
-        loadAnnouncements()
 
         return view
     }
 
-    private fun toggleFilterVisibility() {
-        if (filterScroll.visibility == View.VISIBLE) {
-            filterScroll.visibility = View.GONE
-        } else {
-            filterScroll.visibility = View.VISIBLE
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        loadAnnouncements() // Load data when view is ready
     }
 
-    private fun setupFilterChips() {
-        val chipAll = view?.findViewById<Chip>(R.id.chip_all)
-        val chipEmergency = view?.findViewById<Chip>(R.id.chip_emergency)
-        val chipEvents = view?.findViewById<Chip>(R.id.chip_events)
-        val chipServices = view?.findViewById<Chip>(R.id.chip_services)
-        val chipMaintenance = view?.findViewById<Chip>(R.id.chip_maintenance)
+    private fun setupRecyclerView() {
+        recyclerView.layoutManager = LinearLayoutManager(context)
+        announcementsAdapter = AnnouncementAdapter { announcement ->
+            // Handle item click (e.g., view details)
+            viewAnnouncementDetails(announcement)
+        }
+        recyclerView.adapter = announcementsAdapter
+    }
 
-        chipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
-            if (checkedIds.isEmpty()) {
-                // If no chip is selected, select "All" by default
-                chipAll?.isChecked = true
-                currentCategory = CATEGORY_ALL
-            } else {
-                when (checkedIds[0]) {
-                    R.id.chip_all -> currentCategory = CATEGORY_ALL
-                    R.id.chip_emergency -> currentCategory = CATEGORY_EMERGENCY
-                    R.id.chip_events -> currentCategory = CATEGORY_EVENTS
-                    R.id.chip_services -> currentCategory = CATEGORY_SERVICES
-                    R.id.chip_maintenance -> currentCategory = CATEGORY_MAINTENANCE
-                }
-            }
-            // Apply filter
-            filterAnnouncements()
+
+    private fun setupSwipeRefresh() {
+        swipeRefreshLayout.setColorSchemeResources(R.color.maroon)
+        swipeRefreshLayout.setOnRefreshListener {
+            loadAnnouncements() // Reload data on refresh
         }
     }
 
     private fun checkUserRole() {
-        // TODO: Check user role from your authentication system
-        val isAdmin = false // Change this based on your authentication logic
+        // TODO: Implement proper role checking based on SessionManager roles
+        val roles = sessionManager.getUserRoles()
+        val isOfficialOrAdmin = roles != null && (roles.contains("ROLE_OFFICIAL") || roles.contains("ROLE_ADMIN"))
 
-        if (isAdmin) {
+        if (isOfficialOrAdmin) {
             fabAddAnnouncement.visibility = View.VISIBLE
         } else {
             fabAddAnnouncement.visibility = View.GONE
         }
     }
 
-    private fun showAddAnnouncementDialog() {
-        // TODO: Implement dialog for adding new announcements
-    }
-
     private fun loadAnnouncements() {
-        // Show loading indicator
-        progressBar.visibility = View.VISIBLE
-        recyclerView.visibility = View.GONE
-        emptyStateView.visibility = View.GONE
+        setLoadingState(true) // Show loading
 
-        // Simulate network delay
-        view?.postDelayed({
-            // Get announcements from your data source
-            val announcements = getSampleAnnouncements()
+        val token = sessionManager.getAuthToken()
+        if (token == null) {
+            if(isAdded) Toast.makeText(requireContext(), "Please log in to view announcements.", Toast.LENGTH_SHORT).show()
+            setLoadingState(false)
+            updateEmptyStateVisibility(true) // Show empty state if not logged in
+            return
+        }
 
-            if (announcements.isEmpty()) {
-                // Show empty state
-                showEmptyState()
-            } else {
-                // Show announcements
-                showAnnouncements(announcements)
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.announcementService.getAnnouncements("Bearer $token")
+
+                if (!isAdded) return@launch // Exit if fragment detached
+
+                if (response.isSuccessful) {
+                    val announcements = response.body() ?: emptyList()
+                    // Sort by creation date descending
+                    val sortedList = announcements.sortedByDescending { it.createdAt ?: OffsetDateTime.MIN }
+                    announcementsAdapter.submitList(sortedList)
+                    updateEmptyStateVisibility(sortedList.isEmpty())
+
+                } else {
+                    Log.e("Announcements", "API Error: ${response.code()} - ${response.message()}")
+                    if(isAdded) Toast.makeText(requireContext(), "Failed to load announcements: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    announcementsAdapter.submitList(emptyList()) // Clear list on error
+                    updateEmptyStateVisibility(true)
+                }
+
+            } catch (e: Exception) {
+                if (isAdded) {
+                    Log.e("Announcements", "Exception: ${e.message}", e)
+                    if (e !is kotlinx.coroutines.CancellationException) {
+                        Toast.makeText(requireContext(), "Error loading announcements: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
+                    announcementsAdapter.submitList(emptyList()) // Clear list on error
+                    updateEmptyStateVisibility(true)
+                }
+            } finally {
+                setLoadingState(false) // Hide loading
             }
+        }
+    }
 
-            // Hide loading indicator
-            progressBar.visibility = View.GONE
-
-            // Complete refresh if it was a pull-to-refresh
+    // Show/hide loading indicators
+    private fun setLoadingState(isLoading: Boolean) {
+        if (!isAdded) return
+        if (::progressBar.isInitialized) {
+            progressBar.visibility = if (isLoading && !swipeRefreshLayout.isRefreshing) View.VISIBLE else View.GONE
+        }
+        if (!isLoading && ::swipeRefreshLayout.isInitialized) {
             swipeRefreshLayout.isRefreshing = false
-        }, 1000)
-    }
-
-    private fun showEmptyState() {
-        recyclerView.visibility = View.GONE
-        emptyStateView.visibility = View.VISIBLE
-    }
-
-    private fun showAnnouncements(announcements: List<Announcement>) {
-        recyclerView.visibility = View.VISIBLE
-        emptyStateView.visibility = View.GONE
-
-        // Set adapter
-        recyclerView.adapter = AnnouncementAdapter(announcements)
-    }
-
-    private fun filterAnnouncements() {
-        val allAnnouncements = getSampleAnnouncements()
-
-        val filteredAnnouncements = if (currentCategory == CATEGORY_ALL) {
-            allAnnouncements
-        } else {
-            allAnnouncements.filter { it.category == currentCategory }
-        }
-
-        if (filteredAnnouncements.isEmpty()) {
-            showEmptyState()
-        } else {
-            showAnnouncements(filteredAnnouncements)
         }
     }
 
-    private fun getSampleAnnouncements(): List<Announcement> {
-        // TODO: Replace with actual data from your API
-        return listOf(
-            Announcement(
-                "1",
-                CATEGORY_EMERGENCY,
-                "Scheduled Power Outage",
-                "March 30, 2025",
-                "There will be a scheduled power interruption from 9:00 AM to 3:00 PM for electrical maintenance in the area.",
-                null
-            ),
-            Announcement(
-                "2",
-                CATEGORY_EVENTS,
-                "Barangay Cleanup Drive",
-                "April 5, 2025",
-                "Join us for our monthly community cleanup drive. Together, we can make our barangay clean and green!",
-                null
-            ),
-            Announcement(
-                "3",
-                CATEGORY_SERVICES,
-                "Free Medical Checkup",
-                "April 10, 2025",
-                "The barangay health center will be offering free medical checkups for all residents. Please bring your barangay ID.",
-                null
-            ),
-            Announcement(
-                "4",
-                CATEGORY_MAINTENANCE,
-                "Road Repairs",
-                "April 12-15, 2025",
-                "Road repairs will be conducted on Rizal Street. Please use alternative routes during this period.",
-                null
-            )
-        )
+    // Show/hide empty state view and RecyclerView
+    private fun updateEmptyStateVisibility(isEmpty: Boolean) {
+        if (!isAdded) return
+        if (::recyclerView.isInitialized && ::emptyStateView.isInitialized) {
+            recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
+            emptyStateView.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        }
     }
 
-    // Data model for announcements
-    data class Announcement(
-        val id: String,
-        val category: String,
-        val title: String,
-        val date: String,
-        val content: String,
-        val imageUrl: String?
-    )
+    // Removed getSampleAnnouncements()
+    // Removed filterAnnouncements()
 
-    // Adapter for announcements
+    // --- New RecyclerView Adapter using ListAdapter ---
     inner class AnnouncementAdapter(
-        private val announcements: List<Announcement>
-    ) : RecyclerView.Adapter<AnnouncementAdapter.ViewHolder>() {
+        private val onItemClicked: (AnnouncementResponse) -> Unit
+    ) : ListAdapter<AnnouncementResponse, AnnouncementAdapter.ViewHolder>(AnnouncementDiffCallback()) {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context)
@@ -264,44 +189,42 @@ class AnnouncementFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bind(announcements[position])
+            val announcement = getItem(position)
+            holder.bind(announcement)
         }
 
-        override fun getItemCount() = announcements.size
-
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val categoryView: TextView = itemView.findViewById(R.id.announcement_category)
+            // Removed categoryView TextView reference
             private val titleView: TextView = itemView.findViewById(R.id.announcement_title)
             private val dateView: TextView = itemView.findViewById(R.id.announcement_date)
             private val contentView: TextView = itemView.findViewById(R.id.announcement_content)
             private val imageView: ImageView = itemView.findViewById(R.id.announcement_image)
             private val btnShare: Button = itemView.findViewById(R.id.btn_share)
             private val btnViewDetails: Button = itemView.findViewById(R.id.btn_view_details)
+            private val cardRoot: View = itemView.findViewById(R.id.announcement_card_root)
 
-            fun bind(announcement: Announcement) {
-                // Set text values
-                categoryView.text = announcement.category
-                titleView.text = announcement.title
-                dateView.text = announcement.date
-                contentView.text = announcement.content
+            fun bind(announcement: AnnouncementResponse) {
+                titleView.text = announcement.title ?: "No Title"
+                // Use createdAt or updatedAt, formatting it nicely
+                val displayDate = announcement.updatedAt ?: announcement.createdAt
+                dateView.text = displayDate?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "No Date"
+                contentView.text = announcement.content ?: "No Content"
 
-                // Set category color
-                val backgroundColor = when (announcement.category) {
-                    CATEGORY_EMERGENCY -> COLOR_EMERGENCY
-                    CATEGORY_EVENTS -> COLOR_EVENTS
-                    CATEGORY_SERVICES -> COLOR_SERVICES
-                    CATEGORY_MAINTENANCE -> COLOR_MAINTENANCE
-                    else -> COLOR_EMERGENCY
-                }
-                categoryView.setBackgroundColor(Color.parseColor(backgroundColor))
-
-                // Handle image
-                if (announcement.imageUrl != null) {
-                    imageView.visibility = View.VISIBLE
-                    // TODO: Load image using your preferred image loading library (Glide, Picasso, etc.)
-                } else {
-                    imageView.visibility = View.GONE
-                }
+//                // Handle image loading (optional - requires Glide dependency)
+//                if (!announcement.thumbnailUrl.isNullOrEmpty()) {
+//                    if(isAdded) { // Check fragment attachment before using Glide
+//                        Glide.with(itemView.context)
+//                            .load(announcement.thumbnailUrl)
+//                            .placeholder(R.color.card_stroke) // Optional placeholder
+//                            .error(R.color.card_stroke) // Optional error placeholder
+//                            .into(imageView)
+//                        imageView.visibility = View.VISIBLE
+//                    } else {
+//                        imageView.visibility = View.GONE
+//                    }
+//                } else {
+//                    imageView.visibility = View.GONE
+//                }
 
                 // Set button click listeners
                 btnShare.setOnClickListener {
@@ -309,22 +232,60 @@ class AnnouncementFragment : Fragment() {
                 }
 
                 btnViewDetails.setOnClickListener {
-                    viewAnnouncementDetails(announcement)
+                    onItemClicked(announcement) // Use the passed lambda
                 }
 
                 // Make the whole card clickable
-                itemView.setOnClickListener {
-                    viewAnnouncementDetails(announcement)
+                cardRoot.setOnClickListener {
+                    onItemClicked(announcement) // Use the passed lambda
                 }
             }
         }
     }
 
-    private fun shareAnnouncement(announcement: Announcement) {
-        // TODO: Implement sharing functionality
+    // DiffUtil Callback for ListAdapter
+    class AnnouncementDiffCallback : DiffUtil.ItemCallback<AnnouncementResponse>() {
+        override fun areItemsTheSame(oldItem: AnnouncementResponse, newItem: AnnouncementResponse): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: AnnouncementResponse, newItem: AnnouncementResponse): Boolean {
+            return oldItem == newItem // Compare based on data class equals()
+        }
     }
 
-    private fun viewAnnouncementDetails(announcement: Announcement) {
-        // TODO: Navigate to announcement details screen
+
+    // --- Utility Functions ---
+
+    private fun shareAnnouncement(announcement: AnnouncementResponse) {
+        if (!isAdded) return
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "text/plain"
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "[Barangay360] ${announcement.title ?: "Announcement"}")
+
+        val displayDate = announcement.updatedAt ?: announcement.createdAt
+        val dateString = displayDate?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "N/A"
+
+        val shareContent = """
+            ${announcement.title ?: "Announcement"}
+            Date: $dateString
+
+            ${announcement.content ?: ""}
+
+            - Shared from Barangay360 App
+        """.trimIndent()
+
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareContent)
+        startActivity(Intent.createChooser(shareIntent, "Share Announcement"))
+    }
+
+    private fun viewAnnouncementDetails(announcement: AnnouncementResponse) {
+        if (!isAdded) return
+        // Replace with actual navigation or dialog later
+        Toast.makeText(
+            requireContext(),
+            "Viewing announcement: ${announcement.title ?: "N/A"}",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
