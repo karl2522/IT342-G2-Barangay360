@@ -31,9 +31,8 @@ class SignInActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.signin_page)
 
-        // Initialize SessionManager and ApiClient
-        sessionManager = SessionManager(this)
-        ApiClient.init(applicationContext)
+        // Get the already initialized SessionManager instance
+        sessionManager = SessionManager.getInstance()
 
         // Check if user is already logged in
         if (sessionManager.isLoggedIn()) {
@@ -99,8 +98,16 @@ class SignInActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         response.body()?.let { jwtResponse ->
-                            // Save auth token and user details
-                            sessionManager.saveAuthToken(jwtResponse.accessToken.token)
+                            // Save auth token and refresh token with expiration timestamps
+                            sessionManager.saveAuthToken(
+                                jwtResponse.accessToken.token,
+                                jwtResponse.accessToken.getExpirationTimestamp()
+                            )
+                            sessionManager.saveRefreshToken(
+                                jwtResponse.refreshToken.token,
+                                jwtResponse.refreshToken.getExpirationTimestamp()
+                            )
+                            
                             sessionManager.saveUserDetails(
                                 jwtResponse.id.toString(),
                                 jwtResponse.firstName,

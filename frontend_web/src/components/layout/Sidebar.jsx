@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useState, useContext } from 'react';
+import { useContext, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 
@@ -47,18 +47,6 @@ const AdminIcon = () => (
   </svg>
 );
 
-const ChevronLeftIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-  </svg>
-);
-
 const RequestsIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -102,7 +90,6 @@ const LogoutIcon = () => (
 );
 
 const Sidebar = ({ isOfficial }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -234,48 +221,32 @@ const Sidebar = ({ isOfficial }) => {
   // Choose which navigation items to display based on user role with null check
   const navItems = isOfficial ? officialNavItems : residentNavItems;
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
   return (
     <>
       <div 
-        className={`h-screen fixed left-0 top-0 transition-all duration-300 ease-in-out bg-[#861A2D] text-white shadow-lg ${
-          isCollapsed ? 'w-20' : 'w-64'
-        }`}
+        className="h-screen fixed left-0 top-0 w-64 bg-[#861A2D] text-white shadow-lg"
       >
-        <div className="flex items-center justify-between p-4 border-b border-[#9b3747]">
-          {!isCollapsed && (
-            <h1 className="text-xl font-bold">Barangay360</h1>
-          )}
-          <button 
-            onClick={toggleSidebar} 
-            className={`p-2 rounded-full hover:bg-[#9b3747] transition-colors ${isCollapsed ? 'mx-auto' : ''}`}
-          >
-            {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </button>
+        <div className="flex items-center p-4 border-b border-[#9b3747]">
+          <h1 className="text-xl font-bold">Barangay360</h1>
         </div>
 
-        {!isCollapsed && (
-          <div className="px-4 py-3 border-b border-[#9b3747]">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="h-10 w-10 rounded-full bg-[#9b3747] flex items-center justify-center text-lg font-bold">
-                  {user?.firstName?.charAt(0) || user?.username?.charAt(0) || "U"}
-                </div>
-              </div>
-              <div className="ml-3 overflow-hidden">
-                <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
-                <p className="text-xs truncate">
-                  <span className={`px-1.5 py-0.5 rounded-full ${roleColor}`}>
-                    {userRole}
-                  </span>
-                </p>
+        <div className="px-4 py-3 border-b border-[#9b3747]">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="h-10 w-10 rounded-full bg-[#9b3747] flex items-center justify-center text-lg font-bold">
+                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || "U"}
               </div>
             </div>
+            <div className="ml-3 overflow-hidden">
+              <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+              <p className="text-xs truncate">
+                <span className={`px-1.5 py-0.5 rounded-full ${roleColor}`}>
+                  {userRole}
+                </span>
+              </p>
+            </div>
           </div>
-        )}
+        </div>
 
         <nav className="mt-6 px-2">
           <ul className="space-y-2">
@@ -293,9 +264,7 @@ const Sidebar = ({ isOfficial }) => {
                     }`}
                   >
                     <span className="flex-shrink-0">{item.icon}</span>
-                    {!isCollapsed && (
-                      <span className="ml-3">{item.name}</span>
-                    )}
+                    <span className="ml-3">{item.name}</span>
                   </Link>
                 </li>
               );
@@ -308,9 +277,7 @@ const Sidebar = ({ isOfficial }) => {
                 className="w-full flex items-center p-3 rounded-lg transition-colors hover:bg-[#9b3747]"
               >
                 <span className="flex-shrink-0"><LogoutIcon /></span>
-                {!isCollapsed && (
-                  <span className="ml-3">Logout</span>
-                )}
+                <span className="ml-3">Logout</span>
               </button>
             </li>
           </ul>
@@ -352,4 +319,4 @@ Sidebar.defaultProps = {
   isOfficial: false
 };
 
-export default Sidebar; 
+export default Sidebar;

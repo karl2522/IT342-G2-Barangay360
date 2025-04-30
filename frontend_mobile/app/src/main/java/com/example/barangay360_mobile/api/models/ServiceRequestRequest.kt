@@ -9,5 +9,6 @@ data class ServiceRequestRequest(
     @SerializedName("details") val details: String?, // Optional in JSON, but likely needed
     @SerializedName("purpose") val purpose: String?, // Optional
     @SerializedName("contactNumber") val contactNumber: String?, // Optional
-    @SerializedName("address") val address: String? // Optional
+    @SerializedName("address") val address: String?, // Optional
+    @SerializedName("mode") val mode: String? = null // Made optional as requested
 )

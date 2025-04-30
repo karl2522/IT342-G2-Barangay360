@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.util.Patterns
 import android.util.Size
 import android.view.View
 import android.widget.Button
@@ -20,15 +19,28 @@ import androidx.camera.view.PreviewView
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.common.util.concurrent.ListenableFuture
+import com.example.barangay360_mobile.databinding.ActivityQrCodeScannerBinding
+import com.example.barangay360_mobile.service.QRLoginService
+import com.example.barangay360_mobile.util.ApiService
+import com.example.barangay360_mobile.util.SessionManager
+import com.example.barangay360_mobile.api.ApiClient
+import com.example.barangay360_mobile.api.models.ServiceRequestRequest
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.Locale
 
 class QRCodeScannerActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityQrCodeScannerBinding
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraExecutor: ExecutorService
+    private lateinit var sessionManager: SessionManager
+    private lateinit var qrLoginService: QRLoginService
+
     private lateinit var previewView: PreviewView
     private lateinit var scannerOverlay: View
     private lateinit var scanInstructionsText: TextView
@@ -42,42 +54,44 @@ class QRCodeScannerActivity : AppCompatActivity() {
     private var cameraProvider: ProcessCameraProvider? = null
     private var preview: Preview? = null
     private var imageAnalysis: ImageAnalysis? = null
+    private var imageCapture: ImageCapture? = null
 
-    private val CAMERA_PERMISSION_REQUEST_CODE = 100
-
-    // Flag to prevent duplicate scans
     private var isScanning = true
     private var detectedUrl = ""
-    private var isServiceQrCode = false
-    private var serviceData: JSONObject? = null
+    private var isLoginQrCode = false
+    private var isServiceRequestQrCode = false
+    private var loginSessionId: String? = null
+    private var serviceType: String? = null
+    private var purpose: String? = null
 
     companion object {
-        const val QR_TYPE_SERVICE = "service"
-        const val QR_KEY_SERVICE_TYPE = "serviceType"
-        const val QR_KEY_PURPOSE = "purpose"
+        private const val REQUEST_CODE_PERMISSIONS = 10
+        private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+        const val QR_TYPE_LOGIN = "login"
+        const val QR_TYPE_SERVICE_REQUEST = "service_request"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_qr_code_scanner)
+        binding = ActivityQrCodeScannerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Get the already initialized SessionManager instance
+        sessionManager = SessionManager.getInstance()
+        qrLoginService = ApiService.buildService(QRLoginService::class.java)
 
         // Initialize views
-        previewView = findViewById(R.id.previewView)
-        scannerOverlay = findViewById(R.id.scannerOverlay)
-        scanInstructionsText = findViewById(R.id.scanInstructionsText)
-        resultCard = findViewById(R.id.resultCard)
-        qrContentText = findViewById(R.id.qrContentText)
-        closeButton = findViewById(R.id.closeButton)
-        visitWebsiteButton = findViewById(R.id.visitWebsiteButton)
-        proceedButton = findViewById(R.id.proceedButton)
+        previewView = binding.previewView
+        scannerOverlay = binding.scannerOverlay
+        scanInstructionsText = binding.scanInstructionsText
+        resultCard = binding.resultCard
+        qrContentText = binding.qrContentText
+        closeButton = binding.closeButton
+        visitWebsiteButton = binding.visitWebsiteButton
+        proceedButton = binding.proceedButton
 
-        // Configure previewView for better performance
         previewView.implementationMode = PreviewView.ImplementationMode.PERFORMANCE
 
-        // Start the scanner animation
-        startScannerAnimation()
-
-        // Set up close button
         closeButton.setOnClickListener {
             resultCard.visibility = View.GONE
             isScanning = true
@@ -86,17 +100,11 @@ class QRCodeScannerActivity : AppCompatActivity() {
             }
         }
 
-        // Set up visit website button
-        visitWebsiteButton.setOnClickListener {
-            if (detectedUrl.isNotEmpty()) {
-                showConfirmationDialog(detectedUrl)
-            }
-        }
-
-        // Set up proceed button for service request
         proceedButton.setOnClickListener {
-            if (serviceData != null) {
-                navigateToServiceRequestForm()
+            if (isLoginQrCode && loginSessionId != null) {
+                confirmQRLogin(loginSessionId!!)
+            } else if (isServiceRequestQrCode && serviceType != null) {
+                createServiceRequest()
             }
         }
 
@@ -104,233 +112,416 @@ class QRCodeScannerActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         // Check camera permission and start camera if granted
-        if (hasCameraPermission()) {
+        if (allPermissionsGranted()) {
             startCamera()
         } else {
-            requestCameraPermission()
+            ActivityCompat.requestPermissions(
+                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
+            )
         }
     }
 
-    private fun navigateToServiceRequestForm() {
-        serviceData?.let { data ->
-            val intent = Intent(this, HomeActivity::class.java).apply {
-                putExtra("navigate_to", "service_request")
-                putExtra("service_type", data.optString(QR_KEY_SERVICE_TYPE, ""))
-                putExtra("purpose", data.optString(QR_KEY_PURPOSE, ""))
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    private fun confirmQRLogin(sessionId: String) {
+        lifecycleScope.launch {
+            try {
+                // Get the current auth token
+                val token = sessionManager.fetchAuthToken()
+                if (token == null) {
+                    Toast.makeText(this@QRCodeScannerActivity, "Please login first", Toast.LENGTH_SHORT).show()
+                    finish()
+                    return@launch
+                }
+
+                val response = qrLoginService.confirmQRLogin("Bearer $token", sessionId)
+                if (response.isSuccessful && response.body() != null) {
+                    val loginResponse = response.body()!!
+                    
+                    // Save new tokens with their expiration timestamps
+                    sessionManager.saveAuthToken(
+                        loginResponse.accessToken.token,
+                        loginResponse.accessToken.getExpirationTimestamp()
+                    )
+                    sessionManager.saveRefreshToken(
+                        loginResponse.refreshToken.token,
+                        loginResponse.refreshToken.getExpirationTimestamp()
+                    )
+                    
+                    // Save user details
+                    sessionManager.saveUserDetails(
+                        loginResponse.id.toString(),
+                        loginResponse.firstName,
+                        loginResponse.lastName,
+                        loginResponse.email,
+                        loginResponse.roles,
+                        loginResponse.address,
+                        loginResponse.phone,
+                        loginResponse.active,
+                        loginResponse.warnings
+                    )
+                    
+                    Toast.makeText(this@QRCodeScannerActivity, "Login confirmed successfully", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(this@QRCodeScannerActivity, "Failed to confirm login: ${response.message()}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@QRCodeScannerActivity, "Error confirming login: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-            startActivity(intent)
+        }
+    }
+
+    private fun createServiceRequest() {
+        // Get userId from session manager
+        val userIdStr = sessionManager.getUserId()
+        if (userIdStr == null) {
+            Toast.makeText(this, "User ID not found. Please log in first.", Toast.LENGTH_SHORT).show()
             finish()
+            return
         }
-    }
-
-    private fun startScannerAnimation() {
-        val animationDrawable = scannerOverlay.background as? android.graphics.drawable.AnimationDrawable
-        animationDrawable?.start()
-    }
-
-    private fun hasCameraPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestCameraPermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.CAMERA),
-            CAMERA_PERMISSION_REQUEST_CODE
-        )
-    }
-
-    private fun isValidUrl(text: String): Boolean {
-        return Patterns.WEB_URL.matcher(text).matches() ||
-                text.startsWith("http://") ||
-                text.startsWith("https://")
-    }
-
-    private fun showConfirmationDialog(url: String) {
-        AlertDialog.Builder(this)
-            .setTitle("Visit Website")
-            .setMessage("Would you like to visit this site?\n\n$url")
-            .setPositiveButton("Yes") { _, _ ->
-                openUrlInBrowser(url)
-            }
-            .setNegativeButton("No", null)
-            .show()
-    }
-
-    private fun openUrlInBrowser(url: String) {
-        try {
-            var formattedUrl = url.trim()
-
-            // Add https:// prefix if the URL doesn't have a scheme
-            if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
-                formattedUrl = "https://$formattedUrl"
-            }
-
-            // Create and launch the intent
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse(formattedUrl)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-
-            // Check if there's an app that can handle this intent
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "No application can handle this URL", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error opening URL: ${e.message}", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
+        
+        // Convert string userId to Long
+        val userIdLong = userIdStr.toLongOrNull()
+        if (userIdLong == null) {
+            Toast.makeText(this, "Invalid user ID format", Toast.LENGTH_SHORT).show()
+            finish()
+            return
         }
-    }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startCamera()
-            } else {
-                Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show()
-                finish()
+        // Get user's contact number and address from session
+        val userPhone = sessionManager.getPhone()
+        val userAddress = sessionManager.getAddress()
+
+        lifecycleScope.launch {
+            try {
+                // Creating the request with required fields
+                val request = ServiceRequestRequest(
+                    userId = userIdLong,
+                    serviceType = serviceType!!,
+                    details = "Auto-generated request via QR code",
+                    purpose = purpose ?: when (serviceType?.toLowerCase()) {
+                        "barangay_certificate" -> "General Purpose"
+                        "certificate_of_residency" -> "Proof of Residency"
+                        else -> "General Purpose"
+                    },
+                    contactNumber = userPhone ?: "Not provided", // Use user's phone or default text
+                    address = userAddress ?: "Not provided", // Use user's address or default text
+                    // Not using mode anymore as per requirements
+                    mode = null
+                )
+
+                // Submit the request
+                val response = ApiClient.serviceRequestService.createServiceRequest(request)
+                
+                if (response.isSuccessful && response.body() != null) {
+                    Toast.makeText(this@QRCodeScannerActivity, "Service request created successfully", Toast.LENGTH_SHORT).show()
+                    
+                    // Navigate to MyServicesFragment
+                    val intent = Intent(this@QRCodeScannerActivity, HomeActivity::class.java)
+                    intent.putExtra("openMyServices", true)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this@QRCodeScannerActivity, "Failed to create service request: ${response.message()}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@QRCodeScannerActivity, "Error creating service request: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     private fun startCamera() {
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener({
-            try {
-                val provider = cameraProviderFuture.get()
-                cameraProvider = provider
-                bindCameraUseCases()
-            } catch (e: Exception) {
-                Toast.makeText(this, "Failed to start camera", Toast.LENGTH_SHORT).show()
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-    private fun bindCameraUseCases() {
-        val cameraProvider = cameraProvider ?: return
-
-        try {
-            // Must unbind existing use cases before rebinding
-            cameraProvider.unbindAll()
-
-            // Calculate target resolution (use lower resolution for better performance)
-            val metrics = DisplayMetrics().also { previewView.display?.getRealMetrics(it) }
-            val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
-
-            // Lower resolution for better performance (640x480 is good for QR scanning)
-            val targetResolution = Size(640, 480)
-
-            // Camera selector
-            val cameraSelector = CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                .build()
-
-            // Preview use case
-            preview = Preview.Builder()
-                .setTargetResolution(targetResolution)
+            val preview = Preview.Builder()
                 .build()
                 .also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
-            // Image analysis use case
-            imageAnalysis = ImageAnalysis.Builder()
-                .setTargetResolution(targetResolution)
+            imageCapture = ImageCapture.Builder().build()
+
+            val imageAnalyzer = ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
                 .also {
-                    it.setAnalyzer(cameraExecutor, QRCodeAnalyzer { qrResult ->
-                        if (isScanning) {
-                            isScanning = false
-                            runOnUiThread {
-                                processQrResult(qrResult)
-                            }
-                        }
+                    it.setAnalyzer(cameraExecutor, QRCodeAnalyzer { qrContent ->
+                        handleQRCodeResult(qrContent)
                     })
                 }
 
-            // Bind use cases to camera
-            camera = cameraProvider.bindToLifecycle(
-                this,
-                cameraSelector,
-                preview,
-                imageAnalysis
-            )
+            try {
+                cameraProvider.unbindAll()
+                camera = cameraProvider.bindToLifecycle(
+                    this, CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview, imageCapture, imageAnalyzer
+                )
+            } catch (exc: Exception) {
+                Toast.makeText(this, "Failed to start camera", Toast.LENGTH_SHORT).show()
+            }
 
-        } catch (e: Exception) {
-            Toast.makeText(this, "Use case binding failed", Toast.LENGTH_SHORT).show()
-        }
+        }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun processQrResult(qrResult: String) {
-        // Show the result
-        qrContentText.text = qrResult
-        detectedUrl = qrResult  // Save the URL
-        resultCard.visibility = View.VISIBLE
+    private fun handleQRCodeResult(qrContent: String) {
+        if (!isScanning) return
 
-        // Try to parse the result as JSON
-        try {
-            val jsonObject = JSONObject(qrResult)
-            val qrType = jsonObject.optString("type")
+        runOnUiThread {
+            // Add debug log to see the actual content of scanned QR code
+            println("QR Code scanned content: $qrContent")
             
-            if (qrType == QR_TYPE_SERVICE) {
-                // This is a service request QR code
-                isServiceQrCode = true
-                serviceData = jsonObject
+            // First try to extract service_type from the QR code content directly
+            val serviceTypePattern = "(service_type|serviceType)[=:][\"']?([a-zA-Z_]+)[\"']?".toRegex()
+            val serviceTypeMatch = serviceTypePattern.find(qrContent)
+            
+            if (serviceTypeMatch != null) {
+                // Found a service_type in the raw text, extract it directly
+                isScanning = false
+                isLoginQrCode = false
+                isServiceRequestQrCode = true
                 
-                // Update UI to show service-specific information
-                qrContentText.text = "Service Request: ${jsonObject.optString(QR_KEY_SERVICE_TYPE)}"
+                // Extract the service type from the regex match
+                serviceType = serviceTypeMatch.groupValues[2]
+                purpose = "Generated from QR code"
+                
+                // Show the extracted service type
+                qrContentText.text = "Service Request QR Code detected\nService Type: $serviceType\nCreating request..."
+                resultCard.visibility = View.VISIBLE
                 visitWebsiteButton.visibility = View.GONE
-                proceedButton.visibility = View.VISIBLE
-            } else {
-                // Not a service QR code
-                isServiceQrCode = false
-                serviceData = null
                 proceedButton.visibility = View.GONE
                 
-                // Check if the result is a URL and show the visit website button if it is
-                if (isValidUrl(qrResult)) {
-                    visitWebsiteButton.visibility = View.VISIBLE
+                // Create the service request automatically
+                if (sessionManager.fetchAuthToken() != null) {
+                    createServiceRequest()
                 } else {
+                    qrContentText.text = "Service Request QR Code detected\nPlease log in to proceed"
+                }
+                return@runOnUiThread
+            }
+            
+            // If no direct match for service_type, try to parse as JSON
+            try {
+                val jsonObject = JSONObject(qrContent)
+                
+                when {
+                    // Check if it's a login QR code
+                    jsonObject.has("sessionId") && jsonObject.has("type") && jsonObject.getString("type") == "login" -> {
+                        isScanning = false
+                        isLoginQrCode = true
+                        isServiceRequestQrCode = false
+                        loginSessionId = jsonObject.getString("sessionId")
+                        
+                        // Update UI for login
+                        qrContentText.text = "Login QR Code detected\nClick proceed to login"
+                        resultCard.visibility = View.VISIBLE
+                        visitWebsiteButton.visibility = View.GONE
+                        proceedButton.visibility = View.VISIBLE
+                        proceedButton.text = "Login"
+                    }
+                    
+                    // Check if it's a service request QR code - more flexible detection
+                    jsonObject.has("type") && jsonObject.getString("type") == "service_request" -> {
+                        isScanning = false
+                        isLoginQrCode = false
+                        isServiceRequestQrCode = true
+                        
+                        // Extract service request info with better error handling
+                        serviceType = if (jsonObject.has("service_type")) {
+                            jsonObject.getString("service_type")
+                        } else if (jsonObject.has("serviceType")) {
+                            jsonObject.getString("serviceType")
+                        } else {
+                            // Try to find any field that might contain a service type
+                            var foundType: String? = null
+                            val keys = jsonObject.keys()
+                            while (keys.hasNext()) {
+                                val key = keys.next()
+                                val value = jsonObject.optString(key, "")
+                                if (value.contains("certificate") || value.contains("clearance") || 
+                                    value.contains("permit") || key.contains("service") || key.contains("type")) {
+                                    foundType = value
+                                    break
+                                }
+                            }
+                            foundType ?: "certificate_of_residency" // Alternative default
+                        }
+                        
+                        purpose = if (jsonObject.has("purpose")) {
+                            jsonObject.getString("purpose")
+                        } else {
+                            null
+                        }
+                        
+                        // Automatically create service request if user is logged in
+                        if (sessionManager.fetchAuthToken() != null) {
+                            // Update UI for service request
+                            qrContentText.text = "Service Request QR Code detected\nService Type: $serviceType\nCreating request..."
+                            resultCard.visibility = View.VISIBLE
+                            visitWebsiteButton.visibility = View.GONE
+                            proceedButton.visibility = View.GONE
+                            
+                            createServiceRequest()
+                        } else {
+                            // User not logged in
+                            qrContentText.text = "Service Request QR Code detected\nPlease log in to proceed"
+                            resultCard.visibility = View.VISIBLE
+                            visitWebsiteButton.visibility = View.GONE
+                            proceedButton.visibility = View.GONE
+                        }
+                    }
+                    
+                    // Handle direct service request QR code (simplified format)
+                    jsonObject.has("service_type") || jsonObject.has("serviceType") -> {
+                        isScanning = false
+                        isLoginQrCode = false
+                        isServiceRequestQrCode = true
+                        
+                        // Extract service request info
+                        serviceType = if (jsonObject.has("service_type")) {
+                            jsonObject.getString("service_type")
+                        } else {
+                            jsonObject.getString("serviceType")
+                        }
+                        
+                        purpose = if (jsonObject.has("purpose")) jsonObject.getString("purpose") else null
+                        
+                        // Automatically create service request if user is logged in
+                        if (sessionManager.fetchAuthToken() != null) {
+                            // Update UI for service request
+                            qrContentText.text = "Service Request QR Code detected\nService Type: $serviceType\nCreating request..."
+                            resultCard.visibility = View.VISIBLE
+                            visitWebsiteButton.visibility = View.GONE
+                            proceedButton.visibility = View.GONE
+                            
+                            createServiceRequest()
+                        } else {
+                            // User not logged in
+                            qrContentText.text = "Service Request QR Code detected\nPlease log in to proceed"
+                            resultCard.visibility = View.VISIBLE
+                            visitWebsiteButton.visibility = View.GONE
+                            proceedButton.visibility = View.GONE
+                        }
+                    }
+                    
+                    else -> {
+                        // Try to identify what type of service this might be based on the QR content
+                        isScanning = false
+                        isLoginQrCode = false
+                        isServiceRequestQrCode = true
+                        
+                        // Extract service type based on QR content keywords
+                        val qrText = qrContent.toLowerCase()
+                        serviceType = when {
+                            qrText.contains("residency") -> "certificate_of_residency"
+                            qrText.contains("clearance") -> "barangay_clearance"
+                            qrText.contains("business") || qrText.contains("permit") -> "business_permit"
+                            qrText.contains("indigency") -> "indigency_certificate"
+                            qrText.contains("certificate") -> "barangay_certificate"
+                            else -> "certificate_of_residency" // Change default
+                        }
+                        
+                        purpose = "Generated from QR code: ${qrContent.take(30)}${if(qrContent.length > 30) "..." else ""}"
+                        
+                        // Automatically create service request if user is logged in
+                        if (sessionManager.fetchAuthToken() != null) {
+                            // Update UI 
+                            qrContentText.text = "QR Code detected\nCreating ${formatServiceType(serviceType)} request..."
+                            resultCard.visibility = View.VISIBLE
+                            visitWebsiteButton.visibility = View.GONE
+                            proceedButton.visibility = View.GONE
+                            
+                            createServiceRequest()
+                        } else {
+                            // User not logged in
+                            qrContentText.text = "QR Code detected\nPlease log in to create service request"
+                            resultCard.visibility = View.VISIBLE
+                            visitWebsiteButton.visibility = View.GONE
+                            proceedButton.visibility = View.GONE
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Not a JSON format - try to extract service type from text
+                isScanning = false
+                isLoginQrCode = false
+                isServiceRequestQrCode = true
+                
+                // Extract service type based on QR content keywords
+                val qrText = qrContent.toLowerCase()
+                serviceType = when {
+                    qrText.contains("residency") -> "certificate_of_residency"
+                    qrText.contains("clearance") -> "barangay_clearance"
+                    qrText.contains("business") || qrText.contains("permit") -> "business_permit"
+                    qrText.contains("indigency") -> "indigency_certificate"
+                    qrText.contains("certificate") -> "barangay_certificate"
+                    else -> "certificate_of_residency" // Change default
+                }
+                
+                purpose = "Generated from QR code: ${qrContent.take(30)}${if(qrContent.length > 30) "..." else ""}"
+                
+                // Check if user is logged in
+                if (sessionManager.fetchAuthToken() != null) {
+                    // Update UI
+                    qrContentText.text = "QR Code detected\nCreating ${formatServiceType(serviceType)} request..."
+                    resultCard.visibility = View.VISIBLE
                     visitWebsiteButton.visibility = View.GONE
+                    proceedButton.visibility = View.GONE
+                    
+                    // Automatically create the service request
+                    createServiceRequest()
+                } else {
+                    // User not logged in
+                    qrContentText.text = "QR Code detected\nPlease log in to create service request"
+                    resultCard.visibility = View.VISIBLE
+                    visitWebsiteButton.visibility = View.GONE
+                    proceedButton.visibility = View.GONE
                 }
             }
-        } catch (e: Exception) {
-            // Not a JSON object, handle as normal QR code
-            isServiceQrCode = false
-            serviceData = null
-            proceedButton.visibility = View.GONE
-            
-            // Check if the result is a URL and show the visit website button if it is
-            if (isValidUrl(qrResult)) {
-                visitWebsiteButton.visibility = View.VISIBLE
-            } else {
-                visitWebsiteButton.visibility = View.GONE
+        }
+    }
+    
+    // Helper function to format service type for display
+    private fun formatServiceType(serviceType: String?): String {
+        if (serviceType == null) return "N/A"
+        
+        return when (serviceType.lowercase()) {
+            "barangay_certificate" -> "Barangay Certificate"
+            "certificate_of_residency" -> "Certificate of Residency"
+            "barangay_clearance" -> "Barangay Clearance"
+            "business_permit" -> "Business Permit"
+            "indigency_certificate" -> "Indigency Certificate"
+            else -> {
+                // For unknown types, convert snake_case to Title Case With Spaces
+                serviceType.split("_")
+                    .joinToString(" ") { word ->
+                        word.replaceFirstChar { 
+                            if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() 
+                        }
+                    }
             }
         }
     }
 
-    /**
-     * Calculate the aspect ratio for the screen
-     */
-    private fun aspectRatio(width: Int, height: Int): Int {
-        val previewRatio = maxOf(width, height).toDouble() / minOf(width, height)
-        if (kotlin.math.abs(previewRatio - 4.0/3.0) <= kotlin.math.abs(previewRatio - 16.0/9.0)) {
-            return AspectRatio.RATIO_4_3
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                startCamera()
+            } else {
+                Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
-        return AspectRatio.RATIO_16_9
     }
 
     override fun onPause() {
@@ -350,5 +541,9 @@ class QRCodeScannerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+    }
+
+    private fun bindCameraUseCases() {
+        startCamera()
     }
 }

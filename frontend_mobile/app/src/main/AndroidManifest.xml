@@ -58,6 +58,12 @@
         <activity
             android:name=".CameraActivity"
             android:theme="@style/Theme.Barangay360Mobile.Scanner" />
+
+        <activity
+            android:name=".ServiceRequestFormActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Barangay360Mobile" />
     </application>
 
 </manifest>

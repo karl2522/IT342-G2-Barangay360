@@ -44,7 +44,7 @@ class HomeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        sessionManager = SessionManager(requireContext())
+        sessionManager = SessionManager.getInstance()
         welcomeTextView = view.findViewById(R.id.txt_welcome)
         updateWelcomeMessage()
 
@@ -115,8 +115,6 @@ class HomeFragment : Fragment() {
             Log.w("HomeFragment", "Auth token is null. Cannot fetch announcements.")
             if (isAdded) {
                 if (::announcementCard.isInitialized) announcementCard.visibility = View.GONE
-                // **** SHOW PLACEHOLDER IF NOT LOGGED IN? Or keep hidden? ****
-                // Decide the desired behavior here. For now, keep it hidden.
                 if (::noAnnouncementCard.isInitialized) noAnnouncementCard.visibility = View.GONE
             }
             if (::swipeRefreshLayout.isInitialized) {
@@ -127,9 +125,9 @@ class HomeFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.announcementService.getAnnouncements("Bearer $token")
+                val response = ApiClient.announcementService.getAnnouncements()
 
-                if (!isAdded) return@launch // Exit if fragment is detached
+                if (!isAdded) return@launch
 
                 if (response.isSuccessful) {
                     val announcements = response.body()
@@ -137,27 +135,24 @@ class HomeFragment : Fragment() {
                         val sortedAnnouncements = announcements.sortedByDescending { it.createdAt ?: OffsetDateTime.MIN }
                         val mostRecent = sortedAnnouncements.first()
 
-                        // **** SHOW ANNOUNCEMENT, HIDE PLACEHOLDER ****
                         if (::announcementCard.isInitialized && ::noAnnouncementCard.isInitialized) {
                             announcementTitle.text = mostRecent.title ?: "No Title"
                             announcementDate.text = mostRecent.createdAt?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "No Date"
                             announcementContent.text = mostRecent.content ?: "No Content"
                             announcementCard.visibility = View.VISIBLE
-                            noAnnouncementCard.visibility = View.GONE // Hide placeholder
+                            noAnnouncementCard.visibility = View.GONE
                         }
                     } else {
                         Log.i("HomeFragment", "No announcements found from API.")
-                        // **** HIDE ANNOUNCEMENT, SHOW PLACEHOLDER ****
                         if (::announcementCard.isInitialized && ::noAnnouncementCard.isInitialized) {
-                            announcementCard.visibility = View.GONE // Hide main card
-                            noAnnouncementCard.visibility = View.VISIBLE // Show placeholder
+                            announcementCard.visibility = View.GONE
+                            noAnnouncementCard.visibility = View.VISIBLE
                         }
                     }
                 } else {
                     Log.e("HomeFragment", "API Error fetching announcements: ${response.code()} - ${response.message()}")
-                    if (isAdded) { // Check before showing toast
+                    if (isAdded) {
                         Toast.makeText(requireContext(), "Failed to load announcements: ${response.code()}", Toast.LENGTH_SHORT).show()
-                        // **** HIDE BOTH CARDS ON API ERROR ****
                         if (::announcementCard.isInitialized) announcementCard.visibility = View.GONE
                         if (::noAnnouncementCard.isInitialized) noAnnouncementCard.visibility = View.GONE
                     }
@@ -168,11 +163,8 @@ class HomeFragment : Fragment() {
                     if (e !is kotlinx.coroutines.CancellationException) {
                         Toast.makeText(requireContext(), "Error loading announcements: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
-                    // **** HIDE BOTH CARDS ON EXCEPTION ****
                     if (::announcementCard.isInitialized) announcementCard.visibility = View.GONE
                     if (::noAnnouncementCard.isInitialized) noAnnouncementCard.visibility = View.GONE
-                } else {
-                    Log.w("HomeFragment", "Fragment not added when exception occurred: ${e.message}")
                 }
             } finally {
                 if (isAdded && ::swipeRefreshLayout.isInitialized) {

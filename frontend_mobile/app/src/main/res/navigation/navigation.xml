@@ -36,6 +36,29 @@
         android:label="fragment_profile_edit"
         tools:layout="@layout/fragment_profile_edit" />
 
+    <fragment
+        android:id="@+id/requestServicesFragment"
+        android:name="com.example.barangay360_mobile.RequestServicesFragment"
+        android:label="fragment_request_services"
+        tools:layout="@layout/fragment_request_services">
+        <argument
+            android:name="service_type"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="purpose"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="mode"
+            app:argType="string"
+            android:defaultValue="form" />
+        <argument
+            android:name="user_id"
+            app:argType="long"
+            android:defaultValue="-1L" />
+    </fragment>
+
     <!-- Other fragments... -->
 
 </navigation>

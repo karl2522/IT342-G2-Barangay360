@@ -2,126 +2,209 @@ package com.example.barangay360_mobile.api
 
 import android.content.Context
 import com.example.barangay360_mobile.util.SessionManager
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import com.google.gson.GsonBuilder // Import GsonBuilder
-import com.google.gson.TypeAdapter
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonToken // Import JsonToken
-import com.google.gson.stream.JsonWriter
+import java.lang.reflect.Type
+import java.time.Instant
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    // Update to match your Spring Boot server
-    // For emulator, use 10.0.2.2 to reach host machine's localhost
-    // For physical devices on same WiFi network, use computer's actual IP address
-    private const val BASE_URL = "http://192.168.1.23:8080/"
-
+    // Use 10.0.2.2 for localhost when using Android Emulator
+    private const val BASE_URL = "http://192.168.1.2:8080/"
     private lateinit var sessionManager: SessionManager
+    
+    // Create a proper instance of the logging interceptor (outside of any function)
+    private val loggingInterceptor by lazy {
+        HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+    }
+    
+    // Initialize retrofit with a basic implementation
+    // This will be replaced with the authenticated version in init()
+    private var retrofit: Retrofit = createBasicRetrofit()
+    
+    // Service for token refresh operations (using a basic retrofit without auth interceptor)
+    private val tokenRefreshService: AuthService by lazy {
+        val tempRetrofit = createBasicRetrofit()
+        tempRetrofit.create(AuthService::class.java)
+    }
 
-    // Initialize with application context
     fun init(context: Context) {
-        sessionManager = SessionManager(context)
+        try {
+            sessionManager = SessionManager.getInstance()
+            // Replace the basic retrofit with the authenticated one
+            retrofit = createAuthenticatedRetrofit()
+        } catch (e: Exception) {
+            // Log error but don't crash the app
+            e.printStackTrace()
+        }
     }
 
-    // Custom TypeAdapter for OffsetDateTime
-    class OffsetDateTimeAdapter : TypeAdapter<OffsetDateTime>() {
-        // Use ISO_OFFSET_DATE_TIME formatter for parsing and formatting
-        private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
-
-        override fun write(out: JsonWriter, value: OffsetDateTime?) {
-            if (value == null) {
-                out.nullValue()
-            } else {
-                out.value(value.format(formatter))
-            }
-        }
-
-        override fun read(input: JsonReader): OffsetDateTime? {
-            if (input.peek() == JsonToken.NULL) {
-                input.nextNull()
-                return null
-            }
-            val dateString = input.nextString()
+    // Custom deserializer to handle LocalDateTime to OffsetDateTime conversion
+    private class DateTimeDeserializer : JsonDeserializer<OffsetDateTime> {
+        override fun deserialize(
+            json: JsonElement,
+            typeOfT: Type?,
+            context: JsonDeserializationContext?
+        ): OffsetDateTime? {
             return try {
-                OffsetDateTime.parse(dateString, formatter)
+                val dateStr = json.asString
+                // Parse the backend's LocalDateTime string
+                val localDateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                // Convert to OffsetDateTime using system default zone
+                localDateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime()
             } catch (e: Exception) {
-                // Log error or handle other potential formats
-                null // Or throw an exception if strict parsing is required
+                null
             }
         }
     }
+    
+    // Custom deserializer for Instant
+    private class InstantDeserializer : JsonDeserializer<Instant> {
+        override fun deserialize(
+            json: JsonElement,
+            typeOfT: Type?,
+            context: JsonDeserializationContext?
+        ): Instant? {
+            return try {
+                val timestamp = json.asString
+                Instant.parse(timestamp)
+            } catch (e: Exception) {
+                try {
+                    // Try parsing as seconds since epoch
+                    Instant.ofEpochSecond(json.asLong)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        }
+    }
+    
+    private fun createBasicRetrofit(): Retrofit {
+        try {
+            val httpClient = OkHttpClient.Builder()
+                .apply {
+                    // Only add the interceptor if it's initialized
+                    addInterceptor(loggingInterceptor)
+                }
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
 
-    // Gson instance with custom adapter
-    private val gson = GsonBuilder()
-        .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter())
-        .create()
+            val gson = GsonBuilder()
+                .registerTypeAdapter(OffsetDateTime::class.java, DateTimeDeserializer())
+                .registerTypeAdapter(Instant::class.java, InstantDeserializer())
+                .setLenient() // Add this to handle malformed JSON responses
+                .create()
 
+            return Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(httpClient)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Provide a fallback retrofit instance without interceptors
+            val basicClient = OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
+                
+            val gson = GsonBuilder()
+                .setLenient()
+                .create()
+                
+            return Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(basicClient)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+        }
+    }
+    
+    private fun createAuthenticatedRetrofit(): Retrofit {
+        try {
+            // Make sure sessionManager is initialized before using it
+            if (!::sessionManager.isInitialized) {
+                throw IllegalStateException("ApiClient must be initialized with init() before using authenticated services")
+            }
+            
+            // Create a separate instance of TokenAuthenticator for token refresh
+            val tokenAuthenticator = TokenAuthenticator(sessionManager, tokenRefreshService)
+            
+            // Create a separate instance of AuthInterceptor for adding token to requests
+            val authInterceptor = AuthInterceptor(sessionManager)
+            
+            val httpClient = OkHttpClient.Builder()
+                .apply {
+                    // Only add interceptors if they're initialized
+                    addInterceptor(loggingInterceptor)
+                    addInterceptor(authInterceptor) // Add token to all requests
+                }
+                .authenticator(tokenAuthenticator) // Handle 401 responses
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
 
-    private val authenticatedClient by lazy {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            val gson = GsonBuilder()
+                .registerTypeAdapter(OffsetDateTime::class.java, DateTimeDeserializer())
+                .registerTypeAdapter(Instant::class.java, InstantDeserializer())
+                .setLenient() // Add this to handle malformed JSON responses
+                .create()
+
+            return Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(httpClient)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+        } catch (e: Exception) {
+            // If anything goes wrong, fall back to the basic retrofit
+            e.printStackTrace()
+            return createBasicRetrofit()
+        }
+    }
+
+    // Service interfaces - use the authenticated retrofit instance
+    val authService: AuthService 
+        get() = try {
+            retrofit.create(AuthService::class.java)
+        } catch (e: Exception) {
+            // Fall back to basic retrofit if there's an error
+            createBasicRetrofit().create(AuthService::class.java)
         }
 
-        val authInterceptor = AuthInterceptor(sessionManager)
-
-        OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
-            .addInterceptor(authInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .build()
-    }
-
-    private val standardClient by lazy {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+    val userService: UserService 
+        get() = try {
+            retrofit.create(UserService::class.java)
+        } catch (e: Exception) {
+            createBasicRetrofit().create(UserService::class.java)
         }
 
-        OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .build()
-    }
+    val announcementService: AnnouncementService 
+        get() = try {
+            retrofit.create(AnnouncementService::class.java)
+        } catch (e: Exception) {
+            createBasicRetrofit().create(AnnouncementService::class.java)
+        }
 
-    private val authRetrofit: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(standardClient) // Auth endpoints don't need token
-            .addConverterFactory(GsonConverterFactory.create(gson)) // Use custom Gson
-            .build()
-    }
-
-    private val apiRetrofit: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(authenticatedClient) // Protected endpoints need token
-            .addConverterFactory(GsonConverterFactory.create(gson)) // Use custom Gson
-            .build()
-    }
-
-    val authService: AuthService by lazy {
-        authRetrofit.create(AuthService::class.java)
-    }
-
-    val userService: UserService by lazy {
-        apiRetrofit.create(UserService::class.java)
-    }
-
-    // Add the AnnouncementService instance
-    val announcementService: AnnouncementService by lazy {
-        // Assuming announcements require authentication. If not, use authRetrofit
-        apiRetrofit.create(AnnouncementService::class.java)
-    }
-
-    val serviceRequestService: ServiceRequestService by lazy {
-        apiRetrofit.create(ServiceRequestService::class.java)
-    }
+    val serviceRequestService: ServiceRequestService 
+        get() = try {
+            retrofit.create(ServiceRequestService::class.java)
+        } catch (e: Exception) {
+            createBasicRetrofit().create(ServiceRequestService::class.java)
+        }
 }

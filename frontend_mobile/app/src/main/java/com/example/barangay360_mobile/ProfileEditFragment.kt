@@ -54,9 +54,9 @@ class ProfileEditFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize session manager
-        sessionManager = SessionManager(requireContext())
-        userId = sessionManager.getUserId()
+        // Initialize session manager using getInstance()
+        sessionManager = SessionManager.getInstance()
+        userId = sessionManager.getUserId()?.toLongOrNull()
 
         // Initialize input fields
         firstNameInput = view.findViewById(R.id.first_name_input)
@@ -145,7 +145,8 @@ class ProfileEditFragment : Fragment() {
         // Fetch user profile from API
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.userService.getUserProfile(userId!!, "Bearer $token")
+                // Remove the extra "Bearer $token" argument
+                val response = ApiClient.userService.getUserProfile(userId!!)
 
                 if (response.isSuccessful) {
                     userProfile = response.body()
