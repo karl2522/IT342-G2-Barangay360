@@ -21,10 +21,10 @@ public class CommentReport {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "CLOB")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String reason;
 
-    @Column(columnDefinition = "CLOB")
+    @Column(columnDefinition = "TEXT")
     private String rejectionReason;
 
     @ManyToOne(fetch = FetchType.EAGER)

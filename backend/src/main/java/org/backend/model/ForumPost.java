@@ -27,7 +27,7 @@ public class ForumPost {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "CLOB")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "image_url")
