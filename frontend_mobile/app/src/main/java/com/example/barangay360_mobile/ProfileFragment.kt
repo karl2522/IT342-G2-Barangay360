@@ -43,7 +43,7 @@ class ProfileFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
 
         // Initialize SessionManager
-        sessionManager = SessionManager(requireContext())
+        sessionManager = SessionManager.getInstance()
 
         // Initialize SwipeRefreshLayout
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
@@ -157,10 +157,18 @@ class ProfileFragment : Fragment() {
             return
         }
 
+        // Convert userId from String to Long
+        val userIdLong = userId.toLongOrNull()
+        if (userIdLong == null) {
+            swipeRefreshLayout.isRefreshing = false
+            Toast.makeText(context, "Invalid user ID format", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         // Fetch user profile from API
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.userService.getUserProfile(userId, "Bearer $token")
+                val response = ApiClient.userService.getUserProfile(userIdLong)
 
                 if (response.isSuccessful) {
                     userProfile = response.body()

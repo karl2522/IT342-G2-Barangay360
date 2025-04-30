@@ -2,82 +2,107 @@ package com.example.barangay360_mobile.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import java.util.Date
 
-class SessionManager(context: Context) {
-    private var prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+class SessionManager private constructor(context: Context) {
+    private var prefs: SharedPreferences = context.getSharedPreferences("Barangay360Prefs", Context.MODE_PRIVATE)
 
     companion object {
-        const val PREF_NAME = "Barangay360Prefs"
+        private var instance: SessionManager? = null
+
         const val USER_TOKEN = "user_token"
+        const val TOKEN_EXPIRY = "token_expiry"
+        const val REFRESH_TOKEN = "refresh_token"
+        const val REFRESH_TOKEN_EXPIRY = "refresh_token_expiry"
         const val USER_ID = "user_id"
-        const val USER_NAME = "user_name"
-        const val USER_EMAIL = "user_email"
-        const val USER_FIRST_NAME = "user_first_name"
-        const val USER_LAST_NAME = "user_last_name"
-        const val USER_ROLES = "user_roles"
-        const val USER_PHONE = "user_phone"
-        const val USER_ADDRESS = "user_address"
-        const val USER_IS_ACTIVE = "user_is_active"
-        const val USER_WARNINGS = "user_warnings"
+        const val FIRST_NAME = "first_name"
+        const val LAST_NAME = "last_name"
+        const val EMAIL = "email"
+        const val ROLES = "roles"
+        const val ADDRESS = "address"
+        const val PHONE = "phone"
+        const val IS_ACTIVE = "is_active"
+        const val WARNINGS = "warnings"
+
+        fun initialize(context: Context) {
+            if (instance == null) {
+                instance = SessionManager(context.applicationContext)
+            }
+        }
+
+        fun getInstance(): SessionManager {
+            return instance ?: throw IllegalStateException("SessionManager must be initialized first")
+        }
     }
 
-    fun saveAuthToken(token: String) {
+    fun saveAuthToken(token: String, expiryTimestamp: Long) {
         val editor = prefs.edit()
         editor.putString(USER_TOKEN, token)
+        editor.putLong(TOKEN_EXPIRY, expiryTimestamp)
         editor.apply()
     }
 
+    fun saveRefreshToken(token: String, expiryTimestamp: Long) {
+        val editor = prefs.edit()
+        editor.putString(REFRESH_TOKEN, token)
+        editor.putLong(REFRESH_TOKEN_EXPIRY, expiryTimestamp)
+        editor.apply()
+    }
+
+    fun fetchAuthToken(): String? {
+        return prefs.getString(USER_TOKEN, null)
+    }
+
+    fun getAuthToken(): String? {
+        return fetchAuthToken()
+    }
+
+    fun getTokenExpiry(): Long {
+        return prefs.getLong(TOKEN_EXPIRY, 0)
+    }
+
+    fun isTokenExpired(): Boolean {
+        val expiryTime = getTokenExpiry()
+        if (expiryTime == 0L) return true
+        return System.currentTimeMillis() >= expiryTime
+    }
+
+    fun fetchRefreshToken(): String? {
+        return prefs.getString(REFRESH_TOKEN, null)
+    }
+
+    fun getRefreshTokenExpiry(): Long {
+        return prefs.getLong(REFRESH_TOKEN_EXPIRY, 0)
+    }
+
+    fun isRefreshTokenExpired(): Boolean {
+        val expiryTime = getRefreshTokenExpiry()
+        if (expiryTime == 0L) return true
+        return System.currentTimeMillis() >= expiryTime
+    }
+
     fun saveUserDetails(
-        id: String,
+        userId: String,
         firstName: String,
         lastName: String,
         email: String,
         roles: List<String>,
-        phone: String?,
         address: String?,
+        phone: String?,
         isActive: Boolean,
         warnings: Int
     ) {
         val editor = prefs.edit()
-        editor.putString(USER_ID, id)
-        editor.putString(USER_FIRST_NAME, firstName)
-        editor.putString(USER_LAST_NAME, lastName)
-        editor.putString(USER_EMAIL, email)
-        editor.putString(USER_PHONE, phone)
-        editor.putString(USER_ADDRESS, address)
-        editor.putBoolean(USER_IS_ACTIVE, isActive)
-        editor.putInt(USER_WARNINGS, warnings)
-        editor.putStringSet(USER_ROLES, roles.toSet())
+        editor.putString(USER_ID, userId)
+        editor.putString(FIRST_NAME, firstName)
+        editor.putString(LAST_NAME, lastName)
+        editor.putString(EMAIL, email)
+        editor.putString(ROLES, roles.joinToString(","))
+        editor.putString(ADDRESS, address)
+        editor.putString(PHONE, phone)
+        editor.putBoolean(IS_ACTIVE, isActive)
+        editor.putInt(WARNINGS, warnings)
         editor.apply()
-    }
-
-    fun getAuthToken(): String? {
-        return prefs.getString(USER_TOKEN, null)
-    }
-
-    fun getUserName(): String? {
-        return prefs.getString(USER_NAME, null)
-    }
-
-    fun getFirstName(): String? {
-        return prefs.getString(USER_FIRST_NAME, null)
-    }
-
-    fun getLastName(): String? {
-        return prefs.getString(USER_LAST_NAME, null)
-    }
-
-    fun getUserEmail(): String? {
-        return prefs.getString(USER_EMAIL, null)
-    }
-
-    fun getUserRoles(): Set<String>? {
-        return prefs.getStringSet(USER_ROLES, null)
-    }
-
-    fun getUserId(): Long? {
-        val idString = prefs.getString(USER_ID, null)
-        return idString?.toLongOrNull()
     }
 
     fun clearSession() {
@@ -87,6 +112,48 @@ class SessionManager(context: Context) {
     }
 
     fun isLoggedIn(): Boolean {
-        return getAuthToken() != null
+        return fetchAuthToken() != null
+    }
+    
+    // Getter methods for user details
+    fun getFirstName(): String? {
+        return prefs.getString(FIRST_NAME, null)
+    }
+    
+    fun getLastName(): String? {
+        return prefs.getString(LAST_NAME, null)
+    }
+    
+    fun getUserEmail(): String? {
+        return prefs.getString(EMAIL, null)
+    }
+    
+    fun getUserId(): String? {
+        return prefs.getString(USER_ID, null)
+    }
+    
+    fun getUserRoles(): List<String> {
+        val rolesString = prefs.getString(ROLES, "")
+        return if (rolesString.isNullOrEmpty()) {
+            emptyList()
+        } else {
+            rolesString.split(",")
+        }
+    }
+    
+    fun getAddress(): String? {
+        return prefs.getString(ADDRESS, null)
+    }
+    
+    fun getPhone(): String? {
+        return prefs.getString(PHONE, null)
+    }
+    
+    fun isActive(): Boolean {
+        return prefs.getBoolean(IS_ACTIVE, true)
+    }
+    
+    fun getWarnings(): Int {
+        return prefs.getInt(WARNINGS, 0)
     }
 }

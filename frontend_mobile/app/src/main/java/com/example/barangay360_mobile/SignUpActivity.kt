@@ -35,8 +35,7 @@ class SignUpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.signup_page)
 
-        sessionManager = SessionManager(this)
-        ApiClient.init(applicationContext)
+        sessionManager = SessionManager.getInstance();
 
         // Initialize views with correct IDs
         firstNameEditText = findViewById(R.id.signup_firstname)
@@ -47,10 +46,13 @@ class SignUpActivity : AppCompatActivity() {
         addressEditText = findViewById(R.id.signup_address)
         phoneEditText = findViewById(R.id.signup_phone)
         signUpButton = findViewById(R.id.signup_button)
-        signInTextView = findViewById(R.id.already_account_signin_text)
+        // Correct the ID reference for the sign-in text view
+        signInTextView = findViewById(R.id.already_account_signin_text) 
         progressBar = findViewById(R.id.progressBar)
 
-        // Set OnClickListener for sign up button
+        // No need to initialize here, it's done in Application class
+        // ApiClient.init(applicationContext)
+
         signUpButton.setOnClickListener {
             val firstName = firstNameEditText.text.toString().trim()
             val lastName = lastNameEditText.text.toString().trim()

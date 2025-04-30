@@ -1,11 +1,11 @@
-import { useState, useEffect, useContext } from 'react';
-import Sidebar from '../../components/layout/Sidebar';
-import { forumService } from '../../services/ForumService';
-import { useToast } from '../../contexts/ToastContext';
-import { formatDistanceToNow } from 'date-fns';
 import axios from 'axios';
-import { AuthContext } from '../../contexts/AuthContext';
+import { formatDistanceToNow } from 'date-fns';
+import { useContext, useEffect, useState } from 'react';
+import Sidebar from '../../components/layout/Sidebar';
 import TopNavigation from '../../components/layout/TopNavigation';
+import { AuthContext } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import { forumService } from '../../services/ForumService';
 
 const ReportManagement = () => {
   const { showToast } = useToast();
@@ -696,8 +696,14 @@ const ReportManagement = () => {
 
           {/* Report Details Modal */}
           {selectedReport && (
-            <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center">
-              <div className="bg-white rounded-lg shadow-xl max-w-4xl mx-auto my-8 w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div 
+              className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center"
+              onClick={handleCloseReportModal} // Close when clicking outside
+            >
+              <div 
+                className="bg-white rounded-lg shadow-xl max-w-4xl mx-auto my-8 w-full max-h-[90vh] overflow-hidden flex flex-col"
+                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+              >
                 <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                   <h3 className="text-lg font-medium text-gray-900 flex items-center">
                     <span className="mr-2">{getReportContentDescription()} Report Details</span>
@@ -894,8 +900,14 @@ const ReportManagement = () => {
 
           {/* Approve Report Confirmation Modal */}
           {showApproveModal && reportToAction && (
-            <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center">
-              <div className="bg-white rounded-lg shadow-xl max-w-md mx-auto p-6">
+            <div 
+              className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center"
+              onClick={handleCancelAction} // Close when clicking outside
+            >
+              <div 
+                className="bg-white rounded-lg shadow-xl max-w-md mx-auto p-6"
+                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+              >
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Approve Report & Delete Content</h3>
                 <p className="mb-4">
                   Are you sure you want to approve this report? This action will:
@@ -927,8 +939,14 @@ const ReportManagement = () => {
 
           {/* Reject Report Modal */}
           {showRejectModal && reportToAction && (
-            <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center">
-              <div className="bg-white rounded-lg shadow-xl max-w-md mx-auto p-6">
+            <div 
+              className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center"
+              onClick={handleCancelAction} // Close when clicking outside
+            >
+              <div 
+                className="bg-white rounded-lg shadow-xl max-w-md mx-auto p-6"
+                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+              >
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Reject Report</h3>
                 <p className="mb-4">
                   Please provide a reason for rejecting this report about a {isPostReport(reportToAction) ? 'post' : 'comment'}:
@@ -998,4 +1016,4 @@ const ReportManagement = () => {
   );
 };
 
-export default ReportManagement; 
+export default ReportManagement;

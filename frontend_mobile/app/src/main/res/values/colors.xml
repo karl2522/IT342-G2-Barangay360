@@ -40,4 +40,10 @@
     <color name="text_secondary_dark">#AEAEAE</color>
     <color name="divider_light">#E0E0E0</color>
     <color name="divider_dark">#3D3D3D</color>
+
+    <color name="primary">#861A2D</color>
+    <color name="primary_dark">#5C1220</color>
+    <color name="primary_light">#D4A1A9</color>
+    <color name="accent">#861A2D</color>
+    <color name="light_gray">#EEEEEE</color>
 </resources>

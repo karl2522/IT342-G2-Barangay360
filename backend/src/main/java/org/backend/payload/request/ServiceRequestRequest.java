@@ -19,6 +19,9 @@ public class ServiceRequestRequest {
     
     private String address;
 
+    @NotBlank
+    private String mode; // "auto" or "form"
+
     public String getServiceType() {
         return serviceType;
     }
@@ -65,5 +68,13 @@ public class ServiceRequestRequest {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
     }
 } 

@@ -1,10 +1,10 @@
-import { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { AuthContext } from '../../contexts/AuthContext.jsx';
-import Sidebar from '../../components/layout/Sidebar.jsx';
-import { announcementService } from '../../services/AnnouncementService';
-import { useToast } from '../../contexts/ToastContext';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import Cropper from 'react-easy-crop';
+import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation';
+import { AuthContext } from '../../contexts/AuthContext.jsx';
+import { useToast } from '../../contexts/ToastContext';
+import { announcementService } from '../../services/AnnouncementService';
 
 const AnnouncementsManagement = () => {
   const { user } = useContext(AuthContext);
@@ -524,15 +524,25 @@ const AnnouncementsManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {announcements.map((announcement) => (
                 <div key={announcement.id} className="bg-white rounded-lg shadow overflow-hidden">
-                  {announcement.thumbnailUrl && (
-                    <div className="h-48 w-full relative">
+                  <div className="h-48 w-full relative">
+                    {announcement.thumbnailUrl ? (
                       <img 
                         src={announcement.thumbnailUrl} 
                         alt={announcement.title} 
                         className="w-full h-full object-cover"
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <img 
+                        src="/images/default_image.png"
+                        alt={announcement.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/images/default-image.png"; // Fallback to another default image
+                        }}
+                      />
+                    )}
+                  </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-lg mb-2 text-[#861A2D]">{announcement.title}</h3>
                     <p className="text-sm text-gray-600 mb-4 line-clamp-3">{announcement.content}</p>
@@ -569,8 +579,14 @@ const AnnouncementsManagement = () => {
       
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={closeModal} // Close when clicking outside
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+          >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">
@@ -656,8 +672,14 @@ const AnnouncementsManagement = () => {
       
       {/* Image Cropper Modal */}
       {showCropModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl overflow-hidden">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCropModal(false)} // Close when clicking outside
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+          >
             <div className="p-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-medium text-gray-900">Adjust Image</h3>
               <button 
@@ -736,8 +758,14 @@ const AnnouncementsManagement = () => {
       
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4"
+          onClick={closeDeleteModal} // Close when clicking outside
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+          >
             <div className="text-center">
               <svg className="mx-auto h-12 w-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -773,4 +801,4 @@ const AnnouncementsManagement = () => {
   );
 };
 
-export default AnnouncementsManagement; 
+export default AnnouncementsManagement;

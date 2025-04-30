@@ -1,33 +1,38 @@
-import { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../../contexts/AuthContext.jsx';
+import { useEffect, useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar.jsx';
-import { serviceRequestService } from '../../services/ServiceRequestService';
-import { useToast } from '../../contexts/ToastContext';
 import TopNavigation from '../../components/layout/TopNavigation';
+import { useToast } from '../../contexts/ToastContext';
+import { serviceRequestService } from '../../services/ServiceRequestService';
 
 const RequestsManagement = () => {
-  const { user } = useContext(AuthContext);
   const { showToast } = useToast();
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('PENDING');
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [processing, setProcessing] = useState(false);
-  const [requestCounts, setRequestCounts] = useState({
-    PENDING: 0,
-    APPROVED: 0,
-    REJECTED: 0
-  });
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
   const [rejectionRequest, setRejectionRequest] = useState(null);
-
+  const [showRequestDetailsModal, setShowRequestDetailsModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [requestsPerPage] = useState(8);
+  
+  // Calculate request counts by status
+  const requestCounts = {
+    PENDING: requests.filter(req => req.status === 'PENDING').length,
+    APPROVED: requests.filter(req => req.status === 'APPROVED').length,
+    REJECTED: requests.filter(req => req.status === 'REJECTED').length,
+    ALL: requests.length
+  };
+  
   useEffect(() => {
     loadServiceRequests();
   }, []);
 
   const loadServiceRequests = async () => {
-    setLoading(true);
+    setIsLoading(true);
     try {
       const data = await serviceRequestService.getAllServiceRequests();
       
@@ -37,32 +42,30 @@ const RequestsManagement = () => {
       });
       
       setRequests(sortedData);
-      
-      // Count requests by status
-      const counts = {
-        PENDING: 0,
-        APPROVED: 0,
-        REJECTED: 0
-      };
-      
-      sortedData.forEach(request => {
-        if (counts[request.status] !== undefined) {
-          counts[request.status]++;
-        }
-      });
-      
-      setRequestCounts(counts);
     } catch (error) {
       console.error('Error fetching requests:', error);
       showToast('Failed to load service requests', 'error');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const filteredRequests = requests.filter(request => {
-    return request.status === activeTab;
+    return statusFilter === 'ALL' || request.status === statusFilter;
   });
+
+  // Get current requests for pagination
+  const indexOfLastRequest = currentPage * requestsPerPage;
+  const indexOfFirstRequest = indexOfLastRequest - requestsPerPage;
+  const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
+  
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  
+  // Reset to first page when changing tabs
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter]);
 
   const handleViewRequest = (request) => {
     setSelectedRequest(request);
@@ -131,16 +134,39 @@ const RequestsManagement = () => {
         <TopNavigation title="Service Requests Management" />
         
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto flex flex-col h-[calc(100vh-64px)]">
+          {/* Header and Action Button */}
+          <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Request Management</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Review and manage all service requests from residents
+              </p>
+            </div>
+          </div>
+
           {/* Tabs */}
           <div className="mb-6">
             <div className="bg-white rounded-lg shadow-sm">
               <div className="border-b border-gray-200">
                 <nav className="-mb-px flex">
                   <button
-                    onClick={() => setActiveTab('PENDING')}
+                    onClick={() => setStatusFilter('ALL')}
                     className={`${
-                      activeTab === 'PENDING'
+                      statusFilter === 'ALL'
+                        ? 'border-[#861A2D] text-[#861A2D]'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } relative flex-1 min-w-0 py-4 px-4 border-b-2 font-medium text-sm text-center focus:outline-none`}
+                  >
+                    All
+                    <span className="ml-2 py-0.5 px-2.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                      {requestCounts.ALL}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('PENDING')}
+                    className={`${
+                      statusFilter === 'PENDING'
                         ? 'border-[#861A2D] text-[#861A2D]'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     } relative flex-1 min-w-0 py-4 px-4 border-b-2 font-medium text-sm text-center focus:outline-none`}
@@ -151,9 +177,9 @@ const RequestsManagement = () => {
                     </span>
                   </button>
                   <button
-                    onClick={() => setActiveTab('APPROVED')}
+                    onClick={() => setStatusFilter('APPROVED')}
                     className={`${
-                      activeTab === 'APPROVED'
+                      statusFilter === 'APPROVED'
                         ? 'border-[#861A2D] text-[#861A2D]'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     } relative flex-1 min-w-0 py-4 px-4 border-b-2 font-medium text-sm text-center focus:outline-none`}
@@ -164,9 +190,9 @@ const RequestsManagement = () => {
                     </span>
                   </button>
                   <button
-                    onClick={() => setActiveTab('REJECTED')}
+                    onClick={() => setStatusFilter('REJECTED')}
                     className={`${
-                      activeTab === 'REJECTED'
+                      statusFilter === 'REJECTED'
                         ? 'border-[#861A2D] text-[#861A2D]'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     } relative flex-1 min-w-0 py-4 px-4 border-b-2 font-medium text-sm text-center focus:outline-none`}
@@ -183,7 +209,7 @@ const RequestsManagement = () => {
 
           {/* Requests List */}
           <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            {loading ? (
+            {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#861A2D]"></div>
                   <p className="mt-3 text-gray-600 font-medium">Loading service requests...</p>
@@ -193,23 +219,23 @@ const RequestsManagement = () => {
                 <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                 </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No {activeTab.toLowerCase()} requests</h3>
-                <p className="mt-1 text-sm text-gray-500">There are no {activeTab.toLowerCase()} service requests at this time.</p>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No {statusFilter.toLowerCase()} requests</h3>
+                <p className="mt-1 text-sm text-gray-500">There are no {statusFilter.toLowerCase()} service requests at this time.</p>
               </div>
             ) : (
-              <div className="max-h-[500px] overflow-y-auto">
+              <div className="w-full">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Service Type</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Requester</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Date Requested</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Status</th>
-                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Actions</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requester</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Requested</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredRequests.map((request) => (
+                    {currentRequests.map((request) => (
                       <tr key={request.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{request.serviceType}</div>
@@ -272,6 +298,71 @@ const RequestsManagement = () => {
                     ))}
                   </tbody>
                 </table>
+                
+                {/* Pagination - Only show when there are more than 8 requests */}
+                {filteredRequests.length > requestsPerPage && (
+                  <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm text-gray-700">
+                          Showing <span className="font-medium">{indexOfFirstRequest + 1}</span> to{' '}
+                          <span className="font-medium">
+                            {Math.min(indexOfLastRequest, filteredRequests.length)}
+                          </span>{' '}
+                          of <span className="font-medium">{filteredRequests.length}</span> results
+                        </p>
+                      </div>
+                      <div>
+                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                          <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                              currentPage === 1 
+                                ? 'text-gray-300 cursor-not-allowed' 
+                                : 'text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            <span className="sr-only">Previous</span>
+                            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                          
+                          {/* Page numbers */}
+                          {[...Array(Math.ceil(filteredRequests.length / requestsPerPage)).keys()].map(number => (
+                            <button
+                              key={number + 1}
+                              onClick={() => paginate(number + 1)}
+                              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                currentPage === number + 1
+                                  ? 'z-10 bg-[#861A2D] border-[#861A2D] text-white'
+                                  : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                              }`}
+                            >
+                              {number + 1}
+                            </button>
+                          ))}
+                          
+                          <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredRequests.length / requestsPerPage)))}
+                            disabled={currentPage === Math.ceil(filteredRequests.length / requestsPerPage)}
+                            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                              currentPage === Math.ceil(filteredRequests.length / requestsPerPage)
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            <span className="sr-only">Next</span>
+                            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </nav>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

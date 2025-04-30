@@ -36,7 +36,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setContentView(R.layout.activity_home)
 
         // Initialize SessionManager
-        sessionManager = SessionManager(this)
+        sessionManager = SessionManager.getInstance()
 
         // Setup toolbar
         val toolbar: Toolbar = findViewById(R.id.toolbar)
@@ -136,25 +136,30 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         // Get the data from the intent
                         val serviceType = it.getStringExtra("service_type") ?: ""
                         val purpose = it.getStringExtra("purpose") ?: ""
+                        val mode = it.getStringExtra("mode") ?: "form"
+                        val userId = it.getLongExtra("user_id", 0)
 
                         // Create a bundle to pass data
                         val args = Bundle().apply {
                             putString("service_type", serviceType)
                             putString("purpose", purpose)
+                            putString("mode", mode)
+                            putLong("user_id", userId)
                         }
 
-                        // Navigate to ServicesFragment (which loads MyServicesFragment)
+                        // Create and add ServicesFragment
                         val servicesFragment = ServicesFragment()
-                        // servicesFragment.arguments = args // Pass arguments if ServicesFragment needs them (it doesn't currently)
-                        replaceFragment(servicesFragment)
+                        supportFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, servicesFragment)
+                            .commit()
 
                         // Set bottom navigation to services tab
                         bottomNavigationView.selectedItemId = R.id.services
 
-                        // Use Fragment Result API or ViewModel for safer communication instead of Handler
-                        // Set the result to be received by MyServicesFragment or RequestServicesFragment
-                        supportFragmentManager.setFragmentResult("qrServiceData", args)
-
+                        // Wait for fragment to be added before setting result
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            supportFragmentManager.setFragmentResult("qrServiceData", args)
+                        }, 100)
 
                         // Remove the handled extra to prevent re-processing on config change
                         it.removeExtra("navigate_to")
