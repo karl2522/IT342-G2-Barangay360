@@ -85,7 +85,7 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        
+
         <!-- Google Cloud Storage -->
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -98,14 +98,14 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-        
+
         <!-- Jackson Hibernate Module -->
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-hibernate5-jakarta</artifactId>
             <version>2.15.4</version>
         </dependency>
-        
+
         <!-- Jackson Java 8 Date/Time Module -->
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -127,14 +127,20 @@
             <artifactId>spring-dotenv</artifactId>
             <version>3.0.0</version>
         </dependency>
-        
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Swagger/OpenAPI Documentation -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.3.0</version>
         </dependency>
-        
+
         <!-- PDFBox for PDF document handling -->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
