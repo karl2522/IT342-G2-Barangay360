@@ -290,13 +290,13 @@ const EventsManagement = () => {
 
   const eventService = {
     getAllEvents: async () => {
-      const response = await handleApiRequest('http://localhost:8080/api/events');
+      const response = await handleApiRequest('https://barangay360-nja7q.ondigitalocean.app/api/events');
       if (!response.ok) throw new Error('Failed to fetch events');
       return await response.json();
     },
     
     createEvent: async (eventData) => {
-      const response = await handleApiRequest('http://localhost:8080/api/events', {
+      const response = await handleApiRequest('https://barangay360-nja7q.ondigitalocean.app/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData)
@@ -306,7 +306,7 @@ const EventsManagement = () => {
     },
     
     updateEvent: async (id, eventData) => {
-      const response = await handleApiRequest(`http://localhost:8080/api/events/${id}`, {
+      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/events/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData)
@@ -316,7 +316,7 @@ const EventsManagement = () => {
     },
     
     deleteEvent: async (id) => {
-      const response = await handleApiRequest(`http://localhost:8080/api/events/${id}`, {
+      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/events/${id}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete event');
