@@ -2,19 +2,20 @@
 <resources>
     <!-- Base light application theme -->
     <style name="Theme.Barangay360Mobile" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <!-- Primary brand color -->
-        <item name="colorPrimary">@color/maroon</item>
-        <item name="colorPrimaryVariant">@color/maroon</item>
-        <item name="colorOnPrimary">@color/white</item>
-
-        <!-- Secondary brand color -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-
-        <!-- Status bar color -->
-        <item name="android:statusBarColor">@color/maroon</item>
-
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSecondaryVariant">@color/accent</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Text input style -->
+        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
+        <!-- Button style -->
+        <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
         <!-- Background colors -->
         <item name="android:windowBackground">@color/white</item>
         <item name="colorSurface">@color/white</item>
@@ -22,17 +23,17 @@
 
     <!-- Splash screen theme -->
     <style name="Theme.Barangay360Mobile.Splash" parent="Theme.Barangay360Mobile">
-        <item name="android:windowBackground">@color/white</item>
-        <item name="android:statusBarColor">@color/maroon</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
         <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 
     <!-- QR Code Scanner theme -->
     <style name="Theme.Barangay360Mobile.Scanner" parent="Theme.Barangay360Mobile">
-        <item name="android:windowBackground">@color/black</item>
-        <item name="android:statusBarColor">@color/black</item>
-        <item name="android:navigationBarColor">@color/black</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
     <!-- Dialog animation style -->

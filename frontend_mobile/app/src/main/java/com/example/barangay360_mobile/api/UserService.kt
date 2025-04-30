@@ -11,8 +11,7 @@ interface UserService {
      */
     @GET("api/users/{userId}")
     suspend fun getUserProfile(
-        @Path("userId") userId: Long,
-        @Header("Authorization") authHeader: String
+        @Path("userId") userId: Long
     ): Response<UserProfile>
 
     /**

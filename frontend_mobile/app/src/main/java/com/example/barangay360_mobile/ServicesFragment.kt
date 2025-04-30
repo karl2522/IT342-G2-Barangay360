@@ -1,41 +1,34 @@
 package com.example.barangay360_mobile
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class ServicesFragment : Fragment() {
-    private lateinit var tabLayout: TabLayout
-    lateinit var viewPager: ViewPager2 // Made lateinit public for potential external access if needed later
-    private lateinit var titleTextView: TextView
-    private lateinit var backButton: ImageView
+    private lateinit var fab: FloatingActionButton
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_services, container, false)
+        fab = view.findViewById(R.id.fab_new_request)
 
-        // Initialize views
-        tabLayout = view.findViewById(R.id.tab_layout)
-        viewPager = view.findViewById(R.id.viewPager)
-        titleTextView = view.findViewById(R.id.tv_title)
-        backButton = view.findViewById(R.id.btn_back)
-
-        // Set up back button click listener
-        backButton.setOnClickListener {
-            // Navigate back to previous screen
-            requireActivity().onBackPressed()
+        // Set up FAB click listener
+        fab.setOnClickListener {
+            navigateToRequestForm()
         }
+
+        // Replace the ViewPager with MyServicesFragment directly
+        childFragmentManager.beginTransaction()
+            .replace(R.id.services_container, MyServicesFragment())
+            .commit()
 
         return view
     }
@@ -43,45 +36,26 @@ class ServicesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Set up adapter for ViewPager
-        viewPager.adapter = ServicesPagerAdapter(this)
-
-        // Connect TabLayout with ViewPager
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = when(position) {
-                0 -> "Request Services"
-                1 -> "My Services"
-                else -> null
+        // Set up fragment result listener for QR code data
+        parentFragmentManager.setFragmentResultListener("qrServiceData", viewLifecycleOwner) { _, bundle ->
+            // Navigate directly to RequestServicesFragment with the QR data
+            val fragment = RequestServicesFragment().apply {
+                arguments = bundle
             }
-        }.attach()
-
-        // Update title based on selected tab
-        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                when(tab.position) {
-                    // Keep title consistent or change as needed
-                    0 -> titleTextView.text = "Services"
-                    1 -> titleTextView.text = "Services"
-                }
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab) {}
-            override fun onTabReselected(tab: TabLayout.Tab) {}
-        })
+            
+            // Replace current fragment with RequestServicesFragment
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit()
+        }
     }
 
-    // ViewPager adapter
-    private inner class ServicesPagerAdapter(fragment: Fragment) :
-        FragmentStateAdapter(fragment) {
-
-        override fun getItemCount(): Int = 2 // We have two tabs
-
-        override fun createFragment(position: Int): Fragment {
-            return when (position) {
-                0 -> RequestServicesFragment()
-                1 -> MyServicesFragment()
-                else -> RequestServicesFragment() // Default case
-            }
-        }
+    private fun navigateToRequestForm() {
+        val fragment = RequestServicesFragment()
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

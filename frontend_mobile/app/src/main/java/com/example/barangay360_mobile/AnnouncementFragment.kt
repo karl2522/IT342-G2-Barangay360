@@ -49,7 +49,7 @@ class AnnouncementFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_announcement, container, false)
 
-        sessionManager = SessionManager(requireContext()) // Initialize SessionManager
+        sessionManager = SessionManager.getInstance() // Get the singleton instance
 
         // Initialize UI components
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
@@ -97,15 +97,8 @@ class AnnouncementFragment : Fragment() {
     }
 
     private fun checkUserRole() {
-        // TODO: Implement proper role checking based on SessionManager roles
-        val roles = sessionManager.getUserRoles()
-        val isOfficialOrAdmin = roles != null && (roles.contains("ROLE_OFFICIAL") || roles.contains("ROLE_ADMIN"))
-
-        if (isOfficialOrAdmin) {
-            fabAddAnnouncement.visibility = View.VISIBLE
-        } else {
-            fabAddAnnouncement.visibility = View.GONE
-        }
+        // Since mobile app users are always residents, hide the FAB
+        fabAddAnnouncement.visibility = View.GONE
     }
 
     private fun loadAnnouncements() {
@@ -121,7 +114,7 @@ class AnnouncementFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.announcementService.getAnnouncements("Bearer $token")
+                val response = ApiClient.announcementService.getAnnouncements()
 
                 if (!isAdded) return@launch // Exit if fragment detached
 
@@ -205,39 +198,28 @@ class AnnouncementFragment : Fragment() {
 
             fun bind(announcement: AnnouncementResponse) {
                 titleView.text = announcement.title ?: "No Title"
-                // Use createdAt or updatedAt, formatting it nicely
-                val displayDate = announcement.updatedAt ?: announcement.createdAt
-                dateView.text = displayDate?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "No Date"
+                
+                // Format date with time
+                announcement.createdAt?.let { date ->
+                    val formattedDate = date.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+                    val formattedTime = date.format(DateTimeFormatter.ofPattern("h:mm a"))
+                    dateView.text = "$formattedDate at $formattedTime"
+                } ?: run {
+                    dateView.text = "No Date"
+                }
+                
                 contentView.text = announcement.content ?: "No Content"
 
-//                // Handle image loading (optional - requires Glide dependency)
-//                if (!announcement.thumbnailUrl.isNullOrEmpty()) {
-//                    if(isAdded) { // Check fragment attachment before using Glide
-//                        Glide.with(itemView.context)
-//                            .load(announcement.thumbnailUrl)
-//                            .placeholder(R.color.card_stroke) // Optional placeholder
-//                            .error(R.color.card_stroke) // Optional error placeholder
-//                            .into(imageView)
-//                        imageView.visibility = View.VISIBLE
-//                    } else {
-//                        imageView.visibility = View.GONE
-//                    }
-//                } else {
-//                    imageView.visibility = View.GONE
-//                }
-
-                // Set button click listeners
                 btnShare.setOnClickListener {
                     shareAnnouncement(announcement)
                 }
 
                 btnViewDetails.setOnClickListener {
-                    onItemClicked(announcement) // Use the passed lambda
+                    onItemClicked(announcement)
                 }
 
-                // Make the whole card clickable
                 cardRoot.setOnClickListener {
-                    onItemClicked(announcement) // Use the passed lambda
+                    onItemClicked(announcement)
                 }
             }
         }

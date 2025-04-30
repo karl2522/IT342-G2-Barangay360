@@ -1,8 +1,8 @@
-import { useContext, useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext';
-import { QRCodeSVG } from 'qrcode.react';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -103,55 +103,94 @@ const Login = () => {
   };
 
   // Function to generate a new QR login session
-  const generateQRLoginSession = () => {
-    // Generate a unique session ID 
-    const sessionId = 'qr-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10);
-    setQRLoginSessionId(sessionId);
-    
-    // Create QR code data (in a real application, this would be coming from your backend)
-    const qrData = {
-      type: 'QRLOGIN',
-      sessionId: sessionId,
-      appName: 'Barangay360',
-      timestamp: new Date().toISOString(),
-      expires: new Date(Date.now() + 5 * 60000).toISOString() // 5 minutes
-    };
-    
-    setQRLoginData(JSON.stringify(qrData));
+  const generateQRLoginSession = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/qr/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create QR login session');
+      }
+
+      const data = await response.json();
+      setQRLoginSessionId(data.sessionId);
+      
+      // Create QR code data
+      const qrData = {
+        type: 'login',
+        sessionId: data.sessionId,
+        appName: 'Barangay360',
+        timestamp: new Date().toISOString(),
+        expires: data.expiresAt
+      };
+      
+      setQRLoginData(JSON.stringify(qrData));
+    } catch (error) {
+      console.error('Error creating QR login session:', error);
+      showToast('Error creating QR code. Please try again.', 'error');
+    }
   };
   
   // Function to check if mobile device has authenticated the QR login
   const checkQRLoginStatus = async () => {
     try {
-      // This is a mock function. In a real implementation, you would make an API call
-      // to check if the session has been authenticated by the mobile app
+      const response = await fetch(`http://localhost:8080/api/auth/qr/status/${qrLoginSessionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to check QR login status');
+      }
+
+      const data = await response.json();
       
-      // For this frontend-only implementation, we'll simulate success after 
-      // 15 seconds of the QR code being displayed
-      
-      // For demo purposes, the code will create a successful login after 15 seconds
-      const timeElapsed = Date.now() - parseInt(qrLoginSessionId.split('-')[1]);
-      if (timeElapsed > 15000) {
-        // Mock successful login
+      if (data.status === 'expired') {
+        showToast('QR code has expired. Please refresh.', 'error');
+        refreshQRCode();
+        return;
+      }
+
+      if (data.accessToken) {
+        // QR login successful
         showToast('Successfully authenticated via mobile app', 'success');
         setShowQRLogin(false);
         
-        // In a real implementation, the server would return the user data
-        // For demo purposes, let's assume a regular user login
-        const mockUser = {
-          id: 123,
-          username: 'mobileuser',
-          firstName: 'Mobile',
-          lastName: 'User',
-          roles: ['ROLE_USER']
+        // Save tokens
+        localStorage.setItem('token', JSON.stringify(data.accessToken));
+        localStorage.setItem('refreshToken', JSON.stringify(data.refreshToken));
+        
+        // Save user data
+        const userData = {
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          roles: data.roles,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+          address: data.address,
+          isActive: data.isActive
         };
         
-        // Store the mock user data as if it was returned from the server
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        navigate('/resident/dashboard');
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Navigate based on role
+        if (data.roles.includes('ROLE_OFFICIAL')) {
+          navigate('/official/dashboard');
+        } else {
+          navigate('/resident/dashboard');
+        }
       }
     } catch (error) {
       console.error('Error checking QR login status:', error);
+      showToast('Error checking QR login status', 'error');
     }
   };
   
@@ -507,4 +546,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-export default Login; 
+export default Login;

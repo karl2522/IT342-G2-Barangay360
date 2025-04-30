@@ -60,7 +60,8 @@ class MyServicesFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_my_services, container, false)
 
-        sessionManager = SessionManager(requireContext())
+        // Use getInstance() to get the singleton instance
+        sessionManager = SessionManager.getInstance()
         recyclerView = view.findViewById(R.id.recycler_services)
         emptyStateView = view.findViewById(R.id.empty_state_view)
         emptyStateText = view.findViewById(R.id.empty_state_text) // Initialize empty text
@@ -121,32 +122,42 @@ class MyServicesFragment : Fragment() {
     private fun fetchUserServices() {
         setLoadingState(true)
 
-        val userId = sessionManager.getUserId()
+        val userIdString = sessionManager.getUserId()
         val token = sessionManager.getAuthToken()
 
-        if (userId == null || token == null) {
+        if (userIdString == null || token == null) {
             if (isAdded) Toast.makeText(requireContext(), "Session error. Please log in.", Toast.LENGTH_SHORT).show()
             setLoadingState(false)
-            updateEmptyStateVisibility(true) // Show empty state if not logged in
+            updateEmptyStateVisibility(true)
+            return
+        }
+
+        // Convert userId from String to Long
+        val userIdLong = userIdString.toLongOrNull()
+        if (userIdLong == null) {
+            if (isAdded) Toast.makeText(requireContext(), "Invalid user ID format.", Toast.LENGTH_SHORT).show()
+            setLoadingState(false)
+            updateEmptyStateVisibility(true)
             return
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.serviceRequestService.getServiceRequestsByUserId("Bearer $token", userId)
+                // Pass the converted Long userId
+                val response = ApiClient.serviceRequestService.getServiceRequestsByUserId(userIdLong)
 
                 if (!isAdded) return@launch
 
                 if (response.isSuccessful) {
-                    allServices = response.body() ?: emptyList()
-                    // Sort by date descending (most recent first)
-                    allServices = allServices.sortedByDescending { it.createdAt ?: OffsetDateTime.MIN }
-                    filterAndDisplayServices() // Display initial filtered list
+                    val services = response.body() ?: emptyList()
+                    // Sort all services by date first (newest to oldest)
+                    allServices = services.sortedByDescending { it.createdAt }
+                    filterAndDisplayServices()
                 } else {
                     Log.e("MyServices", "API Error: ${response.code()} - ${response.message()}")
                     if(isAdded) Toast.makeText(requireContext(), "Failed to load services: ${response.code()}", Toast.LENGTH_SHORT).show()
-                    allServices = emptyList() // Clear list on error
-                    filterAndDisplayServices() // Show empty state
+                    allServices = emptyList()
+                    filterAndDisplayServices()
                 }
             } catch (e: Exception) {
                 if (isAdded) {
@@ -154,8 +165,8 @@ class MyServicesFragment : Fragment() {
                     if (e !is kotlinx.coroutines.CancellationException) {
                         Toast.makeText(requireContext(), "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
-                    allServices = emptyList() // Clear list on exception
-                    filterAndDisplayServices() // Show empty state
+                    allServices = emptyList()
+                    filterAndDisplayServices()
                 }
             } finally {
                 setLoadingState(false)
@@ -163,14 +174,13 @@ class MyServicesFragment : Fragment() {
         }
     }
 
-    // Filter the full list based on currentFilter and update adapter
     private fun filterAndDisplayServices() {
         val filteredList = if (currentFilter == FILTER_ALL) {
             allServices
         } else {
             allServices.filter { it.status?.lowercase(Locale.ROOT) == currentFilter }
         }
-        servicesAdapter.submitList(filteredList) // Submit to ListAdapter
+        servicesAdapter.submitList(filteredList)
         updateEmptyStateVisibility(filteredList.isEmpty())
     }
 
@@ -211,19 +221,23 @@ class MyServicesFragment : Fragment() {
     private fun showServiceDetailsDialog(service: ServiceRequestResponse) {
         if (!isAdded) return // Ensure fragment is attached
 
+        val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")
         val detailsMessage = """
             Service Type: ${service.serviceType ?: "N/A"}
-            Status: ${service.status ?: "N/A"}
+            Status: ${service.status?.replaceFirstChar { it.uppercase() } ?: "N/A"}
             Purpose: ${service.purpose ?: "N/A"}
             Details: ${service.details ?: "N/A"}
             Contact: ${service.contactNumber ?: "N/A"}
             Address: ${service.address ?: "N/A"}
-            Requested On: ${service.createdAt?.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)) ?: "N/A"}
-            Last Updated: ${service.updatedAt?.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)) ?: "N/A"}
+            Resident Name: ${service.residentName}
+            Resident Email: ${service.residentEmail}
+            Resident Phone: ${service.residentPhone ?: "N/A"}
+            Requested On: ${service.createdAt?.format(dateFormatter) ?: "N/A"}
+            Last Updated: ${service.updatedAt?.format(dateFormatter) ?: "N/A"}
         """.trimIndent()
 
         AlertDialog.Builder(requireContext())
-            .setTitle("Service Request Details (ID: ${service.id ?: "N/A"})")
+            .setTitle("Service Request Details (ID: ${service.id})")
             .setMessage(detailsMessage)
             .setPositiveButton("Close", null)
             .show()
@@ -231,12 +245,10 @@ class MyServicesFragment : Fragment() {
 
 
     private fun navigateToRequestServices() {
-        (parentFragment as? ServicesFragment)?.viewPager?.currentItem = 0 ?: run {
-            requireActivity().supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, RequestServicesFragment())
-                .addToBackStack(null)
-                .commit()
-        }
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, RequestServicesFragment())
+            .addToBackStack(null)
+            .commit()
     }
 
     // --- New RecyclerView Adapter ---
@@ -260,17 +272,31 @@ class MyServicesFragment : Fragment() {
             private val dateView: TextView = itemView.findViewById(R.id.service_date)
             private val descriptionView: TextView = itemView.findViewById(R.id.service_description)
             private val statusView: TextView = itemView.findViewById(R.id.service_status)
-            private val cardRoot: View = itemView.findViewById(R.id.service_card_root) // Get root for click listener
+            private val cardRoot: View = itemView.findViewById(R.id.service_card_root)
 
             fun bind(service: ServiceRequestResponse) {
-                titleView.text = service.serviceType ?: "Unknown Service"
-                dateView.text = service.createdAt?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "No Date"
-                descriptionView.text = "Purpose: ${service.purpose ?: "N/A"}" // Show purpose in description
+                // Format service type for display - converting snake_case to Title Case
+                titleView.text = formatServiceType(service.serviceType)
+                
+                // Format date with time
+                service.createdAt?.let { date ->
+                    val formattedDate = date.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+                    val formattedTime = date.format(DateTimeFormatter.ofPattern("h:mm a"))
+                    dateView.text = "$formattedDate at $formattedTime"
+                } ?: run {
+                    dateView.text = "No Date"
+                }
 
-                val status = service.status?.lowercase(Locale.ROOT) ?: FILTER_PENDING // Default to pending if null
-                statusView.text = status.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() } // Capitalize
+                descriptionView.text = buildString {
+                    append("Purpose: ${service.purpose ?: "N/A"}")
+                    if (!service.details.isNullOrBlank()) {
+                        append("\nDetails: ${service.details}")
+                    }
+                }
 
-                // Set status background and text color
+                val status = service.status?.lowercase(Locale.ROOT) ?: FILTER_PENDING
+                statusView.text = status.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+
                 when (status) {
                     FILTER_APPROVED -> {
                         statusView.setBackgroundResource(R.drawable.bg_status_approved)
@@ -280,13 +306,12 @@ class MyServicesFragment : Fragment() {
                         statusView.setBackgroundResource(R.drawable.bg_status_rejected)
                         statusView.setTextColor(ContextCompat.getColor(itemView.context, R.color.rejected_text))
                     }
-                    else -> { // Default to Pending style
+                    else -> {
                         statusView.setBackgroundResource(R.drawable.bg_status_pending)
                         statusView.setTextColor(ContextCompat.getColor(itemView.context, R.color.pending_text))
                     }
                 }
 
-                // Set click listener for the entire card
                 cardRoot.setOnClickListener {
                     onItemClicked(service)
                 }
@@ -302,6 +327,29 @@ class MyServicesFragment : Fragment() {
 
         override fun areContentsTheSame(oldItem: ServiceRequestResponse, newItem: ServiceRequestResponse): Boolean {
             return oldItem == newItem // Compare all fields for changes
+        }
+    }
+
+    // Helper method to format service types for display
+    private fun formatServiceType(serviceType: String?): String {
+        if (serviceType == null) return "N/A"
+        
+        // Handle known service types with special formatting
+        return when (serviceType.lowercase()) {
+            "barangay_certificate" -> "Barangay Certificate"
+            "certificate_of_residency" -> "Certificate of Residency"
+            "barangay_clearance" -> "Barangay Clearance"
+            "business_permit" -> "Business Permit"
+            "indigency_certificate" -> "Indigency Certificate"
+            else -> {
+                // For unknown types, convert snake_case to Title Case With Spaces
+                serviceType.split("_")
+                    .joinToString(" ") { word ->
+                        word.replaceFirstChar { 
+                            if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() 
+                        }
+                    }
+            }
         }
     }
 

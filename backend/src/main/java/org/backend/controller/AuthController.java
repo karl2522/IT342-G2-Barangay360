@@ -1,18 +1,15 @@
 package org.backend.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.backend.exception.TokenRefreshException;
 import org.backend.model.ERole;
+import org.backend.model.QRLoginSession;
 import org.backend.model.Role;
 import org.backend.model.User;
 import org.backend.payload.request.LoginRequest;
@@ -27,20 +24,31 @@ import org.backend.repository.RoleRepository;
 import org.backend.repository.UserRepository;
 import org.backend.security.jwt.JwtUtils;
 import org.backend.security.services.UserDetailsImpl;
+import org.backend.service.QRLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.http.HttpStatus;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:8080"}, maxAge = 3600)
@@ -62,6 +70,9 @@ public class AuthController {
 
     @Autowired
     JwtUtils jwtUtils;
+
+    @Autowired
+    private QRLoginService qrLoginService;
 
     @Operation(summary = "Authenticate user", description = "Login with username and password to get JWT tokens")
     @ApiResponses(value = {
@@ -202,6 +213,109 @@ public class AuthController {
     public ResponseEntity<?> logoutUser(@Valid @RequestBody LogoutRequest logoutRequest) {
         return ResponseEntity.ok(new MessageResponse("Log out successful!"));
     }
+
+    @Operation(summary = "Create QR login session", description = "Generate a new QR code login session")
+    @PostMapping("/qr/create")
+    public ResponseEntity<?> createQRLoginSession() {
+        QRLoginSession session = qrLoginService.createLoginSession();
+        return ResponseEntity.ok(Map.of(
+            "sessionId", session.getSessionId(),
+            "expiresAt", session.getExpiresAt()
+        ));
+    }
+
+    @Operation(summary = "Confirm QR login", description = "Complete QR code login from mobile app")
+    @PostMapping("/qr/confirm")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> confirmQRLogin(
+            @RequestParam String sessionId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        try {
+            User user = userRepository.findById(userDetails.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            qrLoginService.confirmLogin(sessionId, user);
+            
+            // Generate tokens
+            TokenDTO accessToken = jwtUtils.generateTokenFromUsername(user.getUsername());
+            TokenDTO refreshToken = jwtUtils.generateRefreshToken(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), null)
+            );
+            
+            List<String> roles = user.getRoles().stream()
+                    .map(role -> role.getName().name())
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(new JwtResponse(
+                    accessToken,
+                    refreshToken,
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    roles,
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getPhone(),
+                    user.getAddress(),
+                    user.isActive(),
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Check QR login status", description = "Check if QR code has been scanned and confirmed")
+    @GetMapping("/qr/status/{sessionId}")
+    public ResponseEntity<?> checkQRLoginStatus(@PathVariable String sessionId) {
+        try {
+            QRLoginSession session = qrLoginService.getSession(sessionId);
+            
+            if (session.isUsed() && session.getUser() != null) {
+                User user = session.getUser();
+                List<String> roles = user.getRoles().stream()
+                        .map(role -> role.getName().name())
+                        .collect(Collectors.toList());
+                
+                TokenDTO accessToken = jwtUtils.generateTokenFromUsername(user.getUsername());
+                TokenDTO refreshToken = jwtUtils.generateRefreshToken(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), null)
+                );
+
+                return ResponseEntity.ok(new JwtResponse(
+                    accessToken,
+                    refreshToken,
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    roles,
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getPhone(),
+                    user.getAddress(),
+                    user.isActive(),
+                    null
+                ));
+            }
+            
+            if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+                return ResponseEntity.ok(Map.of(
+                    "status", "expired",
+                    "message", "QR code has expired"
+                ));
+            }
+            
+            return ResponseEntity.ok(Map.of(
+                "status", "pending",
+                "message", "Waiting for mobile app scan"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
 }
 
- 

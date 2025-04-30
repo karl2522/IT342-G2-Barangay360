@@ -1,13 +1,9 @@
 package com.example.barangay360_mobile.api
 
 import com.example.barangay360_mobile.api.models.ServiceRequestRequest
-import com.example.barangay360_mobile.api.models.ServiceRequestResponse // Assuming you created this
+import com.example.barangay360_mobile.api.models.ServiceRequestResponse
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.POST
-import retrofit2.http.Path
+import retrofit2.http.*
 
 interface ServiceRequestService {
 
@@ -17,7 +13,6 @@ interface ServiceRequestService {
      */
     @POST("api/service-requests")
     suspend fun createServiceRequest(
-        @Header("Authorization") authHeader: String,
         @Body request: ServiceRequestRequest
     ): Response<ServiceRequestResponse> // Or use a generic Response<ResponseBody> if you don't need the response body
 
@@ -27,7 +22,6 @@ interface ServiceRequestService {
      */
     @GET("api/service-requests/user/{userId}")
     suspend fun getServiceRequestsByUserId(
-        @Header("Authorization") authHeader: String,
         @Path("userId") userId: Long
     ): Response<List<ServiceRequestResponse>> // Expecting a List
 }

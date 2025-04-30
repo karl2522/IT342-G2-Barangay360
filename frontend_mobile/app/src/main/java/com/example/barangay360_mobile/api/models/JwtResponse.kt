@@ -12,12 +12,6 @@ data class JwtResponse(
     val phone: String?,
     val address: String?,
     val active: Boolean,
-    val warnings: Int,
-    val profileImage: String?
-)
-
-data class TokenDTO(
-    val token: String,
-    val tokenType: String,
-    val expiryDuration: Long
+    val warnings: Int = 0,
+    val profileImage: String? = null
 )

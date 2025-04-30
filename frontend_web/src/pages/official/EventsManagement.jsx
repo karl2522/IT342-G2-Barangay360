@@ -1,11 +1,11 @@
-import { useState, useEffect, useContext } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation';
-import { useToast } from '../../contexts/ToastContext';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
+import { useToast } from '../../contexts/ToastContext';
 
 // Set up the localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
@@ -14,7 +14,7 @@ const localizer = momentLocalizer(moment);
 // Commented out until backend implementation is ready
 /* 
 const eventService = {
-  getAllEvents: async () => {
+  getAllEvents: async () =>
     const response = await axios.get('/api/events');
     return response.data;
   },
@@ -47,6 +47,8 @@ const EventsManagement = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
+  const [calendarDate, setCalendarDate] = useState(new Date()); // Add state for calendar date
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -60,7 +62,7 @@ const EventsManagement = () => {
   // Fetch events on component mount
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, []); // Keep dependency array empty
 
   const loadEvents = async () => {
     setLoading(true);
@@ -82,6 +84,9 @@ const EventsManagement = () => {
       setLoading(false);
     }
   };
+
+  // Add handler for calendar navigation
+  const handleNavigate = useCallback((newDate) => setCalendarDate(newDate), []);
 
   const openCreateModal = () => {
     setFormData({
@@ -243,6 +248,7 @@ const EventsManagement = () => {
     const style = {
       backgroundColor: event.color || '#861A2D',
       borderRadius: '5px',
+      opacity: 0.8,
       color: '#fff',
       border: 'none',
       display: 'block'
@@ -260,11 +266,23 @@ const EventsManagement = () => {
 
   // Handle slot selection for creating new events
   const handleSelectSlot = ({ start, end }) => {
+    // Only open create modal if the user is not just clicking on a day header
+    // This basic check might need refinement depending on exact behavior desired
+    if (moment(start).isSame(end, 'day') && moment(start).hour() === 0 && moment(end).hour() === 0) {
+      // Potentially a click on the day number, do nothing or handle differently
+      console.log("Day header clicked, not opening modal.");
+      return;
+    }
+    
     setFormData(prevData => ({
       ...prevData,
+      title: '', // Reset title for new event
+      description: '', // Reset description
       start,
       end,
-      allDay: false
+      location: '', // Reset location
+      allDay: moment(start).isSame(end, 'day') && moment(start).hour() === 0 && moment(end).hour() === 0, // Basic allDay check
+      color: '#861A2D' // Reset color
     }));
     setIsEditing(false);
     setShowModal(true);
@@ -357,6 +375,8 @@ const EventsManagement = () => {
                     eventPropGetter={eventStyleGetter}
                     views={['month', 'week', 'day', 'agenda']}
                     defaultView="month"
+                    date={calendarDate} // Control the displayed date
+                    onNavigate={handleNavigate} // Update state on navigation
                   />
                 </div>
               )}
@@ -600,4 +620,4 @@ const EventsManagement = () => {
   );
 };
 
-export default EventsManagement; 
+export default EventsManagement;
