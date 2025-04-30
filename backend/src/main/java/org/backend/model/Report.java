@@ -21,10 +21,10 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "CLOB")
+    @Column(nullable = false, columnDefinition = "TEXT") // ADD THIS LINE
     private String reason;
 
-    @Column(columnDefinition = "CLOB")
+    @Column(columnDefinition = "TEXT") // ADD THIS LINE
     private String rejectionReason;
 
     @ManyToOne(fetch = FetchType.EAGER)
