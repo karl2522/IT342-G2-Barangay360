@@ -40,7 +40,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"}, maxAge = 3600)
 public class ReportController {
     private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
 

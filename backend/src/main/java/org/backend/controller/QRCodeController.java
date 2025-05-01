@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/qr-code")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 @Tag(name = "QR Codes", description = "API for generating QR codes for service requests")
 public class QRCodeController {
 

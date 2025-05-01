@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/events")
 // CORS is handled globally in WebSecurityConfig
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class EventController {
 
     // Add Logger instance
