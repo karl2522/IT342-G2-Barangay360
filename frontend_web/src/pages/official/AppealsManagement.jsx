@@ -1,9 +1,9 @@
-import { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../../contexts/AuthContext';
-import { useToast } from '../../contexts/ToastContext';
+import { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/layout/Sidebar';
 import TopNavigation from '../../components/layout/TopNavigation';
-import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 
 // Helper function for status badges (similar to RequestsManagement)
 const getStatusBadgeClass = (status) => {
@@ -49,7 +49,7 @@ const AppealsManagement = () => {
   const fetchAppeals = async () => {
     try {
       setLoading(true);
-      const response = await handleApiRequest('http://localhost:8080/api/appeals', {
+      const response = await handleApiRequest('https://barangay360-nja7q.ondigitalocean.app/api/appeals', {
         method: 'GET',
       });
 
@@ -108,7 +108,7 @@ const AppealsManagement = () => {
     const appealId = selectedAppeal.id;
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`http://localhost:8080/api/appeals/${appealId}/approve`, {
+      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/appeals/${appealId}/approve`, {
         method: 'POST',
       });
       if (response.ok) {
@@ -133,7 +133,7 @@ const AppealsManagement = () => {
     const appealId = selectedAppeal.id;
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`http://localhost:8080/api/appeals/${appealId}/reject`, {
+      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/appeals/${appealId}/reject`, {
         method: 'POST',
       });
 
@@ -157,8 +157,14 @@ const AppealsManagement = () => {
   const AppealDetailsModal = ({ show, onClose, appeal }) => {
     if (!show || !appeal) return null;
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
+      <div 
+        className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4"
+        onClick={onClose} // Close when clicking outside
+      >
+        <div 
+          className="bg-white rounded-lg shadow-xl max-w-lg w-full"
+          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+        >
           <div className="flex justify-between items-center p-4 border-b border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">Appeal Details</h3>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
@@ -329,8 +335,17 @@ const AppealsManagement = () => {
       />
 
       {showApproveModal && selectedAppeal && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div 
+          className="fixed inset-0 z-[100] overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4"
+          onClick={() => {
+            setShowApproveModal(false);
+            setSelectedAppeal(null);
+          }} // Close when clicking outside
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+          >
             <div className="text-center">
               <svg className="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -372,8 +387,17 @@ const AppealsManagement = () => {
       )}
 
       {showRejectModal && selectedAppeal && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div 
+          className="fixed inset-0 z-[100] overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4"
+          onClick={() => { 
+            setShowRejectModal(false); 
+            setSelectedAppeal(null); 
+          }} // Close when clicking outside
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+          >
             <div className="text-center">
               <svg className="mx-auto h-12 w-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -416,4 +440,4 @@ const AppealsManagement = () => {
   );
 };
 
-export default AppealsManagement; 
+export default AppealsManagement;

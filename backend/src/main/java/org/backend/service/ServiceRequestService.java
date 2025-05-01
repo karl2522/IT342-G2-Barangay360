@@ -10,7 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -128,5 +132,58 @@ public class ServiceRequestService {
                         request.getUser().getPhone()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get the generated document for a service request
+     */
+    public Resource getGeneratedDocument(Long requestId) throws Exception {
+        ServiceRequest request = serviceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Service request not found"));
+
+        if (request.getGeneratedDocumentPath() == null) {
+            throw new RuntimeException("No document has been generated for this request");
+        }
+
+        Path path = Paths.get(request.getGeneratedDocumentPath());
+        Resource resource = new UrlResource(path.toUri());
+
+        if (resource.exists() && resource.isReadable()) {
+            return resource;
+        } else {
+            throw new RuntimeException("Could not read document file");
+        }
+    }
+
+    /**
+     * Mark a document as delivered to the resident
+     */
+    @Transactional
+    public ServiceRequestResponse markDocumentAsDelivered(Long requestId) {
+        ServiceRequest request = serviceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Service request not found"));
+
+        request.markDocumentAsDelivered();
+        ServiceRequest updatedRequest = serviceRequestRepository.save(request);
+
+        ServiceRequestResponse response = new ServiceRequestResponse(
+                updatedRequest.getId(),
+                updatedRequest.getServiceType(),
+                updatedRequest.getStatus(),
+                updatedRequest.getDetails(),
+                updatedRequest.getPurpose(),
+                updatedRequest.getContactNumber(),
+                updatedRequest.getAddress(),
+                updatedRequest.getCreatedAt(),
+                updatedRequest.getUpdatedAt(),
+                updatedRequest.getUser().getFirstName() + " " + updatedRequest.getUser().getLastName(),
+                updatedRequest.getUser().getEmail(),
+                updatedRequest.getUser().getPhone()
+        );
+
+        // Send real-time update
+        messagingTemplate.convertAndSend("/topic/service-requests", response);
+
+        return response;
     }
 } 

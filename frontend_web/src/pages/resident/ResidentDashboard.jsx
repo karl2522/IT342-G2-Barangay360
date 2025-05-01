@@ -1,13 +1,13 @@
-import { useContext, useState, useEffect } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AuthContext } from '../../contexts/AuthContext.jsx';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation.jsx';
+import { AuthContext } from '../../contexts/AuthContext.jsx';
+import { announcementService } from '../../services/AnnouncementService';
+import { forumService } from '../../services/ForumService';
 import { serviceRequestService } from '../../services/ServiceRequestService';
 import { webSocketService } from '../../services/WebSocketService';
-import { forumService } from '../../services/ForumService';
-import { announcementService } from '../../services/AnnouncementService';
-import { formatDistanceToNow } from 'date-fns';
 
 // Helper function to format date and time
 const formatDateTime = (dateTimeStr) => {
@@ -127,10 +127,10 @@ const ResidentDashboard = () => {
     setAnnouncementsError(null);
     try {
         const data = await announcementService.getAllAnnouncements();
-        // Sort by createdAt descending and take the latest 3
+        // Sort by createdAt descending and take the latest 2
         const sortedData = [...data]
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 3);
+            .slice(0, 2);
         setAnnouncements(sortedData);
     } catch (error) {
         console.error('Error loading announcements:', error);
@@ -178,68 +178,71 @@ const ResidentDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
-                <h3 className="text-lg font-medium text-[#861A2D] mb-2 flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-                  </svg>
-                  Latest Announcements
-                </h3>
-                <p className="text-gray-600 mb-4">Stay updated with the latest barangay announcements.</p>
-                {announcementsLoading ? (
-                    <div className="flex flex-col justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
-                        <p className="mt-3 text-gray-600 font-medium">Loading announcements...</p>
-                    </div>
-                ) : announcementsError ? (
-                    <div className="text-center py-6 bg-red-50 rounded-md border border-red-200 px-3">
-                        <svg className="mx-auto h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p className="mt-2 text-sm font-medium text-red-800">Error Loading Announcements</p>
-                        <p className="mt-1 text-xs text-red-700">{announcementsError}</p>
-                    </div>
-                ) : announcements.length > 0 ? (
-                    <div className="space-y-3">
-                        {announcements.map((announcement) => (
-                            <Link 
-                                key={announcement.id} 
-                                to={`/announcements/${announcement.id}`} 
-                                className="block p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 relative overflow-hidden"
-                            >
-                                <div className="absolute left-0 top-0 w-1 h-full bg-[#861A2D]"></div>
-                                <h4 className="text-md font-semibold text-gray-800 mb-2 truncate pr-6">{announcement.title}</h4>
-                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{announcement.content}</p>
-                                <div className="flex justify-between items-center mt-2">
-                                    <div className="flex items-center text-xs text-gray-500">
-                                        <svg className="w-4 h-4 mr-1 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                        </svg>
-                                        {formatDistanceToNow(new Date(announcement.createdAt), { addSuffix: true })}
-                                    </div>
-                                    <span className="text-xs font-medium text-[#861A2D] inline-flex items-center">
-                                        Read more
-                                        <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                                        </svg>
-                                    </span>
-                                </div>
-                            </Link>
-                        ))}
-                        <Link to="/announcements" className="mt-4 inline-block text-sm font-medium text-[#861A2D] hover:underline flex items-center">
-                            View all announcements
-                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                            </svg>
-                        </Link>
-                    </div>
-                ) : (
-                     <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
-                        <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-6 4h6"></path></svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No announcements</h3>
-                        <p className="mt-1 text-xs text-gray-500">There are currently no announcements.</p>
-                    </div>
+              {/* Latest Announcements Card - Modified for flex layout */}
+              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D] flex flex-col">
+                {/* Card Content Area (grows to push link down) */}
+                <div className="flex-grow">
+                  <h3 className="text-lg font-medium text-[#861A2D] mb-2 flex items-center">
+                    Latest Announcements
+                  </h3>
+                  <p className="text-gray-600 mb-4">Stay updated with the latest barangay announcements.</p>
+                  {announcementsLoading ? (
+                      <div className="flex flex-col justify-center items-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
+                          <p className="mt-3 text-gray-600 font-medium">Loading announcements...</p>
+                      </div>
+                  ) : announcementsError ? (
+                      <div className="text-center py-6 bg-red-50 rounded-md border border-red-200 px-3">
+                          <svg className="mx-auto h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          <p className="mt-2 text-sm font-medium text-red-800">Error Loading Announcements</p>
+                          <p className="mt-1 text-xs text-red-700">{announcementsError}</p>
+                      </div>
+                  ) : announcements.length > 0 ? (
+                      <div className="space-y-3">
+                          {announcements.map((announcement) => (
+                              <Link 
+                                  key={announcement.id} 
+                                  to={`/resident/announcements/${announcement.id}`}
+                                  className="block p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 relative overflow-hidden"
+                              >
+                                  <div className="absolute left-0 top-0 w-1 h-full bg-[#861A2D]"></div>
+                                  <h4 className="text-md font-semibold text-gray-800 mb-2 truncate pr-6">{announcement.title}</h4>
+                                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{announcement.content}</p>
+                                  <div className="flex justify-between items-center mt-2">
+                                      <div className="flex items-center text-xs text-gray-500">
+                                          <svg className="w-4 h-4 mr-1 text-[#861A2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                          </svg>
+                                          {formatDistanceToNow(new Date(announcement.createdAt), { addSuffix: true })}
+                                      </div>
+                                  </div>
+                              </Link>
+                          ))}
+                      </div>
+                  ) : (
+                       <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
+                          <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-6 4h6"></path></svg>
+                          <h3 className="mt-2 text-sm font-medium text-gray-900">No announcements</h3>
+                          <p className="mt-1 text-xs text-gray-500">There are currently no announcements.</p>
+                      </div>
+                  )}
+                </div>
+                {/* View All Announcements Link (always at the bottom) */}
+                {/* Conditionally render only if not loading/error? Or always show? Showing always for now. */}
+                {!announcementsLoading && !announcementsError && (
+                  <Link 
+                    to="/resident/announcements" 
+                    className="mt-4 inline-block text-sm font-medium text-[#861A2D] hover:underline flex items-center self-start" // Use self-start or similar if needed
+                  >
+                      View all announcements
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                      </svg>
+                  </Link>
                 )}
               </div>
 
+              {/* Community Events Calendar Card */}
               <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
                 <h3 className="text-lg font-medium text-[#861A2D] mb-2">Community Events Calendar</h3>
                 <p className="text-gray-600 mb-4">Upcoming events in our barangay.</p>
@@ -276,79 +279,87 @@ const ResidentDashboard = () => {
                   </div>
                 ) : (
                   <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
-                    <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-6 4h6"></path></svg>
                     <h3 className="mt-2 text-sm font-medium text-gray-900">No upcoming events</h3>
                     <p className="mt-1 text-xs text-gray-500">Check back later for community events.</p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D]">
-                <h3 className="text-lg font-medium text-[#861A2D] mb-2">My Requests</h3>
-                <p className="text-gray-600 mb-4">Track the status of your service requests.</p>
+              {/* My Requests Card */}
+              <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#861A2D] flex flex-col">
+                <div className="flex-grow">
+                  <h3 className="text-lg font-medium text-[#861A2D] mb-2">My Requests</h3>
+                  <p className="text-gray-600 mb-4">Track the status of your service requests.</p>
 
-                {isLoading ? (
-                  <div className="flex flex-col justify-center items-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
-                    <p className="mt-3 text-gray-600 font-medium">Loading requests...</p>
-                  </div>
-                ) : myRequests.length > 0 ? (
-                  <div className="space-y-3">
-                    {/* Only show the first 3 requests */}
-                    {myRequests.slice(0, 3).map((request) => (
-                      <div key={request.id} className="p-3 bg-gray-50 rounded-md border border-gray-200 hover:shadow-sm transition-all duration-200">
-                        <div className="flex justify-between">
-                          <p className="text-sm font-medium text-gray-800">{request.serviceType}</p>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 text-xs rounded-full ${
-                            request.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                            request.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                            request.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                            'bg-blue-100 text-blue-800'
-                          }`}>
-                            {request.status === 'PENDING' && (
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                              </svg>
-                            )}
-                            {request.status === 'APPROVED' && (
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                              </svg>
-                            )}
-                            {request.status === 'REJECTED' && (
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                              </svg>
-                            )}
-                            {request.status}
-                          </span>
+                  {isLoading ? (
+                    <div className="flex flex-col justify-center items-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#861A2D]"></div>
+                      <p className="mt-3 text-gray-600 font-medium">Loading requests...</p>
+                    </div>
+                  ) : myRequests.length > 0 ? (
+                    <div className="space-y-3">
+                      {/* Only show the first 3 requests */}
+                      {myRequests.slice(0, 3).map((request) => (
+                        <div key={request.id} className="p-3 bg-gray-50 rounded-md border border-gray-200 hover:shadow-sm transition-all duration-200">
+                          <div className="flex justify-between">
+                            <p className="text-sm font-medium text-gray-800">{request.serviceType}</p>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 text-xs rounded-full ${
+                              request.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                              request.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                              request.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {request.status === 'PENDING' && (
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                              )}
+                              {request.status === 'APPROVED' && (
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                              )}
+                              {request.status === 'REJECTED' && (
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                              )}
+                              {request.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">Requested on {new Date(request.createdAt).toLocaleDateString()}</p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">Requested on {new Date(request.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    ))}
-                    
-                    {/* View More button */}
-                    <Link 
-                      to="/services"
-                      className="mt-3 w-full inline-block text-center py-2 px-4 border border-[#861A2D] rounded-md text-sm font-medium text-[#861A2D] bg-white hover:bg-[#861A2D] hover:text-white transition-colors duration-200"
-                    >
-                      View All Requests
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
-                    <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
+                      <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h6"></path>
+                      </svg>
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No requests</h3>
+                      <p className="mt-1 text-xs text-gray-500">You haven&apos;t submitted any requests yet.</p>
+                      <Link 
+                        to="/resident/services"
+                        className="mt-3 inline-block py-2 px-4 border border-[#861A2D] rounded-md text-xs font-medium text-[#861A2D] hover:bg-[#861A2D] hover:text-white transition-colors duration-200"
+                      >
+                        Make a Request
+                      </Link>
+                    </div>
+                  )}
+                </div>
+                
+                {/* View All Requests Link - positioned at the bottom just like announcements */}
+                {!isLoading && myRequests.length > 0 && (
+                  <Link 
+                    to="/resident/services"
+                    className="mt-4 inline-block text-sm font-medium text-[#861A2D] hover:underline flex items-center self-start"
+                  >
+                    View all requests
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                     </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No requests</h3>
-                    <p className="mt-1 text-xs text-gray-500">You haven&apos;t submitted any requests yet.</p>
-                    <Link 
-                      to="/resident/services"
-                      className="mt-3 inline-block py-2 px-4 border border-[#861A2D] rounded-md text-xs font-medium text-[#861A2D] hover:bg-[#861A2D] hover:text-white transition-colors duration-200"
-                    >
-                      Make a Request
-                    </Link>
-                  </div>
+                  </Link>
                 )}
               </div>
             </div>
