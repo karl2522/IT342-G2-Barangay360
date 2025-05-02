@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiService {
     // Updated to match the URL in ApiClient for consistency
-    private const val BASE_URL = "http://192.168.1.2:8080/" 
+    private const val BASE_URL = "https://barangay360-nja7q.ondigitalocean.app/"
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor())
