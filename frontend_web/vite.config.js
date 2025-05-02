@@ -14,6 +14,17 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       }
+    },
+    historyApiFallback: true
+  },
+  base: '/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
     }
   }
 })
