@@ -1,156 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fillViewport="true"
         android:background="@color/mattegray">
 
-    <!-- PH Flag vector image -->
-    <ImageView
-            android:id="@+id/phflag_vector"
-            android:layout_width="363dp"
-            android:layout_height="306dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="30dp"
-            android:src="@drawable/signup_phflag_vector" />
-
-    <!-- Welcome Back text -->
-    <TextView
-            android:id="@+id/signin_welcome_back_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="160dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="Welcome Back!"
-            android:textColor="@color/black"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-    <!-- Filipino character image -->
-    <ImageView
-            android:id="@+id/chibi_filipino_guy"
-            android:layout_width="240dp"
-            android:layout_height="280dp"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="170dp"
-            android:src="@drawable/chibi_filipino_guy" />
-
-    <!-- Form Container -->
-    <LinearLayout
-            android:id="@+id/form_container"
+    <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/chibi_filipino_guy"
-            android:layout_marginHorizontal="32dp"
-            android:layout_marginTop="-60dp"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
-        <!-- Username field with floating label -->
-        <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/signin_username_layout"
+        <!-- PH Flag vector image -->
+        <ImageView
+                android:id="@+id/phflag_vector"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Username"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                android:layout_height="306dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginTop="30dp"
+                android:scaleType="fitStart"
+                android:src="@drawable/signup_phflag_vector" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/signin_email"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:fontFamily="sans-serif"
-                    android:textColor="@color/black"
-                    android:textSize="15sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Password field with floating label -->
-        <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/signin_password_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Password"
-                app:passwordToggleEnabled="true"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-            <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/signin_password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPassword"
-                    android:fontFamily="sans-serif"
-                    android:textColor="@color/black"
-                    android:textSize="15sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Forget password text -->
+        <!-- Welcome Back text -->
         <TextView
-                android:id="@+id/forget_password"
+                android:id="@+id/signin_welcome_back_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginTop="8dp"
-                android:clickable="true"
-                android:focusable="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="160dp"
                 android:fontFamily="sans-serif-medium"
-                android:text="Forget Password"
-                android:textColor="@color/maroon"
-                android:textSize="14sp" />
+                android:text="Welcome Back!"
+                android:textColor="@color/black"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-        <!-- Sign In button -->
-        <Button
-                android:id="@+id/signin_button"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="24dp"
-                android:background="@drawable/button_primary"
-                android:elevation="2dp"
-                android:fontFamily="sans-serif-medium"
-                android:text="Sign in"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="16sp" />
+        <!-- Filipino character image -->
+        <ImageView
+                android:id="@+id/chibi_filipino_guy"
+                android:layout_width="240dp"
+                android:layout_height="280dp"
+                android:layout_below="@id/signin_welcome_back_text"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="10dp"
+                android:src="@drawable/chibi_filipino_guy" />
 
-        <!-- Sign Up link container -->
+        <!-- Form Container -->
         <LinearLayout
-                android:layout_width="wrap_content"
+                android:id="@+id/form_container"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="20dp"
-                android:orientation="horizontal">
+                android:layout_below="@id/chibi_filipino_guy"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="-60dp"
+                android:layout_marginBottom="32dp"
+                android:orientation="vertical">
 
-            <!-- Don't have account text -->
+            <!-- Username field with floating label -->
+            <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/signin_username_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Username"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/signin_email"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:fontFamily="sans-serif"
+                        android:textColor="@color/black"
+                        android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Password field with floating label -->
+            <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/signin_password_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Password"
+                    app:passwordToggleEnabled="true"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/signin_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:fontFamily="sans-serif"
+                        android:textColor="@color/black"
+                        android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Forget password text -->
             <TextView
-                    android:id="@+id/dont_have_account_text"
+                    android:id="@+id/forget_password"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif"
-                    android:text="Don't have an account? "
-                    android:textColor="@color/black"
-                    android:textSize="14sp" />
-
-            <!-- Sign Up text -->
-            <TextView
-                    android:id="@+id/dont_have_account_signup_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="8dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Sign up"
+                    android:text="Forget Password"
                     android:textColor="@color/maroon"
                     android:textSize="14sp" />
+
+            <!-- Sign In button -->
+            <Button
+                    android:id="@+id/signin_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/button_primary"
+                    android:elevation="2dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Sign in"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+
+            <!-- Sign Up link container -->
+            <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                <!-- Don't have account text -->
+                <TextView
+                        android:id="@+id/dont_have_account_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif"
+                        android:text="Don't have an account? "
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+
+                <!-- Sign Up text -->
+                <TextView
+                        android:id="@+id/dont_have_account_signup_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="Sign up"
+                        android:textColor="@color/maroon"
+                        android:textSize="14sp" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
 
-    <!-- Progress indicator -->
-    <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:visibility="gone" />
-
-</RelativeLayout>
+        <!-- Progress indicator -->
+        <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:visibility="gone" />
+    </RelativeLayout>
+</ScrollView>
