@@ -5,6 +5,7 @@ import TopNavigation from '../../components/layout/TopNavigation.jsx';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext';
 import { serviceRequestService } from '../../services/ServiceRequestService';
+import { DateTime } from 'luxon';
 
 const Services = () => {
   const { user } = useContext(AuthContext);
@@ -323,20 +324,22 @@ const Services = () => {
 
   // Get remaining time for editable window
   const getRemainingEditTime = (request) => {
-    const createdAt = new Date(request.createdAt);
-    const deadline = new Date(createdAt);
-    deadline.setHours(deadline.getHours() + 24);
+    const createdAt = DateTime.fromISO(request.createdAt, { zone: 'Asia/Manila' });
+    const deadline = createdAt.plus({ hours: 24 });
+    const now = DateTime.now().setZone('Asia/Manila');
 
-    const now = new Date();
-    const diffMs = deadline - now;
+    const diff = deadline.diff(now, ['hours', 'minutes']).toObject();
 
-    if (diffMs <= 0) return 'Time expired';
+    if (diff.hours < 0 || (diff.hours === 0 && diff.minutes <= 0)) {
+      return 'Time expired';
+    }
 
-    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const diffHrs = Math.floor(diff.hours);
+    const diffMins = Math.floor(diff.minutes);
 
     return `${diffHrs}h ${diffMins}m remaining`;
   };
+
 
   // Close modal - reset form data, QR code state, and method choice
   const closeModal = () => {
