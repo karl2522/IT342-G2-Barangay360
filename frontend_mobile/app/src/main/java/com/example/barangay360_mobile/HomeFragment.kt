@@ -34,6 +34,7 @@ class HomeFragment : Fragment() {
     private lateinit var announcementDate: TextView
     private lateinit var announcementContent: TextView
     private lateinit var viewAllAnnouncementsButton: Button
+    private var isCommunityCardLoading = false
 
     // **** ADD REFERENCE FOR PLACEHOLDER ****
     private lateinit var noAnnouncementCard: CardView
@@ -67,7 +68,8 @@ class HomeFragment : Fragment() {
                 ?.replace(R.id.fragment_container, AnnouncementFragment())
                 ?.addToBackStack(null)
                 ?.commit()
-            (activity as? HomeActivity)?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)?.selectedItemId = R.id.announcements
+            (activity as? HomeActivity)?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)?.selectedItemId =
+                R.id.announcements
         }
 
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
@@ -86,7 +88,20 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         fetchMostRecentAnnouncement()
+
+        // Add this inside your onViewCreated or equivalent method
+        // Fix: Use findViewById instead of binding
+        val cardCommunity = view.findViewById<CardView>(R.id.card_community)
+        cardCommunity.setOnClickListener {
+            // Navigate to Community Fragment
+            val communityFragment = CommunityFragment.newInstance()
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, communityFragment)
+                .addToBackStack(null)
+                .commit()
+        }
     }
+
 
     private fun updateWelcomeMessage() {
         val firstName = sessionManager.getFirstName() ?: ""
@@ -104,6 +119,7 @@ class HomeFragment : Fragment() {
         updateWelcomeMessage()
         fetchMostRecentAnnouncement()
     }
+
 
     private fun fetchMostRecentAnnouncement() {
         if (::swipeRefreshLayout.isInitialized) {
@@ -123,6 +139,8 @@ class HomeFragment : Fragment() {
             return
         }
 
+
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.announcementService.getAnnouncements()
@@ -132,12 +150,15 @@ class HomeFragment : Fragment() {
                 if (response.isSuccessful) {
                     val announcements = response.body()
                     if (!announcements.isNullOrEmpty()) {
-                        val sortedAnnouncements = announcements.sortedByDescending { it.createdAt ?: OffsetDateTime.MIN }
+                        val sortedAnnouncements =
+                            announcements.sortedByDescending { it.createdAt ?: OffsetDateTime.MIN }
                         val mostRecent = sortedAnnouncements.first()
 
                         if (::announcementCard.isInitialized && ::noAnnouncementCard.isInitialized) {
                             announcementTitle.text = mostRecent.title ?: "No Title"
-                            announcementDate.text = mostRecent.createdAt?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "No Date"
+                            announcementDate.text = mostRecent.createdAt?.format(
+                                DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                            ) ?: "No Date"
                             announcementContent.text = mostRecent.content ?: "No Content"
                             announcementCard.visibility = View.VISIBLE
                             noAnnouncementCard.visibility = View.GONE
@@ -150,21 +171,35 @@ class HomeFragment : Fragment() {
                         }
                     }
                 } else {
-                    Log.e("HomeFragment", "API Error fetching announcements: ${response.code()} - ${response.message()}")
+                    Log.e(
+                        "HomeFragment",
+                        "API Error fetching announcements: ${response.code()} - ${response.message()}"
+                    )
                     if (isAdded) {
-                        Toast.makeText(requireContext(), "Failed to load announcements: ${response.code()}", Toast.LENGTH_SHORT).show()
-                        if (::announcementCard.isInitialized) announcementCard.visibility = View.GONE
-                        if (::noAnnouncementCard.isInitialized) noAnnouncementCard.visibility = View.GONE
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to load announcements: ${response.code()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        if (::announcementCard.isInitialized) announcementCard.visibility =
+                            View.GONE
+                        if (::noAnnouncementCard.isInitialized) noAnnouncementCard.visibility =
+                            View.GONE
                     }
                 }
             } catch (e: Exception) {
                 if (isAdded) {
                     Log.e("HomeFragment", "Exception fetching announcements: ${e.message}", e)
                     if (e !is kotlinx.coroutines.CancellationException) {
-                        Toast.makeText(requireContext(), "Error loading announcements: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Error loading announcements: ${e.localizedMessage}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     if (::announcementCard.isInitialized) announcementCard.visibility = View.GONE
-                    if (::noAnnouncementCard.isInitialized) noAnnouncementCard.visibility = View.GONE
+                    if (::noAnnouncementCard.isInitialized) noAnnouncementCard.visibility =
+                        View.GONE
                 }
             } finally {
                 if (isAdded && ::swipeRefreshLayout.isInitialized) {

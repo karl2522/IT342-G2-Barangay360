@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/surface_variant"
+        android:layout_marginBottom="12dp">
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp">
+
+        <!-- Post Header (User Name and Date) -->
+        <LinearLayout
+                android:id="@+id/community_post_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/community_user_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Juan Dela Cruz"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/community_post_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Posted 2 hours ago"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Post Content (Title and Description) -->
+        <TextView
+                android:id="@+id/community_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/community_post_header"
+                android:layout_marginTop="12dp"
+                android:text="Suggestion for Basketball Court Schedule"
+                android:textColor="@color/maroon"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        <TextView
+                android:id="@+id/community_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/community_title"
+                android:layout_marginTop="8dp"
+                android:text="Maybe we can have a schedule for using the court? It gets crowded sometimes, especially on weekends. What do you guys think?"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+        <!-- Reaction Stats (Likes and Comments) -->
+        <LinearLayout
+                android:id="@+id/community_reaction_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/community_description"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+            <TextView
+                    android:id="@+id/like_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_thumb_up"
+                    android:drawableTint="@color/maroon"
+                    android:drawablePadding="4dp"
+                    android:text="15 likes"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+            <TextView
+                    android:id="@+id/comment_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:drawableStart="@drawable/ic_comment"
+                    android:drawableTint="@color/maroon"
+                    android:drawablePadding="4dp"
+                    android:text="4 comments"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Reaction Buttons (Like, Comment, Share) -->
+        <LinearLayout
+                android:id="@+id/community_reaction_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/community_reaction_stats"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+            <Button
+                    android:id="@+id/btn_like"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:drawableStart="@drawable/ic_thumb_up"
+                    android:drawableTint="@color/maroon"
+                    android:text="Like"
+                    android:textColor="@color/text_primary" />
+
+            <Button
+                    android:id="@+id/btn_comment"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:drawableStart="@drawable/ic_comment"
+                    android:drawableTint="@color/maroon"
+                    android:text="Comment"
+                    android:textColor="@color/text_primary" />
+
+            <Button
+                    android:id="@+id/btn_share"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:drawableStart="@drawable/ic_share"
+                    android:drawableTint="@color/maroon"
+                    android:text="Share"
+                    android:textColor="@color/text_primary" />
+        </LinearLayout>
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

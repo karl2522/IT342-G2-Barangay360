@@ -18,6 +18,10 @@
             android:icon="@drawable/announcement_icon"
             android:title="Announcement"/>
         <item
+                android:id="@+id/nav_community"
+                android:icon="@drawable/ic_community"
+                android:title="Community"/>
+        <item
             android:id="@+id/nav_profile"
             android:icon="@drawable/profile_icon"
             android:title="Profile"/>

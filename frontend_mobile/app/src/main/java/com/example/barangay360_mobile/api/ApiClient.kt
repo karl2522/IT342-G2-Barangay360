@@ -20,7 +20,9 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
     // Use 10.0.2.2 for localhost when using Android Emulator
-    private const val BASE_URL = "http://192.168.1.2:8080/"
+    //http://192.168.56.1:8080/
+    //http://192.168.254.181:8080/
+    private const val BASE_URL = "https://barangay360-nja7q.ondigitalocean.app/"
     private lateinit var sessionManager: SessionManager
     
     // Create a proper instance of the logging interceptor (outside of any function)

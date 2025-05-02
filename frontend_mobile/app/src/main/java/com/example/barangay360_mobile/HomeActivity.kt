@@ -201,6 +201,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 selectedFragment = AnnouncementFragment()
                 selectedBottomNavId = R.id.announcements
             }
+
+            R.id.nav_community -> {
+                selectedFragment = CommunityFragment()
+            }
             R.id.nav_profile -> {
                 selectedFragment = ProfileFragment()
                 selectedBottomNavId = R.id.profile

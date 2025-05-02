@@ -34,6 +34,7 @@
                         app:cardCornerRadius="12dp"
                         app:cardBackgroundColor="@color/surface_variant"
                         app:cardElevation="4dp">
+
                     <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -111,48 +112,50 @@
                         app:cardCornerRadius="12dp"
                         app:cardBackgroundColor="@color/surface_variant"
                         app:cardElevation="2dp"
-                        android:visibility="gone"> <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                        android:visibility="gone">
 
-                    <TextView
-                            android:id="@+id/txt_announcement_title"
+                    <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Scheduled Power Outage"
-                            android:textColor="@color/maroon"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:orientation="vertical"
+                            android:padding="16dp">
 
-                    <TextView
-                            android:id="@+id/txt_announcement_date"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="March 30, 2025"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                        <TextView
+                                android:id="@+id/txt_announcement_title"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Scheduled Power Outage"
+                                android:textColor="@color/maroon"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
 
-                    <TextView
-                            android:id="@+id/txt_announcement_content"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="There will be a scheduled power interruption from 9:00 AM to 3:00 PM for electrical maintenance in the area."
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
+                        <TextView
+                                android:id="@+id/txt_announcement_date"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="March 30, 2025"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="14sp" />
 
-                    <Button
-                            android:id="@+id/btn_view_all_announcements"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="end"
-                            android:text="View All"
-                            android:textColor="@color/maroon" />
-                </LinearLayout>
+                        <TextView
+                                android:id="@+id/txt_announcement_content"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="There will be a scheduled power interruption from 9:00 AM to 3:00 PM for electrical maintenance in the area."
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp" />
+
+                        <Button
+                                android:id="@+id/btn_view_all_announcements"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="end"
+                                android:text="View All"
+                                android:textColor="@color/maroon" />
+                    </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
@@ -165,184 +168,178 @@
                         app:cardCornerRadius="12dp"
                         app:cardBackgroundColor="@color/surface_variant"
                         app:cardElevation="2dp"
-                        android:visibility="gone"> <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="24dp"
-                        android:gravity="center"
-                        android:text="There are no announcements lately! Stay tuned"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="14sp"
-                        android:textStyle="italic"/>
+                        android:visibility="gone">
+
+                    <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="24dp"
+                            android:gravity="center"
+                            android:text="There are no announcements lately! Stay tuned"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp"
+                            android:textStyle="italic" />
 
                 </androidx.cardview.widget.CardView>
+
+                <!-- Community Section Header -->
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="16dp"
-                        android:text="Quick Services"
+                        android:text="Community"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
-                <LinearLayout
+
+                <!-- Community Post Container -->
+                <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
-                        android:layout_marginEnd="16dp"
-                        android:orientation="horizontal">
+                        android:layout_marginEnd="16dp">
 
                     <androidx.cardview.widget.CardView
-                            android:id="@+id/card_service_request"
-                            android:layout_width="0dp"
+                            android:id="@+id/card_community"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
                             android:foreground="?attr/selectableItemBackground"
                             app:cardCornerRadius="12dp"
                             app:cardBackgroundColor="@color/surface_variant"
                             app:cardElevation="2dp">
 
-                        <LinearLayout
+                        <RelativeLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:orientation="vertical"
-                                android:padding="16dp">
+                                android:padding="12dp">
 
-                            <ImageView
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:src="@drawable/barangay360_logo"
-                                    app:tint="@color/maroon" />
+                            <!-- Post Header (User Name and Date) -->
+                            <LinearLayout
+                                    android:id="@+id/community_post_header"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical">
+
+                                <TextView
+                                        android:id="@+id/community_user_name"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Juan Dela Cruz"
+                                        android:textColor="@color/text_primary"
+                                        android:textSize="16sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/community_post_date"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Posted 2 hours ago"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <!-- Post Content (Title and Description) -->
+                            <TextView
+                                    android:id="@+id/community_title"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_below="@id/community_post_header"
+                                    android:layout_marginTop="12dp"
+                                    android:text="Suggestion for Basketball Court Schedule"
+                                    android:textColor="@color/maroon"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
 
                             <TextView
-                                    android:layout_width="wrap_content"
+                                    android:id="@+id/community_description"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:layout_below="@id/community_title"
                                     android:layout_marginTop="8dp"
-                                    android:text="Request Services"
-                                    android:textAlignment="center"
+                                    android:text="Maybe we can have a schedule for using the court? It gets crowded sometimes, especially on weekends. What do you guys think?"
                                     android:textColor="@color/text_primary"
                                     android:textSize="14sp" />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
 
-                    <androidx.cardview.widget.CardView
-                            android:id="@+id/card_clearance"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:foreground="?attr/selectableItemBackground"
-                            app:cardCornerRadius="12dp"
-                            app:cardBackgroundColor="@color/surface_variant"
-                            app:cardElevation="2dp">
-
-                        <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:orientation="vertical"
-                                android:padding="16dp">
-
-                            <ImageView
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:src="@drawable/barangay360_logo"
-                                    app:tint="@color/maroon" />
-
-                            <TextView
-                                    android:layout_width="wrap_content"
+                            <!-- Reaction Stats (Likes and Comments) -->
+                            <LinearLayout
+                                    android:id="@+id/community_reaction_stats"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="Get Clearance"
-                                    android:textAlignment="center"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-                </LinearLayout>
+                                    android:layout_below="@id/community_description"
+                                    android:layout_marginTop="12dp"
+                                    android:orientation="horizontal">
 
-                <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginEnd="16dp"
-                        android:orientation="horizontal">
+                                <TextView
+                                        android:id="@+id/like_count"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:drawableStart="@drawable/ic_thumb_up"
+                                        android:drawableTint="@color/maroon"
+                                        android:drawablePadding="4dp"
+                                        android:text="15 likes"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="12sp" />
 
-                    <androidx.cardview.widget.CardView
-                            android:id="@+id/card_report"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
-                            android:foreground="?attr/selectableItemBackground"
-                            app:cardCornerRadius="12dp"
-                            app:cardBackgroundColor="@color/surface_variant"
-                            app:cardElevation="2dp">
+                                <TextView
+                                        android:id="@+id/comment_count"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="16dp"
+                                        android:drawableStart="@drawable/ic_comment"
+                                        android:drawableTint="@color/maroon"
+                                        android:drawablePadding="4dp"
+                                        android:text="4 comments"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="12sp" />
+                            </LinearLayout>
 
-                        <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:orientation="vertical"
-                                android:padding="16dp">
-
-                            <ImageView
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:src="@drawable/barangay360_logo"
-                                    app:tint="@color/maroon" />
-
-                            <TextView
-                                    android:layout_width="wrap_content"
+                            <!-- Reaction Buttons (Like, Comment, Share) -->
+                            <LinearLayout
+                                    android:id="@+id/community_reaction_buttons"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:layout_below="@id/community_reaction_stats"
                                     android:layout_marginTop="8dp"
-                                    android:text="Report Incident"
-                                    android:textAlignment="center"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
-                        </LinearLayout>
+                                    android:orientation="horizontal">
+
+                                <Button
+                                        android:id="@+id/btn_like"
+                                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:drawableStart="@drawable/ic_thumb_up"
+                                        android:drawableTint="@color/maroon"
+                                        android:text="Like"
+                                        android:textColor="@color/text_primary" />
+
+                                <Button
+                                        android:id="@+id/btn_comment"
+                                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:drawableStart="@drawable/ic_comment"
+                                        android:drawableTint="@color/maroon"
+                                        android:text="Comment"
+                                        android:textColor="@color/text_primary" />
+
+                                <Button
+                                        android:id="@+id/btn_share"
+                                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:drawableStart="@drawable/ic_share"
+                                        android:drawableTint="@color/maroon"
+                                        android:text="Share"
+                                        android:textColor="@color/text_primary" />
+                            </LinearLayout>
+                        </RelativeLayout>
                     </androidx.cardview.widget.CardView>
-
-                    <androidx.cardview.widget.CardView
-                            android:id="@+id/card_contact"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:foreground="?attr/selectableItemBackground"
-                            app:cardCornerRadius="12dp"
-                            app:cardBackgroundColor="@color/surface_variant"
-                            app:cardElevation="2dp">
-
-                        <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:orientation="vertical"
-                                android:padding="16dp">
-
-                            <ImageView
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:src="@drawable/barangay360_logo"
-                                    app:tint="@color/maroon" />
-
-                            <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="Contact Us"
-                                    android:textAlignment="center"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-                </LinearLayout>
-
+                </RelativeLayout>
 
                 <TextView
                         android:layout_width="wrap_content"
@@ -353,6 +350,7 @@
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
+
                 <androidx.cardview.widget.CardView
                         android:id="@+id/card_news"
                         android:layout_width="match_parent"
@@ -363,6 +361,7 @@
                         app:cardCornerRadius="12dp"
                         app:cardBackgroundColor="@color/surface_variant"
                         app:cardElevation="2dp">
+
                     <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -430,6 +429,7 @@
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
+
                 <androidx.cardview.widget.CardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -439,6 +439,7 @@
                         app:cardCornerRadius="12dp"
                         app:cardBackgroundColor="@color/surface_variant"
                         app:cardElevation="2dp">
+
                     <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
