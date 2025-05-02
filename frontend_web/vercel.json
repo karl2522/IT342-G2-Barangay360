@@ -1,12 +1,5 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "routes": [
-    { "src": "/resident/services", "dest": "/index.html" },
-    { "src": "/resident/(.*)", "dest": "/index.html" },
-    { "src": "/official/(.*)", "dest": "/index.html" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
