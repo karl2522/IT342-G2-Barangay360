@@ -10,7 +10,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'hhttp://localhost:8080/api',
+        target: 'https://barangay360-nja7q.ondigitalocean.app/api',
         changeOrigin: true,
         secure: false,
       }
