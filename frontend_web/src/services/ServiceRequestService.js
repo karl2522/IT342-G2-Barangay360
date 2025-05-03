@@ -1,6 +1,14 @@
 const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api';
 
 class ServiceRequestService {
+    constructor() {
+        this.authContext = null;
+    }
+
+    setAuthContext(context) {
+        this.authContext = context;
+    }
+
     getToken() {
         const tokenData = localStorage.getItem('token');
         if (!tokenData) return null;
@@ -83,6 +91,46 @@ class ServiceRequestService {
         }
 
         return response.json();
+    }
+
+    async cancelServiceRequest(requestId) {
+        // If AuthContext is available, use it for token refresh capability
+        if (this.authContext) {
+            try {
+                const response = await this.authContext.handleApiRequest(
+                    `${API_URL}/service-requests/${requestId}/cancel`,
+                    {
+                        method: 'POST'
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to cancel service request');
+                }
+
+                return response.json();
+            } catch (error) {
+                console.error('Error in cancelServiceRequest with AuthContext:', error);
+                throw error;
+            }
+        } else {
+            // Fallback to the original implementation
+            const token = this.getToken();
+            if (!token) throw new Error('No authentication token found');
+
+            const response = await fetch(`${API_URL}/service-requests/${requestId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to cancel service request');
+            }
+
+            return response.json();
+        }
     }
 }
 
