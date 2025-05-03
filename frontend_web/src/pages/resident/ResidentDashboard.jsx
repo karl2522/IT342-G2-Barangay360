@@ -5,6 +5,7 @@ import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation.jsx';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import { announcementService } from '../../services/AnnouncementService';
+import { eventService } from '../../services/EventService';
 import { forumService } from '../../services/ForumService';
 import { serviceRequestService } from '../../services/ServiceRequestService';
 import { webSocketService } from '../../services/WebSocketService';
@@ -91,15 +92,11 @@ const ResidentDashboard = () => {
     setEventsLoading(true);
     setEventsError(null);
     try {
-      // Adjust the URL if your backend runs on a different port/host
-      const response = await fetch('/api/events');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-       // Sort events, e.g., by start date (newest first)
-       const sortedData = [...data].sort((a, b) => new Date(b.start) - new Date(a.start));
-       setEvents(sortedData);
+      // Using the EventService to fetch events
+      const data = await eventService.getAllEvents();
+      // Sort events, e.g., by start date (newest first)
+      const sortedData = [...data].sort((a, b) => new Date(b.start) - new Date(a.start));
+      setEvents(sortedData);
     } catch (error) {
       console.error('Error loading events:', error);
       setEventsError('Failed to load community events. Please try again later.');
@@ -348,7 +345,7 @@ const ResidentDashboard = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* View All Requests Link - positioned at the bottom just like announcements */}
                 {!isLoading && myRequests.length > 0 && (
                   <Link 

@@ -174,7 +174,7 @@ public class ServiceRequestController {
                 request.setUserId(userId);
                 request.setServiceType(serviceType);
                 request.setMode("auto");
-                
+
                 // Set default values based on service type
                 switch (serviceType.toLowerCase()) {
                     case "barangay_certificate":
@@ -189,7 +189,7 @@ public class ServiceRequestController {
                     default:
                         return ResponseEntity.badRequest().body("Unsupported service type for auto mode");
                 }
-                
+
                 return ResponseEntity.ok(serviceRequestService.createServiceRequest(request));
             } else {
                 // For form mode, return the necessary form fields
@@ -203,4 +203,24 @@ public class ServiceRequestController {
             return ResponseEntity.badRequest().body("Invalid QR code data");
         }
     }
-} 
+
+    @Operation(summary = "Cancel a service request", description = "Cancel a pending service request")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Service request cancelled successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceRequestResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Request cannot be cancelled"),
+        @ApiResponse(responseCode = "401", description = "Not authorized to cancel this request"),
+        @ApiResponse(responseCode = "404", description = "Service request not found")
+    })
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ServiceRequestResponse> cancelServiceRequest(
+            @Parameter(description = "Service request ID", required = true)
+            @PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(serviceRequestService.cancelServiceRequest(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+}

@@ -6,40 +6,15 @@ import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext';
+import { eventService } from '../../services/EventService';
 
 // Set up the localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
 
-// Event service for handling API requests
-// Commented out until backend implementation is ready
-/* 
-const eventService = {
-  getAllEvents: async () =>
-    const response = await axios.get('/api/events');
-    return response.data;
-  },
-  
-  createEvent: async (eventData) => {
-    const response = await axios.post('/api/events', eventData);
-    return response.data;
-  },
-  
-  updateEvent: async (id, eventData) => {
-    const response = await axios.put(`/api/events/${id}`, eventData);
-    return response.data;
-  },
-  
-  deleteEvent: async (id) => {
-    const response = await axios.delete(`/api/events/${id}`);
-    return response.data;
-  }
-};
-*/
-
 const EventsManagement = () => {
   // Access toast context
   const { showToast } = useToast();
-  const { handleApiRequest } = useContext(AuthContext); // Get handleApiRequest from context
+  const authContext = useContext(AuthContext);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -48,6 +23,11 @@ const EventsManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
   const [calendarDate, setCalendarDate] = useState(new Date()); // Add state for calendar date
+
+  // Set the AuthContext in the eventService
+  useEffect(() => {
+    eventService.setAuthContext(authContext);
+  }, [authContext]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -69,13 +49,13 @@ const EventsManagement = () => {
     try {
       // Note: This is a placeholder. In a real implementation, you would 
       // fetch data from the backend API. Currently using mock data.
-      
+
       // Use this when backend is ready:
       // const data = await eventService.getAllEvents();
-      
+
       // Mock data for demonstration
       const data = await eventService.getAllEvents();
-      
+
       setEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -148,15 +128,15 @@ const EventsManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       showToast('Please enter an event title', 'error');
       return;
     }
-    
+
     try {
       let updatedEvents;
-      
+
       if (isEditing && selectedEvent) {
         // Update existing event
         const updatedEvent = {
@@ -169,17 +149,17 @@ const EventsManagement = () => {
           allDay: formData.allDay,
           color: formData.color
         };
-        
+
         // In a real implementation, you would update the event in the backend
         // await eventService.updateEvent(selectedEvent.id, updatedEvent);
-        
+
         await eventService.updateEvent(selectedEvent.id, updatedEvent);
-        
+
         // Update local state
         updatedEvents = events.map(event => 
           event.id === selectedEvent.id ? updatedEvent : event
         );
-        
+
         showToast('Event updated successfully', 'success');
       } else {
         // Create new event
@@ -193,18 +173,18 @@ const EventsManagement = () => {
           allDay: formData.allDay,
           color: formData.color
         };
-        
+
         // In a real implementation, you would create the event in the backend
         // const createdEvent = await eventService.createEvent(newEvent);
-        
+
         const createdEvent = await eventService.createEvent(newEvent);
-        
+
         // Update local state
         updatedEvents = [...events, createdEvent];
-        
+
         showToast('Event created successfully', 'success');
       }
-      
+
       setEvents(updatedEvents);
       closeModal();
     } catch (error) {
@@ -225,17 +205,17 @@ const EventsManagement = () => {
 
   const handleDelete = async () => {
     if (!eventToDelete) return;
-    
+
     try {
       // In a real implementation, you would delete the event from the backend
       // await eventService.deleteEvent(eventToDelete.id);
-      
+
       await eventService.deleteEvent(eventToDelete.id);
-      
+
       // Update local state
       const updatedEvents = events.filter(event => event.id !== eventToDelete.id);
       setEvents(updatedEvents);
-      
+
       showToast('Event deleted successfully', 'success');
       closeDeleteModal();
     } catch (error) {
@@ -273,7 +253,7 @@ const EventsManagement = () => {
       console.log("Day header clicked, not opening modal.");
       return;
     }
-    
+
     setFormData(prevData => ({
       ...prevData,
       title: '', // Reset title for new event
@@ -286,48 +266,6 @@ const EventsManagement = () => {
     }));
     setIsEditing(false);
     setShowModal(true);
-  };
-
-  const eventService = {
-    getAllEvents: async () => {
-      const response = await handleApiRequest('https://barangay360-nja7q.ondigitalocean.app/api/events');
-      if (!response.ok) throw new Error('Failed to fetch events');
-      return await response.json();
-    },
-    
-    createEvent: async (eventData) => {
-      const response = await handleApiRequest('https://barangay360-nja7q.ondigitalocean.app/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventData)
-      });
-      if (!response.ok) throw new Error('Failed to create event');
-      return await response.json();
-    },
-    
-    updateEvent: async (id, eventData) => {
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/events/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventData)
-      });
-      if (!response.ok) throw new Error('Failed to update event');
-      return await response.json();
-    },
-    
-    deleteEvent: async (id) => {
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/events/${id}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to delete event');
-      // DELETE might not return a body, handle appropriately
-      try {
-        return await response.json();
-      } catch {
-        // If no JSON body, return success indicator or empty object
-        return { success: true }; 
-      }
-    }
   };
 
   return (
@@ -356,7 +294,7 @@ const EventsManagement = () => {
                   Create Event
                 </button>
               </div>
-              
+
               {loading ? (
                 <div className="flex items-center justify-center h-96">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#861A2D]"></div>
@@ -589,13 +527,13 @@ const EventsManagement = () => {
                   </svg>
                 </button>
               </div>
-              
+
               <div className="bg-white px-6 py-5">
                 <p className="text-base text-gray-600">
                   Are you sure you want to delete this event? This action cannot be undone.
                 </p>
               </div>
-              
+
               <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-4">
                 <button
                   type="button"
