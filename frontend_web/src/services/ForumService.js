@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/forum';
-const REPORTS_API_URL = 'https://barangay360-nja7q.ondigitalocean.app/reports';
+const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api/forum';
+const REPORTS_API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api/reports';
 
 class ForumService {
   constructor() {
