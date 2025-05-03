@@ -8,8 +8,14 @@ import { serviceRequestService } from '../../services/ServiceRequestService';
 import { DateTime } from 'luxon';
 
 const Services = () => {
-  const { user } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const { user } = authContext;
   const { showToast } = useToast();
+
+  // Set the AuthContext in the serviceRequestService
+  useEffect(() => {
+    serviceRequestService.setAuthContext(authContext);
+  }, [authContext]);
   const [formData, setFormData] = useState({
     serviceType: '',
     purpose: '',
@@ -211,6 +217,8 @@ const Services = () => {
         return 'bg-green-100 text-green-800';
       case 'REJECTED':
         return 'bg-red-100 text-red-800';
+      case 'CANCELLED':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -236,6 +244,12 @@ const Services = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         );
+      case 'CANCELLED':
+        return (
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        );
       default:
         return null;
     }
@@ -243,7 +257,13 @@ const Services = () => {
 
   // Get filtered and paginated requests
   const filteredRequests = statusFilter === 'ALL'
-      ? activeRequests
+      ? [...activeRequests].sort((a, b) => {
+          // If one is cancelled and the other is not, put cancelled at the bottom
+          if (a.status === 'CANCELLED' && b.status !== 'CANCELLED') return 1;
+          if (a.status !== 'CANCELLED' && b.status === 'CANCELLED') return -1;
+          // Otherwise, maintain the original sorting (newest first)
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        })
       : activeRequests.filter(request => request.status === statusFilter);
 
   // Pagination calculations
@@ -293,11 +313,7 @@ const Services = () => {
 
     setIsCancelling(true);
     try {
-      await serviceRequestService.updateServiceRequestStatus(
-          requestToCancel.id,
-          'CANCELLED',
-          { cancellationReason: cancelReason }
-      );
+      await serviceRequestService.cancelServiceRequest(requestToCancel.id);
       showToast('Request cancelled successfully', 'success');
       setShowCancelModal(false);
       setCancelReason('');
@@ -444,6 +460,19 @@ const Services = () => {
                       Rejected
                       <span className="ml-2 py-0.5 px-2.5 text-xs font-medium rounded-full bg-red-100 text-red-800">
                       {activeRequests.filter(req => req.status === 'REJECTED').length}
+                    </span>
+                    </button>
+                    <button
+                        onClick={() => setStatusFilter('CANCELLED')}
+                        className={`${
+                            statusFilter === 'CANCELLED'
+                                ? 'border-b-2 border-[#861A2D] text-[#861A2D]'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        } relative flex-1 min-w-0 py-4 px-4 border-b-2 font-medium text-sm text-center focus:outline-none`}
+                    >
+                      Cancelled
+                      <span className="ml-2 py-0.5 px-2.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                      {activeRequests.filter(req => req.status === 'CANCELLED').length}
                     </span>
                     </button>
                   </nav>

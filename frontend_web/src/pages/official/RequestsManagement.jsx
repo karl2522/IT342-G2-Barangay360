@@ -18,15 +18,16 @@ const RequestsManagement = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsPerPage] = useState(8);
-  
+
   // Calculate request counts by status
   const requestCounts = {
     PENDING: requests.filter(req => req.status === 'PENDING').length,
     APPROVED: requests.filter(req => req.status === 'APPROVED').length,
     REJECTED: requests.filter(req => req.status === 'REJECTED').length,
+    CANCELLED: requests.filter(req => req.status === 'CANCELLED').length,
     ALL: requests.length
   };
-  
+
   useEffect(() => {
     loadServiceRequests();
   }, []);
@@ -35,12 +36,12 @@ const RequestsManagement = () => {
     setIsLoading(true);
     try {
       const data = await serviceRequestService.getAllServiceRequests();
-      
+
       // Sort requests with newest first (by createdAt date)
       const sortedData = [...data].sort((a, b) => {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
-      
+
       setRequests(sortedData);
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -50,18 +51,24 @@ const RequestsManagement = () => {
     }
   };
 
-  const filteredRequests = requests.filter(request => {
-    return statusFilter === 'ALL' || request.status === statusFilter;
-  });
+  const filteredRequests = statusFilter === 'ALL'
+    ? [...requests].sort((a, b) => {
+        // If one is cancelled and the other is not, put cancelled at the bottom
+        if (a.status === 'CANCELLED' && b.status !== 'CANCELLED') return 1;
+        if (a.status !== 'CANCELLED' && b.status === 'CANCELLED') return -1;
+        // Otherwise, maintain the original sorting (newest first)
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      })
+    : requests.filter(request => request.status === statusFilter);
 
   // Get current requests for pagination
   const indexOfLastRequest = currentPage * requestsPerPage;
   const indexOfFirstRequest = indexOfLastRequest - requestsPerPage;
   const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
-  
+
   // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  
+
   // Reset to first page when changing tabs
   useEffect(() => {
     setCurrentPage(1);
@@ -95,7 +102,7 @@ const RequestsManagement = () => {
       showToast('Rejection reason is required', 'error');
       return;
     }
-    
+
     setProcessing(true);
     try {
       await serviceRequestService.updateServiceRequestStatus(requestId, 'REJECTED');
@@ -120,6 +127,8 @@ const RequestsManagement = () => {
         return 'bg-green-100 text-green-800';
       case 'REJECTED':
         return 'bg-red-100 text-red-800';
+      case 'CANCELLED':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -128,11 +137,11 @@ const RequestsManagement = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex w-full">
       <Sidebar isOfficial={true} />
-      
+
       <div className="flex-1 flex flex-col ml-64">
         {/* Top Navigation */}
         <TopNavigation title="Service Requests Management" />
-        
+
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto flex flex-col h-[calc(100vh-64px)]">
           {/* Header and Action Button */}
@@ -200,6 +209,19 @@ const RequestsManagement = () => {
                     Rejected
                     <span className="ml-2 py-0.5 px-2.5 text-xs font-medium rounded-full bg-red-100 text-red-800">
                       {requestCounts.REJECTED}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('CANCELLED')}
+                    className={`${
+                      statusFilter === 'CANCELLED'
+                        ? 'border-[#861A2D] text-[#861A2D]'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } relative flex-1 min-w-0 py-4 px-4 border-b-2 font-medium text-sm text-center focus:outline-none`}
+                  >
+                    Cancelled
+                    <span className="ml-2 py-0.5 px-2.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                      {requestCounts.CANCELLED}
                     </span>
                   </button>
                 </nav>
@@ -298,7 +320,7 @@ const RequestsManagement = () => {
                     ))}
                   </tbody>
                 </table>
-                
+
                 {/* Pagination - Only show when there are more than 8 requests */}
                 {filteredRequests.length > requestsPerPage && (
                   <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
@@ -328,7 +350,7 @@ const RequestsManagement = () => {
                               <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </button>
-                          
+
                           {/* Page numbers */}
                           {[...Array(Math.ceil(filteredRequests.length / requestsPerPage)).keys()].map(number => (
                             <button
@@ -343,7 +365,7 @@ const RequestsManagement = () => {
                               {number + 1}
                             </button>
                           ))}
-                          
+
                           <button
                             onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredRequests.length / requestsPerPage)))}
                             disabled={currentPage === Math.ceil(filteredRequests.length / requestsPerPage)}
@@ -387,7 +409,7 @@ const RequestsManagement = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
@@ -435,7 +457,7 @@ const RequestsManagement = () => {
                   <p className="mt-1 text-sm text-gray-900">{new Date(selectedRequest.createdAt).toLocaleString()}</p>
                 </div>
               </div>
-              
+
               {selectedRequest.status === 'PENDING' && (
                 <div className="mt-6 flex justify-end space-x-4">
                   <button
