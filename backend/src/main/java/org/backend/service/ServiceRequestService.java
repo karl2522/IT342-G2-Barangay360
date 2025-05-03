@@ -186,4 +186,41 @@ public class ServiceRequestService {
 
         return response;
     }
-} 
+
+    /**
+     * Cancel a service request
+     */
+    @Transactional
+    public ServiceRequestResponse cancelServiceRequest(Long requestId) {
+        ServiceRequest request = serviceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Service request not found"));
+
+        // Only allow cancellation if the request is in PENDING status
+        if (!"PENDING".equals(request.getStatus())) {
+            throw new RuntimeException("Only pending requests can be cancelled");
+        }
+
+        request.setStatus("CANCELLED");
+        ServiceRequest updatedRequest = serviceRequestRepository.save(request);
+
+        ServiceRequestResponse response = new ServiceRequestResponse(
+                updatedRequest.getId(),
+                updatedRequest.getServiceType(),
+                updatedRequest.getStatus(),
+                updatedRequest.getDetails(),
+                updatedRequest.getPurpose(),
+                updatedRequest.getContactNumber(),
+                updatedRequest.getAddress(),
+                updatedRequest.getCreatedAt(),
+                updatedRequest.getUpdatedAt(),
+                updatedRequest.getUser().getFirstName() + " " + updatedRequest.getUser().getLastName(),
+                updatedRequest.getUser().getEmail(),
+                updatedRequest.getUser().getPhone()
+        );
+
+        // Send real-time update
+        messagingTemplate.convertAndSend("/topic/service-requests", response);
+
+        return response;
+    }
+}

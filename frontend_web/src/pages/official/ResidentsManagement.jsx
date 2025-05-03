@@ -30,7 +30,7 @@ const ResidentsManagement = () => {
       const token = JSON.parse(localStorage.getItem('token'));
       console.log('Fetching residents with token:', token); // Debug log
 
-      const response = await fetch('http://localhost:8080/api/users/residents', {
+      const response = await fetch('https://localhost:8080/api/api/users/residents', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token.token}`,

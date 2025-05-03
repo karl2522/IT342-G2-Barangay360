@@ -72,5 +72,23 @@ public class EventController {
         }
     }
 
-    // You might add endpoints for delete, get by ID, etc., later
-} 
+    // Endpoint for officials to delete an event
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('OFFICIAL') or hasRole('ADMIN')")
+    public ResponseEntity<?> deleteEvent(@PathVariable Long id) {
+        logger.info("DELETE /api/events/{} called", id);
+        try {
+            boolean deleted = eventService.deleteEvent(id);
+            if (deleted) {
+                logger.info("Event with ID {} successfully deleted.", id);
+                return ResponseEntity.ok().build();
+            } else {
+                logger.warn("Attempted to delete non-existent event with ID: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            logger.error("Error occurred during event deletion for ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+}

@@ -52,5 +52,13 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    // Implement other methods like deleteEvent, getEventById if needed
-} 
+    @Override
+    @Transactional
+    public boolean deleteEvent(Long id) {
+        if (eventRepository.existsById(id)) {
+            eventRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+}

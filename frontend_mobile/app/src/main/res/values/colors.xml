@@ -13,6 +13,7 @@
     <color name="maroon">#861A2D</color>
     <color name="gray">#B0B0B0</color>
     <color name="mattegray">#EEEEEE</color>
+    <color name="dark_gray">#FF212121</color>
 
     <!-- Service status colors (unchanged in dark mode) -->
     <color name="approved_text">#388E3C</color>

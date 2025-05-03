@@ -63,7 +63,7 @@ const ResidentProfile = () => {
       };
       
       const response = await handleApiRequest(
-        `http://localhost:8080/api/users/${user.id}`, 
+        `localhost:8080/api/users/${user.id}`,
         {
           method: 'PUT',
           headers: {

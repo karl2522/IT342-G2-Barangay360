@@ -10,9 +10,20 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'hhttp://localhost:8080/api',
         changeOrigin: true,
         secure: false,
+      }
+    },
+    historyApiFallback: true
+  },
+  base: '/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
       }
     }
   }
