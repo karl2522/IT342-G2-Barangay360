@@ -25,7 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/forum")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"}, maxAge = 3600)
+@CrossOrigin(origins = {"https://barangay360.vercel.app/","http://localhost:5173", "http://localhost:5174"}, maxAge = 3600)
 public class ForumController {
     private static final Logger logger = LoggerFactory.getLogger(ForumController.class);
 

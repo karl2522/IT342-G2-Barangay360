@@ -27,8 +27,9 @@ import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/service-requests")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
+@CrossOrigin(origins = {"https://barangay360.vercel.app/","http://localhost:5173", "http://localhost:5174"})
 @Tag(name = "Service Requests", description = "API for managing barangay service requests")
+
 public class ServiceRequestController {
 
     @Autowired

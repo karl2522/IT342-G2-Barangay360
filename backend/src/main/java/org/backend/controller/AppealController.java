@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/appeals")
 @Tag(name = "Appeals Management", description = "APIs for submitting and managing account reactivation appeals")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"}, maxAge = 3600) // Adjust CORS as needed
+@CrossOrigin(origins = {"https://barangay360.vercel.app/","http://localhost:5173", "http://localhost:5174"}, maxAge = 3600) // Adjust CORS as needed
 public class AppealController {
 
     @Autowired

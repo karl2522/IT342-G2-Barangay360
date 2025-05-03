@@ -21,7 +21,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .addInterceptors(new WebSocketHandshakeInterceptor())
-                .setAllowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8080")
+                .setAllowedOrigins("https://barangay360.vercel.app/","http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8080")
                 .withSockJS();
     }
 
