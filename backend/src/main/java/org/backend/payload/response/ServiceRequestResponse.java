@@ -15,6 +15,9 @@ public class ServiceRequestResponse {
     private String residentName;
     private String residentEmail;
     private String residentPhone;
+    private String documentStatus;
+    private String generatedDocumentPath;
+    private String attachedDocumentPath;
 
     public ServiceRequestResponse(Long id, String serviceType, String status, String details,
                                 String purpose, String contactNumber, String address,
@@ -32,6 +35,31 @@ public class ServiceRequestResponse {
         this.residentName = residentName;
         this.residentEmail = residentEmail;
         this.residentPhone = residentPhone;
+        this.documentStatus = null;
+        this.generatedDocumentPath = null;
+        this.attachedDocumentPath = null;
+    }
+
+    public ServiceRequestResponse(Long id, String serviceType, String status, String details,
+                                String purpose, String contactNumber, String address,
+                                LocalDateTime createdAt, LocalDateTime updatedAt,
+                                String residentName, String residentEmail, String residentPhone,
+                                String documentStatus, String generatedDocumentPath, String attachedDocumentPath) {
+        this.id = id;
+        this.serviceType = serviceType;
+        this.status = status;
+        this.details = details;
+        this.purpose = purpose;
+        this.contactNumber = contactNumber;
+        this.address = address;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.residentName = residentName;
+        this.residentEmail = residentEmail;
+        this.residentPhone = residentPhone;
+        this.documentStatus = documentStatus;
+        this.generatedDocumentPath = generatedDocumentPath;
+        this.attachedDocumentPath = attachedDocumentPath;
     }
 
     // Getters and Setters
@@ -66,7 +94,7 @@ public class ServiceRequestResponse {
     public void setDetails(String details) {
         this.details = details;
     }
-    
+
     public String getPurpose() {
         return purpose;
     }
@@ -130,4 +158,28 @@ public class ServiceRequestResponse {
     public void setResidentPhone(String residentPhone) {
         this.residentPhone = residentPhone;
     }
-} 
+
+    public String getDocumentStatus() {
+        return documentStatus;
+    }
+
+    public void setDocumentStatus(String documentStatus) {
+        this.documentStatus = documentStatus;
+    }
+
+    public String getGeneratedDocumentPath() {
+        return generatedDocumentPath;
+    }
+
+    public void setGeneratedDocumentPath(String generatedDocumentPath) {
+        this.generatedDocumentPath = generatedDocumentPath;
+    }
+
+    public String getAttachedDocumentPath() {
+        return attachedDocumentPath;
+    }
+
+    public void setAttachedDocumentPath(String attachedDocumentPath) {
+        this.attachedDocumentPath = attachedDocumentPath;
+    }
+}

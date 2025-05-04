@@ -1,4 +1,4 @@
-const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api';
+const API_URL = 'http://localhost:8080/api';
 
 class ServiceRequestService {
     constructor() {
@@ -18,6 +18,26 @@ class ServiceRequestService {
         } catch (error) {
             console.error('Error parsing token:', error);
             return null;
+        }
+    }
+
+    // Method to handle API requests with token refresh capability if AuthContext is available
+    async handleApiRequest(url, options = {}) {
+        if (this.authContext) {
+            return this.authContext.handleApiRequest(url, options);
+        } else {
+            const token = this.getToken();
+            if (!token) throw new Error('No authentication token found');
+
+            const headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+
+            return fetch(url, {
+                ...options,
+                headers
+            });
         }
     }
 
@@ -94,42 +114,160 @@ class ServiceRequestService {
     }
 
     async cancelServiceRequest(requestId) {
-        // If AuthContext is available, use it for token refresh capability
-        if (this.authContext) {
-            try {
-                const response = await this.authContext.handleApiRequest(
-                    `${API_URL}/service-requests/${requestId}/cancel`,
-                    {
-                        method: 'POST'
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error('Failed to cancel service request');
+        try {
+            const response = await this.handleApiRequest(
+                `${API_URL}/service-requests/${requestId}/cancel`,
+                {
+                    method: 'POST'
                 }
-
-                return response.json();
-            } catch (error) {
-                console.error('Error in cancelServiceRequest with AuthContext:', error);
-                throw error;
-            }
-        } else {
-            // Fallback to the original implementation
-            const token = this.getToken();
-            if (!token) throw new Error('No authentication token found');
-
-            const response = await fetch(`${API_URL}/service-requests/${requestId}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            );
 
             if (!response.ok) {
                 throw new Error('Failed to cancel service request');
             }
 
             return response.json();
+        } catch (error) {
+            console.error('Error in cancelServiceRequest:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Attach a document to a service request
+     * @param {number} requestId - The ID of the service request
+     * @param {FormData} formData - The form data containing the document file
+     * @returns {Promise<Object>} - The updated service request
+     */
+    async attachDocumentToRequest(requestId, formData) {
+        try {
+            // Get the token
+            const token = this.getToken();
+            if (!token) throw new Error('No authentication token found');
+
+            // Create headers without Content-Type to let the browser set it with the boundary
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            // Make the request with the FormData
+            const response = await fetch(`${API_URL}/service-requests/${requestId}/attach-document`, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to attach document to service request');
+            }
+
+            return response.json();
+        } catch (error) {
+            console.error('Error in attachDocumentToRequest:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate a document for a service request
+     * @param {number} requestId - The ID of the service request
+     * @returns {Promise<Object>} - The updated service request
+     */
+    async generateDocument(requestId) {
+        try {
+            const response = await this.handleApiRequest(
+                `${API_URL}/service-requests/${requestId}/generate-document`,
+                {
+                    method: 'POST'
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.error || 'Failed to generate document');
+            }
+
+            return response.json();
+        } catch (error) {
+            console.error('Error in generateDocument:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate a barangay certificate for a service request
+     * @param {number} requestId - The ID of the service request
+     * @returns {Promise<Object>} - The response with document path
+     */
+    async generateBarangayCertificate(requestId) {
+        try {
+            const response = await this.handleApiRequest(
+                `${API_URL}/service-requests/${requestId}/generate-barangay-certificate`,
+                {
+                    method: 'POST'
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.error || 'Failed to generate barangay certificate');
+            }
+
+            return response.json();
+        } catch (error) {
+            console.error('Error in generateBarangayCertificate:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Download a generated document for a service request
+     * @param {number} requestId - The ID of the service request
+     * @returns {Promise<Blob>} - The document as a blob
+     */
+    async downloadDocument(requestId) {
+        try {
+            const response = await this.handleApiRequest(
+                `${API_URL}/service-requests/${requestId}/download-document`,
+                {
+                    method: 'GET'
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to download document');
+            }
+
+            return response.blob();
+        } catch (error) {
+            console.error('Error in downloadDocument:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mark a document as delivered
+     * @param {number} requestId - The ID of the service request
+     * @returns {Promise<Object>} - The updated service request
+     */
+    async markDocumentAsDelivered(requestId) {
+        try {
+            const response = await this.handleApiRequest(
+                `${API_URL}/service-requests/${requestId}/mark-delivered`,
+                {
+                    method: 'POST'
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to mark document as delivered');
+            }
+
+            return response.json();
+        } catch (error) {
+            console.error('Error in markDocumentAsDelivered:', error);
+            throw error;
         }
     }
 }

@@ -13,11 +13,15 @@ const RequestsManagement = () => {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectionRequest, setRejectionRequest] = useState(null);
-  const [showRequestDetailsModal, setShowRequestDetailsModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsPerPage] = useState(8);
+  // Document handling states
+  const [isAttachingDocument, setIsAttachingDocument] = useState(false);
+  const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
+  const [documentError, setDocumentError] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // Calculate request counts by status
   const requestCounts = {
@@ -82,11 +86,123 @@ const RequestsManagement = () => {
     setSelectedRequest(null);
   };
 
+  // Handle file selection
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  // Handle document attachment
+  const handleAttachDocument = async (requestId) => {
+    if (!selectedFile) {
+      setDocumentError('Please select a file to attach');
+      showToast('Please select a file to attach', 'error');
+      return;
+    }
+
+    setIsAttachingDocument(true);
+    setDocumentError(null);
+    try {
+      const formData = new FormData();
+      formData.append('document', selectedFile);
+
+      await serviceRequestService.attachDocumentToRequest(requestId, formData);
+      showToast('Document attached successfully', 'success');
+      setSelectedFile(null); // Clear the selected file after successful upload
+
+      // Refresh the requests list
+      loadServiceRequests();
+
+      // Refresh the selected request
+      if (selectedRequest && selectedRequest.id === requestId) {
+        const updatedRequests = await serviceRequestService.getAllServiceRequests();
+        const updatedRequest = updatedRequests.find(req => req.id === requestId);
+        if (updatedRequest) {
+          setSelectedRequest(updatedRequest);
+        }
+      }
+    } catch (error) {
+      console.error('Error attaching document:', error);
+      setDocumentError('Failed to attach document to request: ' + (error.message || 'Unknown error'));
+      showToast('Failed to attach document', 'error');
+    } finally {
+      setIsAttachingDocument(false);
+    }
+  };
+
+  // Handle document generation
+  const handleGenerateDocument = async (requestId) => {
+    setIsGeneratingDocument(true);
+    setDocumentError(null);
+    try {
+      await serviceRequestService.generateDocument(requestId);
+      showToast('Document generated successfully', 'success');
+      loadServiceRequests();
+      // Refresh the selected request
+      if (selectedRequest && selectedRequest.id === requestId) {
+        const updatedRequests = await serviceRequestService.getAllServiceRequests();
+        const updatedRequest = updatedRequests.find(req => req.id === requestId);
+        if (updatedRequest) {
+          setSelectedRequest(updatedRequest);
+        }
+      }
+    } catch (error) {
+      console.error('Error generating document:', error);
+      setDocumentError(error.message || 'Failed to generate document');
+      showToast(error.message || 'Failed to generate document', 'error');
+    } finally {
+      setIsGeneratingDocument(false);
+    }
+  };
+
+  // Handle document download
+  const handleDownloadDocument = async (requestId) => {
+    try {
+      const blob = await serviceRequestService.downloadDocument(requestId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `document_${requestId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      showToast('Failed to download document', 'error');
+    }
+  };
+
+  // Handle mark as delivered
+  const handleMarkAsDelivered = async (requestId) => {
+    setProcessing(true);
+    try {
+      await serviceRequestService.markDocumentAsDelivered(requestId);
+      showToast('Document marked as delivered', 'success');
+      loadServiceRequests();
+      handleCloseRequest();
+    } catch (error) {
+      console.error('Error marking document as delivered:', error);
+      showToast('Failed to mark document as delivered', 'error');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleApproveRequest = async (requestId) => {
     setProcessing(true);
     try {
-      await serviceRequestService.updateServiceRequestStatus(requestId, 'APPROVED');
-      showToast('Request approved successfully', 'success');
+      // First check if document is attached
+      const updatedRequests = await serviceRequestService.getAllServiceRequests();
+      const request = updatedRequests.find(req => req.id === requestId);
+
+      if (request && request.documentStatus === 'ATTACHED') {
+        // If document is attached, generate it
+        await handleGenerateDocument(requestId);
+      } else {
+        showToast('Cannot approve request: Document must be attached first', 'error');
+      }
+
       loadServiceRequests();
       handleCloseRequest();
     } catch (error) {
@@ -458,24 +574,136 @@ const RequestsManagement = () => {
                 </div>
               </div>
 
-              {selectedRequest.status === 'PENDING' && (
-                <div className="mt-6 flex justify-end space-x-4">
+              {/* Document Status Section */}
+              <div className="mt-6 border-t border-gray-200 pt-4">
+                <h4 className="text-sm font-medium text-gray-500 mb-2">Document Status</h4>
+                <div className="flex items-center">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    ${selectedRequest.documentStatus === 'NOT_GENERATED' ? 'bg-gray-100 text-gray-800' : 
+                      selectedRequest.documentStatus === 'ATTACHED' ? 'bg-blue-100 text-blue-800' : 
+                      selectedRequest.documentStatus === 'GENERATED' ? 'bg-green-100 text-green-800' : 
+                      'bg-purple-100 text-purple-800'}`}>
+                    {selectedRequest.documentStatus || 'NOT_GENERATED'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                {/* Document Actions */}
+                {selectedRequest.status === 'PENDING' && (
+                  <>
+                    {/* Attach Document Section - Show only if document is not attached */}
+                    {(!selectedRequest.documentStatus || selectedRequest.documentStatus === 'NOT_GENERATED') && (
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="file"
+                            id="document-upload"
+                            className="hidden"
+                            onChange={handleFileChange}
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                          />
+                          <label
+                            htmlFor="document-upload"
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded cursor-pointer hover:bg-gray-300 flex items-center"
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                            </svg>
+                            {selectedFile ? selectedFile.name : 'Choose File'}
+                          </label>
+                          <button
+                            onClick={() => handleAttachDocument(selectedRequest.id)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300"
+                            disabled={isAttachingDocument || !selectedFile}
+                          >
+                            {isAttachingDocument ? (
+                              <span className="flex items-center">
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Attaching...
+                              </span>
+                            ) : (
+                              'Attach Document'
+                            )}
+                          </button>
+                        </div>
+                        {selectedFile && (
+                          <p className="text-sm text-gray-600">
+                            Selected file: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Generate Document Button - Show only if document is attached but not generated */}
+                    {selectedRequest.documentStatus === 'ATTACHED' && (
+                      <button
+                        onClick={() => handleGenerateDocument(selectedRequest.id)}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                        disabled={isGeneratingDocument}
+                      >
+                        {isGeneratingDocument ? (
+                          <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Generating...
+                          </span>
+                        ) : (
+                          'Generate Document'
+                        )}
+                      </button>
+                    )}
+
+                    {/* Reject Button */}
+                    <button
+                      onClick={() => {
+                        setShowRejectionModal(true);
+                      }}
+                      className="px-4 py-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-50"
+                      disabled={processing}
+                    >
+                      Reject Request
+                    </button>
+                  </>
+                )}
+
+                {/* Download Document Button - Show if document is generated */}
+                {(selectedRequest.documentStatus === 'GENERATED' || selectedRequest.documentStatus === 'DELIVERED') && (
                   <button
-                    onClick={() => {
-                      setShowRejectionModal(true);
-                    }}
-                    className="px-4 py-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-50"
+                    onClick={() => handleDownloadDocument(selectedRequest.id)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  >
+                    <span className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                      </svg>
+                      Download Document
+                    </span>
+                  </button>
+                )}
+
+                {/* Mark as Delivered Button - Show if document is generated but not delivered */}
+                {selectedRequest.documentStatus === 'GENERATED' && selectedRequest.status === 'APPROVED' && (
+                  <button
+                    onClick={() => handleMarkAsDelivered(selectedRequest.id)}
+                    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
                     disabled={processing}
                   >
-                    Reject Request
+                    {processing ? 'Processing...' : 'Mark as Delivered'}
                   </button>
-                  <button
-                    onClick={() => handleApproveRequest(selectedRequest.id)}
-                    className="px-4 py-2 bg-[#861A2D] text-white rounded hover:bg-[#9b3747]"
-                    disabled={processing}
-                  >
-                    {processing ? 'Processing...' : 'Approve Request'}
-                  </button>
+                )}
+              </div>
+
+              {/* Error Message */}
+              {documentError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{documentError}</p>
                 </div>
               )}
             </div>

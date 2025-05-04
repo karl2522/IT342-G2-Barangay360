@@ -58,7 +58,10 @@ public class ServiceRequestService {
                 savedRequest.getUpdatedAt(),
                 user.getFirstName() + " " + user.getLastName(),
                 user.getEmail(),
-                user.getPhone()
+                user.getPhone(),
+                savedRequest.getDocumentStatus(),
+                savedRequest.getGeneratedDocumentPath(),
+                savedRequest.getAttachedDocumentPath()
         );
 
         // Send real-time update to officials
@@ -87,7 +90,10 @@ public class ServiceRequestService {
                 updatedRequest.getUpdatedAt(),
                 updatedRequest.getUser().getFirstName() + " " + updatedRequest.getUser().getLastName(),
                 updatedRequest.getUser().getEmail(),
-                updatedRequest.getUser().getPhone()
+                updatedRequest.getUser().getPhone(),
+                updatedRequest.getDocumentStatus(),
+                updatedRequest.getGeneratedDocumentPath(),
+                updatedRequest.getAttachedDocumentPath()
         );
 
         // Send real-time update
@@ -110,7 +116,10 @@ public class ServiceRequestService {
                         request.getUpdatedAt(),
                         request.getUser().getFirstName() + " " + request.getUser().getLastName(),
                         request.getUser().getEmail(),
-                        request.getUser().getPhone()
+                        request.getUser().getPhone(),
+                        request.getDocumentStatus(),
+                        request.getGeneratedDocumentPath(),
+                        request.getAttachedDocumentPath()
                 ))
                 .collect(Collectors.toList());
     }
@@ -129,7 +138,10 @@ public class ServiceRequestService {
                         request.getUpdatedAt(),
                         request.getUser().getFirstName() + " " + request.getUser().getLastName(),
                         request.getUser().getEmail(),
-                        request.getUser().getPhone()
+                        request.getUser().getPhone(),
+                        request.getDocumentStatus(),
+                        request.getGeneratedDocumentPath(),
+                        request.getAttachedDocumentPath()
                 ))
                 .collect(Collectors.toList());
     }
@@ -178,13 +190,83 @@ public class ServiceRequestService {
                 updatedRequest.getUpdatedAt(),
                 updatedRequest.getUser().getFirstName() + " " + updatedRequest.getUser().getLastName(),
                 updatedRequest.getUser().getEmail(),
-                updatedRequest.getUser().getPhone()
+                updatedRequest.getUser().getPhone(),
+                updatedRequest.getDocumentStatus(),
+                updatedRequest.getGeneratedDocumentPath(),
+                updatedRequest.getAttachedDocumentPath()
         );
 
         // Send real-time update
         messagingTemplate.convertAndSend("/topic/service-requests", response);
 
         return response;
+    }
+
+    /**
+     * Attach a document to a service request
+     */
+    @Transactional
+    public ServiceRequestResponse attachDocumentToRequest(Long requestId, User official, org.springframework.web.multipart.MultipartFile file) {
+        ServiceRequest request = serviceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Service request not found"));
+
+        // Only allow attachment if the request is in PENDING status
+        if (!"PENDING".equals(request.getStatus())) {
+            throw new RuntimeException("Only pending requests can have documents attached");
+        }
+
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("No document file provided");
+        }
+
+        try {
+            // Create a directory for attached documents if it doesn't exist
+            java.nio.file.Path attachedDocsDir = java.nio.file.Paths.get("documents", "attached");
+            if (!java.nio.file.Files.exists(attachedDocsDir)) {
+                java.nio.file.Files.createDirectories(attachedDocsDir);
+            }
+
+            // Generate a unique filename
+            String originalFilename = file.getOriginalFilename();
+            String fileExtension = originalFilename != null && originalFilename.contains(".") 
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+                : "";
+            String filename = "attached_" + requestId + "_" + System.currentTimeMillis() + fileExtension;
+
+            // Save the file
+            java.nio.file.Path filePath = attachedDocsDir.resolve(filename);
+            java.nio.file.Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            // Update the service request with the document path
+            String documentPath = filePath.toString();
+            request.markDocumentAsAttached(official, documentPath);
+            ServiceRequest updatedRequest = serviceRequestRepository.save(request);
+
+            ServiceRequestResponse response = new ServiceRequestResponse(
+                    updatedRequest.getId(),
+                    updatedRequest.getServiceType(),
+                    updatedRequest.getStatus(),
+                    updatedRequest.getDetails(),
+                    updatedRequest.getPurpose(),
+                    updatedRequest.getContactNumber(),
+                    updatedRequest.getAddress(),
+                    updatedRequest.getCreatedAt(),
+                    updatedRequest.getUpdatedAt(),
+                    updatedRequest.getUser().getFirstName() + " " + updatedRequest.getUser().getLastName(),
+                    updatedRequest.getUser().getEmail(),
+                    updatedRequest.getUser().getPhone(),
+                    updatedRequest.getDocumentStatus(),
+                    updatedRequest.getGeneratedDocumentPath(),
+                    updatedRequest.getAttachedDocumentPath()
+            );
+
+            // Send real-time update
+            messagingTemplate.convertAndSend("/topic/service-requests", response);
+
+            return response;
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to store document file: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -215,7 +297,10 @@ public class ServiceRequestService {
                 updatedRequest.getUpdatedAt(),
                 updatedRequest.getUser().getFirstName() + " " + updatedRequest.getUser().getLastName(),
                 updatedRequest.getUser().getEmail(),
-                updatedRequest.getUser().getPhone()
+                updatedRequest.getUser().getPhone(),
+                updatedRequest.getDocumentStatus(),
+                updatedRequest.getGeneratedDocumentPath(),
+                updatedRequest.getAttachedDocumentPath()
         );
 
         // Send real-time update

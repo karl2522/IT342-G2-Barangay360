@@ -32,7 +32,7 @@ class WebSocketService {
         try {
             // Define a factory function that creates a SockJS instance with token
             const socketFactory = () => {
-                const url = `https://barangay360-nja7q.ondigitalocean.app/ws${token ? `?token=${token}` : ''}`;
+                const url = `http://localhost:8080/ws${token ? `?token=${token}` : ''}`;
                 console.log('Connecting to WebSocket at:', url);
                 return new SockJS(url);
             };

@@ -30,7 +30,7 @@ const ResidentsManagement = () => {
       const token = JSON.parse(localStorage.getItem('token'));
       console.log('Fetching residents with token:', token); // Debug log
 
-      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/users/residents', {
+      const response = await fetch('https://localhost:8080/api/api/users/residents', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token.token}`,
@@ -90,7 +90,7 @@ const ResidentsManagement = () => {
     try {
       setIsSubmitting(true);
       const token = JSON.parse(localStorage.getItem('token'));
-      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/warn`, {
+      const response = await fetch(`http://localhost:8080/api/users/${userId}/warn`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token.token}`,
@@ -118,7 +118,7 @@ const ResidentsManagement = () => {
   const handleActivateUser = async (userId) => {
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/activate`, {
+      const response = await handleApiRequest(`http://localhost:8080/api/users/${userId}/activate`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ const ResidentsManagement = () => {
   const handleDeactivateUser = async (userId) => {
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/deactivate`, {
+      const response = await handleApiRequest(`http://localhost:8080/api/users/${userId}/deactivate`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -171,7 +171,7 @@ const ResidentsManagement = () => {
     try {
       setIsSubmitting(true);
       const token = JSON.parse(localStorage.getItem('token'));
-      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}`, {
+      const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token.token}`,
