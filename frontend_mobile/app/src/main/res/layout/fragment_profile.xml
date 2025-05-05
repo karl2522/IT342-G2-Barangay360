@@ -103,7 +103,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Juan Dela Cruz"
+                        android:text="Name"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -113,7 +113,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Resident ID: BRG-2023-0123"
+                        android:text="Resident ID: #####"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
@@ -169,7 +169,7 @@
                                 android:id="@+id/profile_phone"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="0912-345-6789"
+                                android:text=""
                                 android:textColor="@color/text_primary"
                                 android:textSize="14sp" />
                         </LinearLayout>
@@ -192,7 +192,7 @@
                                 android:id="@+id/profile_email"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="juan.delacruz@example.com"
+                                android:text=""
                                 android:textColor="@color/text_primary"
                                 android:textSize="14sp" />
                         </LinearLayout>
@@ -214,7 +214,7 @@
                                 android:id="@+id/profile_address"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="123 Main Street, Barangay 360"
+                                android:text=""
                                 android:textColor="@color/text_primary"
                                 android:textSize="14sp" />
                         </LinearLayout>
@@ -263,7 +263,7 @@
                                     android:id="@+id/pending_count"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="2"
+                                    android:text="-"
                                     android:textColor="@color/maroon"
                                     android:textSize="20sp"
                                     android:textStyle="bold" />
@@ -287,7 +287,7 @@
                                     android:id="@+id/approved_count"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="5"
+                                    android:text="-"
                                     android:textColor="#4CAF50"
                                     android:textSize="20sp"
                                     android:textStyle="bold" />
@@ -311,7 +311,7 @@
                                     android:id="@+id/rejected_count"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="1"
+                                    android:text="-"
                                     android:textColor="#F44336"
                                     android:textSize="20sp"
                                     android:textStyle="bold" />

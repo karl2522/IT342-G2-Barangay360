@@ -32,15 +32,6 @@ class CommunityFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        // Find community button click
-        binding.btnFindCommunity.setOnClickListener {
-            Toast.makeText(requireContext(), "Find Community clicked", Toast.LENGTH_SHORT).show()
-        }
-
-        // Create community button click
-        binding.btnCreateCommunity.setOnClickListener {
-            Toast.makeText(requireContext(), "Create Community clicked", Toast.LENGTH_SHORT).show()
-        }
 
         // Set up swipe refresh
         binding.swipeRefreshLayout.setOnRefreshListener {
