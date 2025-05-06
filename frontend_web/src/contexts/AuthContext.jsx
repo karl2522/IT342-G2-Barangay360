@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
       // Log the refresh token being used (first few chars only for security)
       console.log(`Using refresh token: ${refreshToken.token.substring(0, 10)}...`);
 
-      const response = await fetch('http://localhost:8080/api/api/auth/refreshtoken', {
+      const response = await fetch('http://localhost:8080/api/auth/refreshtoken', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -82,14 +82,14 @@ export const AuthProvider = ({ children }) => {
 
       // Handle both successful and failed responses without throwing
       const data = await response.json().catch(() => ({}));
-      
+
       if (response.ok && data.accessToken && data.refreshToken) {
         console.log('Token refresh successful');
-        
+
         // Store the tokens with their metadata
         localStorage.setItem('token', JSON.stringify(data.accessToken));
         localStorage.setItem('refreshToken', JSON.stringify(data.refreshToken));
-        
+
         // Update state
         setToken(data.accessToken);
         setRefreshToken(data.refreshToken);
@@ -185,7 +185,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
-          
+
           // Throw error with deactivation reason
           throw new Error(data.message || 'Your account has been deactivated due to multiple warnings.');
         }
@@ -213,7 +213,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', JSON.stringify(data.accessToken));
       localStorage.setItem('refreshToken', JSON.stringify(data.refreshToken));
-      
+
       setUser(userData);
       setToken(data.accessToken);
       setRefreshToken(data.refreshToken);
@@ -244,7 +244,7 @@ export const AuthProvider = ({ children }) => {
         ...userData,
         roles: userData.role === 'official' ? ['official'] : ['resident']
       };
-      
+
       const response = await fetch('http://localhost:8080/api/auth/signup', {
         method: 'POST',
         headers: {
@@ -256,7 +256,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         return { success: true, message: data.message };
       } else {

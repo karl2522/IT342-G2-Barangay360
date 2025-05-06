@@ -10,8 +10,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.backend.payload.request.ServiceRequestRequest;
 import org.backend.payload.response.ServiceRequestResponse;
 import org.backend.service.ServiceRequestService;
-import org.backend.service.DocumentGeneratorService;
-import org.backend.service.BarangayCertificateGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,12 +32,6 @@ public class ServiceRequestController {
 
     @Autowired
     private ServiceRequestService serviceRequestService;
-
-    @Autowired
-    private DocumentGeneratorService documentGeneratorService;
-
-    @Autowired
-    private BarangayCertificateGenerator barangayCertificateGenerator;
 
     @Operation(summary = "Create a service request", description = "Create a new service request for a barangay service")
     @ApiResponses(value = {
@@ -106,31 +98,6 @@ public class ServiceRequestController {
         @ApiResponse(responseCode = "401", description = "Not authorized to generate documents"),
         @ApiResponse(responseCode = "404", description = "Service request not found"),
         @ApiResponse(responseCode = "400", description = "No documents attached to request")
-    })
-    @PostMapping("/{id}/generate-document")
-    @PreAuthorize("hasRole('OFFICIAL')")
-    public ResponseEntity<ServiceRequestResponse> generateDocument(
-            @Parameter(description = "Service request ID", required = true)
-            @PathVariable Long id,
-            @AuthenticationPrincipal User official) {
-        try {
-            // Check if the request has attached documents
-            if (!barangayCertificateGenerator.hasAttachedDocument(id)) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            String documentPath = documentGeneratorService.generateDocument(id, official);
-            return ResponseEntity.ok(serviceRequestService.updateServiceRequestStatus(id, "APPROVED"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @Operation(summary = "Download generated document", description = "Download the generated document for a service request")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Document downloaded successfully"),
-        @ApiResponse(responseCode = "401", description = "Not authorized to download document"),
-        @ApiResponse(responseCode = "404", description = "Document not found")
     })
     @GetMapping("/{id}/download-document")
     @PreAuthorize("hasAnyRole('OFFICIAL', 'USER')")
@@ -260,41 +227,24 @@ public class ServiceRequestController {
         }
     }
 
-    @Operation(summary = "Generate barangay certificate", description = "Generate a barangay certificate using OpenPDF")
+    @Operation(summary = "Generate document for service request", description = "Generate a document for an approved service request")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Certificate generated successfully"),
-        @ApiResponse(responseCode = "401", description = "Not authorized to generate certificates"),
-        @ApiResponse(responseCode = "404", description = "Service request not found"),
-        @ApiResponse(responseCode = "400", description = "No documents attached to request")
+        @ApiResponse(responseCode = "200", description = "Document generated successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceRequestResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Request cannot have document generated"),
+        @ApiResponse(responseCode = "401", description = "Not authorized to generate documents"),
+        @ApiResponse(responseCode = "404", description = "Service request not found")
     })
-    @PostMapping("/{id}/generate-barangay-certificate")
+    @PostMapping("/{id}/generate-document")
     @PreAuthorize("hasRole('OFFICIAL')")
-    public ResponseEntity<Map<String, String>> generateBarangayCertificate(
+    public ResponseEntity<ServiceRequestResponse> generateDocument(
             @Parameter(description = "Service request ID", required = true)
             @PathVariable Long id,
             @AuthenticationPrincipal User official) {
         try {
-            // Check if the request has attached documents
-            if (!barangayCertificateGenerator.hasAttachedDocument(id)) {
-                Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Cannot generate certificate: No documents attached to this request");
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
-
-            // Generate the certificate
-            String documentPath = barangayCertificateGenerator.generateCertificate(id, official);
-
-            // Return success response
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("documentPath", documentPath);
-            response.put("message", "Barangay certificate generated successfully");
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.ok(serviceRequestService.generateDocument(id, official));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(null);
         }
     }
 }

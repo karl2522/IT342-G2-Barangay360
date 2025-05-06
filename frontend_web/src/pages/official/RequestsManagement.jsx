@@ -22,6 +22,38 @@ const RequestsManagement = () => {
   const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
   const [documentError, setDocumentError] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  // Approval modal states
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [approvalRequest, setApprovalRequest] = useState(null);
+
+  // Add document preview functionality
+  const [showDocPreview, setShowDocPreview] = useState(false);
+  const [docPreviewUrl, setDocPreviewUrl] = useState('');
+  const [isDocLoading, setIsDocLoading] = useState(false);
+
+  const handlePreviewDocument = async (requestId) => {
+    setIsDocLoading(true);
+    try {
+      const blob = await serviceRequestService.downloadDocument(requestId);
+      const url = window.URL.createObjectURL(blob);
+      setDocPreviewUrl(url);
+      setShowDocPreview(true);
+    } catch (error) {
+      console.error('Error previewing document:', error);
+      showToast('Failed to preview document', 'error');
+    } finally {
+      setIsDocLoading(false);
+    }
+  };
+
+  // Close document preview
+  const closeDocPreview = () => {
+    if (docPreviewUrl) {
+      window.URL.revokeObjectURL(docPreviewUrl);
+    }
+    setShowDocPreview(false);
+    setDocPreviewUrl('');
+  };
 
   // Calculate request counts by status
   const requestCounts = {
@@ -129,13 +161,14 @@ const RequestsManagement = () => {
     }
   };
 
-  // Handle document generation
+  // Handle document approval (previously document generation)
   const handleGenerateDocument = async (requestId) => {
     setIsGeneratingDocument(true);
     setDocumentError(null);
     try {
-      await serviceRequestService.generateDocument(requestId);
-      showToast('Document generated successfully', 'success');
+      // Update the status to APPROVED instead of generating document
+      await serviceRequestService.updateServiceRequestStatus(requestId, 'APPROVED');
+      showToast('Request approved successfully', 'success');
       loadServiceRequests();
       // Refresh the selected request
       if (selectedRequest && selectedRequest.id === requestId) {
@@ -146,9 +179,9 @@ const RequestsManagement = () => {
         }
       }
     } catch (error) {
-      console.error('Error generating document:', error);
-      setDocumentError(error.message || 'Failed to generate document');
-      showToast(error.message || 'Failed to generate document', 'error');
+      console.error('Error approving request:', error);
+      setDocumentError(error.message || 'Failed to approve request');
+      showToast(error.message || 'Failed to approve request', 'error');
     } finally {
       setIsGeneratingDocument(false);
     }
@@ -189,25 +222,53 @@ const RequestsManagement = () => {
     }
   };
 
-  const handleApproveRequest = async (requestId) => {
+  const handleApproveRequest = (request) => {
+    // Show the approval modal with the selected request
+    setApprovalRequest(request);
+    setShowApprovalModal(true);
+  };
+
+  const handleApproveWithDocument = async (requestId) => {
+    if (!selectedFile) {
+      setDocumentError('Please select a file to attach');
+      showToast('Please select a file to attach', 'error');
+      return;
+    }
+
+    // Validate file type (PDF only)
+    if (!selectedFile.type.includes('pdf')) {
+      setDocumentError('Only PDF files are allowed');
+      showToast('Only PDF files are allowed', 'error');
+      return;
+    }
+
+    // Validate file size (maximum 5MB)
+    const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (selectedFile.size > maxFileSize) {
+      setDocumentError('File size exceeds the maximum limit of 5MB');
+      showToast('File size exceeds the maximum limit of 5MB', 'error');
+      return;
+    }
+
     setProcessing(true);
+    setDocumentError(null);
     try {
-      // First check if document is attached
-      const updatedRequests = await serviceRequestService.getAllServiceRequests();
-      const request = updatedRequests.find(req => req.id === requestId);
+      // First attach the document
+      const formData = new FormData();
+      formData.append('document', selectedFile);
+      await serviceRequestService.attachDocumentToRequest(requestId, formData);
 
-      if (request && request.documentStatus === 'ATTACHED') {
-        // If document is attached, generate it
-        await handleGenerateDocument(requestId);
-      } else {
-        showToast('Cannot approve request: Document must be attached first', 'error');
-      }
+      // Then update the status to APPROVED (instead of generating document)
+      await serviceRequestService.updateServiceRequestStatus(requestId, 'APPROVED');
 
+      showToast('Request approved and document attached successfully', 'success');
+      setSelectedFile(null); // Clear the selected file
+      setShowApprovalModal(false); // Close the modal
       loadServiceRequests();
-      handleCloseRequest();
     } catch (error) {
       console.error('Error approving request:', error);
-      showToast('Failed to approve request', 'error');
+      setDocumentError(error.message || 'Failed to approve request');
+      showToast('Failed to approve request: ' + (error.message || 'Unknown error'), 'error');
     } finally {
       setProcessing(false);
     }
@@ -396,7 +457,7 @@ const RequestsManagement = () => {
                             {request.status === 'PENDING' && (
                               <>
                                 <button
-                                  onClick={() => handleApproveRequest(request.id)}
+                                  onClick={() => handleApproveRequest(request)}
                                   className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                   disabled={processing}
                                 >
@@ -576,15 +637,78 @@ const RequestsManagement = () => {
 
               {/* Document Status Section */}
               <div className="mt-6 border-t border-gray-200 pt-4">
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Document Status</h4>
-                <div className="flex items-center">
-                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${selectedRequest.documentStatus === 'NOT_GENERATED' ? 'bg-gray-100 text-gray-800' : 
-                      selectedRequest.documentStatus === 'ATTACHED' ? 'bg-blue-100 text-blue-800' : 
-                      selectedRequest.documentStatus === 'GENERATED' ? 'bg-green-100 text-green-800' : 
-                      'bg-purple-100 text-purple-800'}`}>
-                    {selectedRequest.documentStatus || 'NOT_GENERATED'}
-                  </span>
+                <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <svg className="h-5 w-5 text-gray-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Document Status
+                </h4>
+                <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                    <div className="mb-3 sm:mb-0">
+                      <div className="flex items-center mb-1">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          ${selectedRequest.documentStatus === 'NOT_GENERATED' ? 'bg-gray-100 text-gray-800' : 
+                            selectedRequest.documentStatus === 'ATTACHED' ? 'bg-blue-100 text-blue-800' : 
+                            selectedRequest.documentStatus === 'GENERATED' ? 'bg-green-100 text-green-800' : 
+                            'bg-purple-100 text-purple-800'}`}>
+                          {selectedRequest.documentStatus || 'NOT_GENERATED'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {!selectedRequest.documentStatus || selectedRequest.documentStatus === 'NOT_GENERATED'
+                          ? 'No document attached yet'
+                          : selectedRequest.documentStatus === 'ATTACHED'
+                            ? 'Document attached but not yet approved'
+                            : selectedRequest.documentStatus === 'GENERATED'
+                              ? 'Document approved and ready for delivery'
+                              : 'Document is ready for pickup or has been delivered'}
+                      </p>
+                    </div>
+
+                    {/* Document Actions Buttons - only show if document is attached or generated */}
+                    {(selectedRequest.documentStatus === 'ATTACHED' || 
+                      selectedRequest.documentStatus === 'GENERATED' || 
+                      selectedRequest.documentStatus === 'DELIVERED') && (
+                      <div className="flex space-x-2">
+                        {/* View Document Button */}
+                        <button
+                          onClick={() => handlePreviewDocument(selectedRequest.id)}
+                          disabled={isDocLoading}
+                          className="inline-flex items-center px-3 py-1.5 border border-indigo-300 text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none"
+                        >
+                          {isDocLoading ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Loading...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                              </svg>
+                              Preview
+                            </>
+                          )}
+                        </button>
+
+                        {/* Download Document Button */}
+                        <button
+                          onClick={() => handleDownloadDocument(selectedRequest.id)}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+                        >
+                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                          </svg>
+                          Download
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -663,6 +787,7 @@ const RequestsManagement = () => {
                     {/* Reject Button */}
                     <button
                       onClick={() => {
+                        setRejectionRequest(selectedRequest);
                         setShowRejectionModal(true);
                       }}
                       className="px-4 py-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-50"
@@ -671,21 +796,6 @@ const RequestsManagement = () => {
                       Reject Request
                     </button>
                   </>
-                )}
-
-                {/* Download Document Button - Show if document is generated */}
-                {(selectedRequest.documentStatus === 'GENERATED' || selectedRequest.documentStatus === 'DELIVERED') && (
-                  <button
-                    onClick={() => handleDownloadDocument(selectedRequest.id)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                  >
-                    <span className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                      </svg>
-                      Download Document
-                    </span>
-                  </button>
                 )}
 
                 {/* Mark as Delivered Button - Show if document is generated but not delivered */}
@@ -698,6 +808,13 @@ const RequestsManagement = () => {
                     {processing ? 'Processing...' : 'Mark as Delivered'}
                   </button>
                 )}
+
+                <button
+                  onClick={handleCloseRequest}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                >
+                  Close
+                </button>
               </div>
 
               {/* Error Message */}
@@ -706,6 +823,115 @@ const RequestsManagement = () => {
                   <p className="text-sm text-red-600">{documentError}</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approval Modal */}
+      {showApprovalModal && approvalRequest && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-[#861A2D]">Approve Service Request</h3>
+                <button
+                  onClick={() => {
+                    setShowApprovalModal(false);
+                    setSelectedFile(null);
+                    setDocumentError(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Please attach a document to approve this service request. Only PDF files up to 5MB are accepted.
+                </p>
+
+                {/* Request Details */}
+                <div className="bg-gray-50 p-4 rounded-md mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Request Details</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="font-medium">Service Type:</span> {approvalRequest.serviceType}
+                    </div>
+                    <div>
+                      <span className="font-medium">Requester:</span> {approvalRequest.residentName}
+                    </div>
+                    <div>
+                      <span className="font-medium">Contact:</span> {approvalRequest.contactNumber || approvalRequest.residentPhone}
+                    </div>
+                    <div>
+                      <span className="font-medium">Date:</span> {new Date(approvalRequest.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="col-span-2">
+                      <span className="font-medium">Purpose:</span> {approvalRequest.purpose}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Document Upload */}
+                <div className="mb-4">
+                  <label htmlFor="document-upload-approval" className="block text-sm font-medium text-gray-700 mb-1">
+                    Attach Document <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="file"
+                      id="document-upload-approval"
+                      className="hidden"
+                      onChange={handleFileChange}
+                      accept=".pdf"
+                    />
+                    <label
+                      htmlFor="document-upload-approval"
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded cursor-pointer hover:bg-gray-300 flex items-center"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                      </svg>
+                      {selectedFile ? selectedFile.name : 'Choose PDF File'}
+                    </label>
+                  </div>
+                  {selectedFile && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      Selected file: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                    </p>
+                  )}
+                  {documentError && (
+                    <p className="text-sm text-red-600 mt-1">{documentError}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowApprovalModal(false);
+                    setSelectedFile(null);
+                    setDocumentError(null);
+                  }}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleApproveWithDocument(approvalRequest.id)}
+                  disabled={!selectedFile || processing}
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                    selectedFile && !processing ? 'bg-green-600 hover:bg-green-700' : 'bg-green-400 cursor-not-allowed'
+                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
+                >
+                  {processing ? 'Processing...' : 'Approve with Document'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -768,6 +994,43 @@ const RequestsManagement = () => {
                   {processing ? 'Processing...' : 'Reject'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Preview Modal */}
+      {showDocPreview && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-[#861A2D]">Document Preview</h3>
+              <button
+                onClick={closeDocPreview}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="mt-4">
+              {isDocLoading ? (
+                <div className="flex items-center justify-center">
+                  <svg className="animate-spin h-8 w-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p className="ml-2 text-gray-500">Loading document...</p>
+                </div>
+              ) : (
+                <iframe
+                  src={docPreviewUrl}
+                  title="Document Preview"
+                  className="w-full h-96 border rounded-md"
+                ></iframe>
+              )}
             </div>
           </div>
         </div>

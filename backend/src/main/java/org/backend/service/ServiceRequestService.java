@@ -219,6 +219,21 @@ public class ServiceRequestService {
             throw new RuntimeException("No document file provided");
         }
 
+        // Validate file type (PDF only)
+        String originalFilename = file.getOriginalFilename();
+        String contentType = file.getContentType();
+        if (originalFilename == null || 
+            (!originalFilename.toLowerCase().endsWith(".pdf") || 
+            (contentType != null && !contentType.equals("application/pdf")))) {
+            throw new RuntimeException("Only PDF files are allowed");
+        }
+
+        // Validate file size (maximum 5MB)
+        long maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (file.getSize() > maxFileSize) {
+            throw new RuntimeException("File size exceeds the maximum limit of 5MB");
+        }
+
         try {
             // Create a directory for attached documents if it doesn't exist
             java.nio.file.Path attachedDocsDir = java.nio.file.Paths.get("documents", "attached");
@@ -227,10 +242,9 @@ public class ServiceRequestService {
             }
 
             // Generate a unique filename
-            String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename != null && originalFilename.contains(".") 
+            String fileExtension = originalFilename.contains(".") 
                 ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
-                : "";
+                : ".pdf";
             String filename = "attached_" + requestId + "_" + System.currentTimeMillis() + fileExtension;
 
             // Save the file
@@ -283,6 +297,47 @@ public class ServiceRequestService {
         }
 
         request.setStatus("CANCELLED");
+        ServiceRequest updatedRequest = serviceRequestRepository.save(request);
+
+        ServiceRequestResponse response = new ServiceRequestResponse(
+                updatedRequest.getId(),
+                updatedRequest.getServiceType(),
+                updatedRequest.getStatus(),
+                updatedRequest.getDetails(),
+                updatedRequest.getPurpose(),
+                updatedRequest.getContactNumber(),
+                updatedRequest.getAddress(),
+                updatedRequest.getCreatedAt(),
+                updatedRequest.getUpdatedAt(),
+                updatedRequest.getUser().getFirstName() + " " + updatedRequest.getUser().getLastName(),
+                updatedRequest.getUser().getEmail(),
+                updatedRequest.getUser().getPhone(),
+                updatedRequest.getDocumentStatus(),
+                updatedRequest.getGeneratedDocumentPath(),
+                updatedRequest.getAttachedDocumentPath()
+        );
+
+        // Send real-time update
+        messagingTemplate.convertAndSend("/topic/service-requests", response);
+
+        return response;
+    }
+
+    /**
+     * Generate a document for a service request
+     */
+    @Transactional
+    public ServiceRequestResponse generateDocument(Long requestId, User official) {
+        ServiceRequest request = serviceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Service request not found"));
+
+        // Check if document is attached
+        if (request.getAttachedDocumentPath() == null) {
+            throw new RuntimeException("No document has been attached to this request");
+        }
+
+        // Mark the document as generated
+        request.markDocumentAsGenerated(request.getAttachedDocumentPath(), official);
         ServiceRequest updatedRequest = serviceRequestRepository.save(request);
 
         ServiceRequestResponse response = new ServiceRequestResponse(

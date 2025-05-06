@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { useContext, useEffect, useRef, useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar.jsx';
@@ -5,7 +6,6 @@ import TopNavigation from '../../components/layout/TopNavigation.jsx';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext';
 import { serviceRequestService } from '../../services/ServiceRequestService';
-import { DateTime } from 'luxon';
 
 const Services = () => {
   const authContext = useContext(AuthContext);
@@ -285,6 +285,55 @@ const Services = () => {
 
   const handleCloseRequest = () => {
     setSelectedRequest(null);
+  };
+
+  // Add document download functionality for residents
+  const handleDownloadDocument = async (requestId) => {
+    try {
+      const blob = await serviceRequestService.downloadDocument(requestId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `document_${requestId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showToast('Document downloaded successfully', 'success');
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      showToast('Failed to download document', 'error');
+    }
+  };
+
+  // Add document preview functionality
+  const [showDocPreview, setShowDocPreview] = useState(false);
+  const [docPreviewUrl, setDocPreviewUrl] = useState('');
+  const [isDocLoading, setIsDocLoading] = useState(false);
+
+  const handlePreviewDocument = async (requestId) => {
+    setIsDocLoading(true);
+    try {
+      const blob = await serviceRequestService.downloadDocument(requestId);
+      const url = window.URL.createObjectURL(blob);
+      setDocPreviewUrl(url);
+      setShowDocPreview(true);
+    } catch (error) {
+      console.error('Error previewing document:', error);
+      showToast('Failed to preview document', 'error');
+    } finally {
+      setIsDocLoading(false);
+    }
+  };
+
+  // Close document preview
+  const closeDocPreview = () => {
+    if (docPreviewUrl) {
+      window.URL.revokeObjectURL(docPreviewUrl);
+    }
+    setShowDocPreview(false);
+    setDocPreviewUrl('');
   };
 
   const handleEditRequest = (request) => {
@@ -1254,6 +1303,72 @@ const Services = () => {
                       <h4 className="text-sm font-medium text-gray-500">Address</h4>
                       <p className="mt-1 text-sm text-gray-900">{selectedRequest.address}</p>
                     </div>
+
+                    {/* Document Section */}
+                    {selectedRequest.documentStatus && selectedRequest.documentStatus !== 'NOT_GENERATED' && (
+                      <div className="md:col-span-2 mt-2">
+                        <div className="border-t border-gray-200 pt-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg className="h-5 w-5 text-gray-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Document
+                          </h4>
+                          <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                              <div className="mb-3 sm:mb-0">
+                                <p className="text-sm font-medium text-gray-900 mb-1">
+                                  {selectedRequest.serviceType} Document
+                                </p>
+                                <div className="flex items-center">
+                                  <span className={`px-2 py-1 text-xs font-medium rounded-full 
+                                    ${selectedRequest.documentStatus === 'ATTACHED' ? 'bg-blue-100 text-blue-800' : 
+                                      selectedRequest.documentStatus === 'GENERATED' ? 'bg-green-100 text-green-800' : 
+                                      'bg-purple-100 text-purple-800'}`}>
+                                    {selectedRequest.documentStatus}
+                                  </span>
+                                  {selectedRequest.documentStatus === 'DELIVERED' && (
+                                    <span className="ml-2 text-xs text-gray-500">
+                                      Document is ready for pickup
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handlePreviewDocument(selectedRequest.id)}
+                                  disabled={isDocLoading}
+                                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none"
+                                >
+                                  {isDocLoading ? (
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                  ) : (
+                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                  )}
+                                  {isDocLoading ? "Loading..." : "View"}
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadDocument(selectedRequest.id)}
+                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+                                >
+                                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                  </svg>
+                                  Download
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {selectedRequest.status === 'REJECTED' && selectedRequest.rejectionReason && (
                         <div className="md:col-span-2 bg-red-50 p-3 rounded-md">
                           <h4 className="text-sm font-medium text-red-800">Reason for Rejection</h4>
@@ -1408,6 +1523,56 @@ const Services = () => {
                 </div>
               </div>
             </div>
+        )}
+
+        {/* Document Preview Modal */}
+        {showDocPreview && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75"
+               onClick={closeDocPreview}>
+            <div className="relative w-full max-w-4xl h-[80vh] bg-white rounded-lg shadow-xl overflow-hidden"
+                 onClick={(e) => e.stopPropagation()}>
+              <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-white border-b z-10">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                  <svg className="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  Document Preview
+                </h3>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleDownloadDocument(selectedRequest.id)}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+                  >
+                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Download
+                  </button>
+                  <button
+                    onClick={closeDocPreview}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="w-full h-full pt-16 px-2 overflow-auto bg-gray-100">
+                {docPreviewUrl ? (
+                  <iframe
+                    src={docPreviewUrl}
+                    title="Document Preview"
+                    className="w-full h-full border-none"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Loading document...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
   );
