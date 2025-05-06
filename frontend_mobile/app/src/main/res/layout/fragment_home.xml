@@ -45,7 +45,7 @@
                                 android:id="@+id/txt_welcome"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Welcome, Juan Dela Cruz!"
+                                android:text="Welcome, Name"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
@@ -54,7 +54,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="Resident ID: BRG-2023-12345"
+                                android:text="test@email.com"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="14sp" />
 
