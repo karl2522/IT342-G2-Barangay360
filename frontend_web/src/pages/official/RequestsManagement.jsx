@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useRef } from 'react';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation';
 import { useToast } from '../../contexts/ToastContext';
@@ -41,6 +41,63 @@ const RequestsManagement = () => {
   // Document viewer states
   const [documentViewerUrl, setDocumentViewerUrl] = useState('');
   const [showDocumentViewer, setShowDocumentViewer] = useState(false);
+
+  // Add refs for detecting clicks outside modals
+  const requestDetailsModalRef = useRef(null);
+  const documentViewerModalRef = useRef(null);
+  const docPreviewModalRef = useRef(null);
+  const approvalModalRef = useRef(null);
+  const rejectionModalRef = useRef(null);
+  
+  // Handle clicks outside modal
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // For Request Details Modal
+      if (selectedRequest && 
+          requestDetailsModalRef.current && 
+          !requestDetailsModalRef.current.contains(event.target)) {
+        handleCloseRequest();
+      }
+      
+      // For Document Viewer Modal
+      if (showDocumentViewer && 
+          documentViewerModalRef.current && 
+          !documentViewerModalRef.current.contains(event.target)) {
+        handleCloseDocumentViewer();
+      }
+      
+      // For Document Preview Modal
+      if (showDocPreview && 
+          docPreviewModalRef.current && 
+          !docPreviewModalRef.current.contains(event.target)) {
+        closeDocPreview();
+      }
+      
+      // For Approval Modal
+      if (showApprovalModal && 
+          approvalModalRef.current && 
+          !approvalModalRef.current.contains(event.target) &&
+          !processing) {
+        setShowApprovalModal(false);
+        setSelectedFile(null);
+        setDocumentError(null);
+      }
+      
+      // For Rejection Modal
+      if (showRejectionModal && 
+          rejectionModalRef.current && 
+          !rejectionModalRef.current.contains(event.target) &&
+          !processing) {
+        setShowRejectionModal(false);
+        setRejectionReason('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedRequest, showDocumentViewer, showDocPreview, showApprovalModal, showRejectionModal, processing]);
 
   // Set the AuthContext in the serviceRequestService
   useEffect(() => {
@@ -675,7 +732,7 @@ const RequestsManagement = () => {
       {/* Request Details Modal */}
       {selectedRequest && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full shadow-xl">
+          <div ref={requestDetailsModalRef} className="bg-white rounded-lg max-w-2xl w-full shadow-xl">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-[#861A2D]">Service Request Details</h3>
@@ -936,9 +993,9 @@ const RequestsManagement = () => {
 
       {/* Approval Modal */}
       {showApprovalModal && approvalRequest && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div>
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div ref={approvalModalRef} className="bg-white rounded-lg max-w-2xl w-full shadow-xl">
+            <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-[#861A2D]">Approve Service Request</h3>
                 <button
@@ -1046,7 +1103,7 @@ const RequestsManagement = () => {
       {/* Rejection Modal */}
       {showRejectionModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div ref={rejectionModalRef} className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div>
               <div className="flex items-center justify-center">
                 <svg className="h-12 w-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1108,7 +1165,7 @@ const RequestsManagement = () => {
       {/* Document Preview Modal */}
       {showDocPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="w-full h-full max-w-6xl max-h-full flex flex-col">
+          <div ref={docPreviewModalRef} className="w-full h-full max-w-6xl max-h-full flex flex-col">
             <div className="flex-1 bg-white rounded-t shadow-2xl overflow-hidden">
               {docPreviewError ? (
                 <div className="flex flex-col items-center justify-center h-full bg-gray-100 p-6">
@@ -1157,7 +1214,7 @@ const RequestsManagement = () => {
       {/* Document Viewer Modal */}
       {showDocumentViewer && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-90 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-6xl h-[80vh] shadow-xl flex flex-col">
+          <div ref={documentViewerModalRef} className="bg-white rounded-lg w-full max-w-6xl h-[80vh] shadow-xl flex flex-col">
             <div className="flex-1 overflow-hidden">
               {documentViewerUrl ? (
                 <PDFViewerComponent 
