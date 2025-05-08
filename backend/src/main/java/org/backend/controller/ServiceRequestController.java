@@ -19,6 +19,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.backend.model.User;
+import org.springframework.http.HttpStatus;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.backend.model.ServiceRequest;
+import org.backend.repository.ServiceRequestRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -30,8 +36,13 @@ import java.util.HashMap;
 @Tag(name = "Service Requests", description = "API for managing barangay service requests")
 public class ServiceRequestController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ServiceRequestController.class);
+
     @Autowired
     private ServiceRequestService serviceRequestService;
+
+    @Autowired
+    private ServiceRequestRepository serviceRequestRepository;
 
     @Operation(summary = "Create a service request", description = "Create a new service request for a barangay service")
     @ApiResponses(value = {
@@ -40,7 +51,7 @@ public class ServiceRequestController {
         @ApiResponse(responseCode = "401", description = "Not authorized to create service requests"),
         @ApiResponse(responseCode = "400", description = "Invalid service request data")
     })
-    @PostMapping
+    @PostMapping    
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ServiceRequestResponse> createServiceRequest(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Service request details", required = true)
@@ -245,6 +256,149 @@ public class ServiceRequestController {
             return ResponseEntity.ok(serviceRequestService.generateDocument(id, official));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @Operation(summary = "View the attached document for a service request", description = "View the document attached to a service request")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Document retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Not authorized to view this document"),
+        @ApiResponse(responseCode = "404", description = "Service request or document not found"),
+        @ApiResponse(responseCode = "400", description = "No document attached to request")
+    })
+    @GetMapping("/{id}/view-attached-document")
+    // We now allow this endpoint to be accessed without explicit authentication
+    // Authorization is handled in the filter based on the token parameter
+    public ResponseEntity<Resource> viewAttachedDocument(
+            @Parameter(description = "Service request ID", required = true)
+            @PathVariable Long id) {
+        try {
+            // Log the request
+            logger.info("Document view request for service request ID: {}", id);
+            
+            Resource resource = serviceRequestService.getAttachedDocument(id);
+            String filename = resource.getFilename();
+            MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+            
+            // Determine content type based on file extension
+            if (filename != null) {
+                String lowercaseFilename = filename.toLowerCase();
+                if (lowercaseFilename.endsWith(".pdf")) {
+                    mediaType = MediaType.APPLICATION_PDF;
+                } else if (lowercaseFilename.endsWith(".png")) {
+                    mediaType = MediaType.IMAGE_PNG;
+                } else if (lowercaseFilename.endsWith(".jpg") || lowercaseFilename.endsWith(".jpeg")) {
+                    mediaType = MediaType.IMAGE_JPEG;
+                } else if (lowercaseFilename.endsWith(".docx")) {
+                    mediaType = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+                } else if (lowercaseFilename.endsWith(".xlsx")) {
+                    mediaType = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                }
+            }
+            
+            logger.info("Successfully retrieved document for ID: {}, filename: {}, mediaType: {}", 
+                    id, filename, mediaType);
+            
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + (filename != null ? filename : "document") + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            logger.error("Error retrieving attached document for ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    @Operation(summary = "Get service request by ID", description = "Retrieve a specific service request by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Service request found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceRequestResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Service request not found"),
+        @ApiResponse(responseCode = "401", description = "Not authorized to view this service request")
+    })
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('OFFICIAL', 'USER')")
+    public ResponseEntity<ServiceRequestResponse> getServiceRequestById(
+            @Parameter(description = "Service request ID", required = true)
+            @PathVariable Long id) {
+        try {
+            ServiceRequest request = serviceRequestRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Service request not found"));
+            
+            ServiceRequestResponse response = new ServiceRequestResponse(
+                    request.getId(),
+                    request.getServiceType(),
+                    request.getStatus(),
+                    request.getDetails(),
+                    request.getPurpose(),
+                    request.getContactNumber(),
+                    request.getAddress(),
+                    request.getCreatedAt(),
+                    request.getUpdatedAt(),
+                    request.getUser().getFirstName() + " " + request.getUser().getLastName(),
+                    request.getUser().getEmail(),
+                    request.getUser().getPhone(),
+                    request.getDocumentStatus(),
+                    request.getGeneratedDocumentPath(),
+                    request.getAttachedDocumentPath()
+            );
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error getting service request by ID {}: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Operation(summary = "Get document path information", description = "Get diagnostic information about document paths for a service request")
+    @GetMapping("/{id}/document-info")
+    @PreAuthorize("hasAnyRole('OFFICIAL', 'USER')")
+    public ResponseEntity<?> getDocumentPathInfo(@PathVariable Long id) {
+        try {
+            ServiceRequest request = serviceRequestRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Service request not found"));
+            
+            java.util.Map<String, Object> info = new java.util.HashMap<>();
+            info.put("requestId", id);
+            info.put("attachedDocumentPath", request.getAttachedDocumentPath());
+            info.put("generatedDocumentPath", request.getGeneratedDocumentPath());
+            info.put("documentStatus", request.getDocumentStatus());
+            
+            // Check if the attached document file exists
+            if (request.getAttachedDocumentPath() != null) {
+                java.nio.file.Path attachedPath = java.nio.file.Paths.get(request.getAttachedDocumentPath());
+                info.put("attachedDocumentExists", java.nio.file.Files.exists(attachedPath));
+                info.put("attachedDocumentAbsolutePath", attachedPath.toAbsolutePath().toString());
+                
+                // Extract the filename to create alternative paths
+                String filename = attachedPath.getFileName().toString();
+                info.put("filename", filename);
+                
+                // Check alternative paths
+                java.nio.file.Path altPath1 = java.nio.file.Paths.get(System.getProperty("user.dir"), "documents", "attached", filename);
+                info.put("alternativePath1", altPath1.toString());
+                info.put("alternativePath1Exists", java.nio.file.Files.exists(altPath1));
+                
+                java.nio.file.Path altPath2 = java.nio.file.Paths.get("documents", "attached", filename);
+                info.put("alternativePath2", altPath2.toString());
+                info.put("alternativePath2Exists", java.nio.file.Files.exists(altPath2));
+            }
+            
+            // List all files in the attached documents directory
+            java.nio.file.Path attachedDir = java.nio.file.Paths.get(System.getProperty("user.dir"), "documents", "attached");
+            if (java.nio.file.Files.exists(attachedDir)) {
+                java.util.List<String> files = java.nio.file.Files.list(attachedDir)
+                        .map(p -> p.getFileName().toString())
+                        .collect(java.util.stream.Collectors.toList());
+                info.put("availableFiles", files);
+            }
+            
+            return ResponseEntity.ok(info);
+        } catch (Exception e) {
+            logger.error("Error getting document path info: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
         }
     }
 }

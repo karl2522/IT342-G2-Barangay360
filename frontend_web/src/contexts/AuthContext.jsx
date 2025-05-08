@@ -77,7 +77,8 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ refreshToken: refreshToken.token }),
-        credentials: 'include'
+        credentials: 'include',
+        mode: 'cors' // Ensure CORS is enabled
       });
 
       // Handle both successful and failed responses without throwing
@@ -96,7 +97,17 @@ export const AuthProvider = ({ children }) => {
         return true;
       } else {
         console.warn('Token refresh failed with status:', response.status);
-        // Return false instead of throwing - let caller decide what to do
+        
+        // If the refresh token is invalid/expired, clean up
+        if (response.status === 401 || response.status === 403) {
+          console.error('Refresh token invalid or expired, logging out');
+          // Clear tokens but don't navigate away - let caller decide
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          setToken(null);
+          setRefreshToken(null);
+        }
+        
         return false;
       }
     } catch (error) {
@@ -104,6 +115,18 @@ export const AuthProvider = ({ children }) => {
       return false;
     }
   };
+
+  // Add a public method that other services can use to refresh the token
+  const refreshTokenMethod = async () => {
+    const success = await refreshAccessToken();
+    if (!success) {
+      showToast('Your session has expired. Please login again.', 'error');
+      logout();
+      navigate('/login');
+      return false;
+    }
+    return true;
+  }
 
   // Function to handle API requests with automatic token refresh
   const handleApiRequest = async (url, options = {}) => {
@@ -318,7 +341,8 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated, 
       hasRole,
       refreshAccessToken,
-      handleApiRequest // Expose the new API request handler
+      refreshTokenMethod,
+      handleApiRequest
     }}>
       {children}
     </AuthContext.Provider>

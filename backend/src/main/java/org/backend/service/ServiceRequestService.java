@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ServiceRequestService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ServiceRequestService.class);
 
     @Autowired
     private ServiceRequestRepository serviceRequestRepository;
@@ -219,24 +223,36 @@ public class ServiceRequestService {
             throw new RuntimeException("No document file provided");
         }
 
-        // Validate file type (PDF only)
+        // Validate file type (Allow common document types)
         String originalFilename = file.getOriginalFilename();
         String contentType = file.getContentType();
-        if (originalFilename == null || 
-            (!originalFilename.toLowerCase().endsWith(".pdf") || 
-            (contentType != null && !contentType.equals("application/pdf")))) {
-            throw new RuntimeException("Only PDF files are allowed");
+        
+        if (originalFilename == null) {
+            throw new RuntimeException("Invalid file name");
+        }
+        
+        // Check for allowed file extensions
+        String lowerCaseFilename = originalFilename.toLowerCase();
+        boolean isAllowedFileType = lowerCaseFilename.endsWith(".pdf") || 
+                                   lowerCaseFilename.endsWith(".png") || 
+                                   lowerCaseFilename.endsWith(".jpg") || 
+                                   lowerCaseFilename.endsWith(".jpeg") || 
+                                   lowerCaseFilename.endsWith(".docx") || 
+                                   lowerCaseFilename.endsWith(".xlsx");
+        
+        if (!isAllowedFileType) {
+            throw new RuntimeException("Only PDF, PNG, JPG, JPEG, DOCX, and XLSX files are allowed");
         }
 
-        // Validate file size (maximum 5MB)
-        long maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+        // Validate file size (maximum 10MB)
+        long maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
         if (file.getSize() > maxFileSize) {
-            throw new RuntimeException("File size exceeds the maximum limit of 5MB");
+            throw new RuntimeException("File size exceeds the maximum limit of 10MB");
         }
 
         try {
             // Create a directory for attached documents if it doesn't exist
-            java.nio.file.Path attachedDocsDir = java.nio.file.Paths.get("documents", "attached");
+            java.nio.file.Path attachedDocsDir = java.nio.file.Paths.get(System.getProperty("user.dir"), "documents", "attached");
             if (!java.nio.file.Files.exists(attachedDocsDir)) {
                 java.nio.file.Files.createDirectories(attachedDocsDir);
             }
@@ -244,15 +260,16 @@ public class ServiceRequestService {
             // Generate a unique filename
             String fileExtension = originalFilename.contains(".") 
                 ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
-                : ".pdf";
+                : "";
             String filename = "attached_" + requestId + "_" + System.currentTimeMillis() + fileExtension;
 
             // Save the file
             java.nio.file.Path filePath = attachedDocsDir.resolve(filename);
             java.nio.file.Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-            // Update the service request with the document path
-            String documentPath = filePath.toString();
+            // Update the service request with the document path (store absolute path for better reliability)
+            String documentPath = filePath.toAbsolutePath().toString();
+            logger.info("Storing document with absolute path: {}", documentPath);
             request.markDocumentAsAttached(official, documentPath);
             ServiceRequest updatedRequest = serviceRequestRepository.save(request);
 
@@ -362,5 +379,53 @@ public class ServiceRequestService {
         messagingTemplate.convertAndSend("/topic/service-requests", response);
 
         return response;
+    }
+
+    /**
+     * Get the attached document for a service request
+     */
+    public Resource getAttachedDocument(Long requestId) throws Exception {
+        ServiceRequest request = serviceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Service request not found"));
+
+        if (request.getAttachedDocumentPath() == null) {
+            throw new RuntimeException("No document has been attached to this request");
+        }
+        
+        try {
+            // Get the document path from the database
+            String attachedDocumentPath = request.getAttachedDocumentPath();
+            Path path;
+            
+            // Try to handle both absolute and relative paths
+            if (attachedDocumentPath.startsWith("/") || attachedDocumentPath.contains(":")) {
+                // This is already an absolute path
+                path = Paths.get(attachedDocumentPath);
+            } else {
+                // This is a relative path, resolve it against the application's base directory
+                path = Paths.get(System.getProperty("user.dir"), attachedDocumentPath);
+            }
+            
+            // Log what path we're trying to access
+            logger.info("Trying to access document at: {}", path.toAbsolutePath().toString());
+            
+            // Check if the file exists
+            if (!java.nio.file.Files.exists(path)) {
+                logger.error("Document file not found at path: {}", path.toAbsolutePath().toString());
+                throw new RuntimeException("Document file not found");
+            }
+            
+            Resource resource = new UrlResource(path.toUri());
+            
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                logger.error("Document exists but is not readable: {}", path.toAbsolutePath().toString());
+                throw new RuntimeException("Could not read attached document file");
+            }
+        } catch (Exception e) {
+            logger.error("Error accessing attached document: {}", e.getMessage());
+            throw e;
+        }
     }
 }

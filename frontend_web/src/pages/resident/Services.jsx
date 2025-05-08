@@ -6,6 +6,9 @@ import TopNavigation from '../../components/layout/TopNavigation.jsx';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext';
 import { serviceRequestService } from '../../services/ServiceRequestService';
+import PDFViewerComponent from '../../components/PDFViewerComponent';
+import { isEdgeBrowser, createViewerUrl } from '../../utils/documentViewerUtils.jsx';
+
 
 const Services = () => {
   const authContext = useContext(AuthContext);
@@ -41,6 +44,8 @@ const Services = () => {
   // Pagination states for service requests
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsPerPage] = useState(8);
+  const [documentViewerUrl, setDocumentViewerUrl] = useState('');
+  const [showDocumentViewer, setShowDocumentViewer] = useState(false);
 
   // Load user's requests from the database on component mount
   useEffect(() => {
@@ -290,20 +295,33 @@ const Services = () => {
   // Add document download functionality for residents
   const handleDownloadDocument = async (requestId) => {
     try {
+      showToast('Preparing document for download...', 'info');
       const blob = await serviceRequestService.downloadDocument(requestId);
+      
+      // Create a download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `document_${requestId}.pdf`;
+      
+      // Set filename with timestamp for uniqueness
+      const date = new Date().toISOString().split('T')[0];
+      a.download = `document_${requestId}_${date}.pdf`;
+      
+      // Trigger download
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Clean up
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+      
       showToast('Document downloaded successfully', 'success');
     } catch (error) {
       console.error('Error downloading document:', error);
-      showToast('Failed to download document', 'error');
+      showToast(`Failed to download document: ${error.message || 'Unknown error'}`, 'error');
     }
   };
 
@@ -311,17 +329,43 @@ const Services = () => {
   const [showDocPreview, setShowDocPreview] = useState(false);
   const [docPreviewUrl, setDocPreviewUrl] = useState('');
   const [isDocLoading, setIsDocLoading] = useState(false);
+  const [docPreviewError, setDocPreviewError] = useState(null);
 
   const handlePreviewDocument = async (requestId) => {
     setIsDocLoading(true);
+    setDocPreviewError(null);
+    
     try {
-      const blob = await serviceRequestService.downloadDocument(requestId);
-      const url = window.URL.createObjectURL(blob);
-      setDocPreviewUrl(url);
+      console.log(`Starting document preview process for request ID: ${requestId}`);
+      
+      // Check for Edge browser
+      const isEdge = isEdgeBrowser();
+      if (isEdge) {
+        console.log('Microsoft Edge detected - using compatible viewing mode');
+      }
+      
+      // Get the document URL
+      const docUrl = await serviceRequestService.getDocumentPreviewUrl(requestId);
+      
+      // For Microsoft Edge, try to create a specialized URL
+      if (isEdge && !docUrl.startsWith('blob:')) {
+        try {
+          const token = serviceRequestService.getToken();
+          const edgeUrl = await createViewerUrl(docUrl, token);
+          setDocPreviewUrl(edgeUrl);
+        } catch (edgeError) {
+          console.warn('Failed to create Edge-compatible URL:', edgeError);
+          setDocPreviewUrl(docUrl);
+        }
+      } else {
+        setDocPreviewUrl(docUrl);
+      }
+      
       setShowDocPreview(true);
     } catch (error) {
-      console.error('Error previewing document:', error);
-      showToast('Failed to preview document', 'error');
+      console.error('Error setting up document preview:', error);
+      setDocPreviewError(`Error loading document: ${error.message || 'Unknown error'}`);
+      setError('Could not load document preview. Please try again later.');
     } finally {
       setIsDocLoading(false);
     }
@@ -329,11 +373,20 @@ const Services = () => {
 
   // Close document preview
   const closeDocPreview = () => {
-    if (docPreviewUrl) {
-      window.URL.revokeObjectURL(docPreviewUrl);
+    // If we have a blob URL, revoke it to free up memory
+    if (docPreviewUrl && docPreviewUrl.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(docPreviewUrl);
+        console.log('Successfully revoked blob URL');
+      } catch (err) {
+        console.warn('Error revoking URL:', err);
+      }
     }
+    
+    // Reset all state related to document preview
     setShowDocPreview(false);
     setDocPreviewUrl('');
+    setDocPreviewError(null);
   };
 
   const handleEditRequest = (request) => {
@@ -423,6 +476,49 @@ const Services = () => {
       setQrValue(''); // Clear QR value
       setErrors({}); // Clear errors
     }
+  };
+
+  // Handle viewing the attached document
+  const handleViewAttachedDocument = async (requestId) => {
+    try {
+      setIsLoading(true);
+      
+      // Check if we're running in Edge and log a message
+      const isEdge = isEdgeBrowser();
+      if (isEdge) {
+        console.log('Microsoft Edge detected - using Edge-compatible viewing mode for request ID:', requestId);
+      }
+      
+      const documentUrl = await serviceRequestService.getAttachedDocument(requestId);
+      
+      // For Edge, we'll try to create a blob URL which can help bypass some restrictions
+      let displayUrl = documentUrl;
+      if (isEdge && !documentUrl.startsWith('blob:')) {
+        try {
+          // Get token for authenticated fetch
+          const token = serviceRequestService.getToken();
+          displayUrl = await createViewerUrl(documentUrl, token);
+          console.log('Created Edge-compatible document URL');
+        } catch (edgeError) {
+          console.warn('Failed to create Edge-compatible URL:', edgeError);
+          // Continue with original URL
+        }
+      }
+      
+      setDocumentViewerUrl(displayUrl);
+      setShowDocumentViewer(true);
+    } catch (error) {
+      console.error('Error viewing attached document:', error);
+      setError('Failed to load attached document: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Close document viewer
+  const handleCloseDocumentViewer = () => {
+    setShowDocumentViewer(false);
+    setDocumentViewerUrl('');
   };
 
   return (
@@ -698,7 +794,7 @@ const Services = () => {
                           >
                             <span className="sr-only">Next</span>
                             <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10l-3.293-3.293a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                             </svg>
                           </button>
                         </nav>
@@ -1419,6 +1515,19 @@ const Services = () => {
                       Close
                     </button>
                   </div>
+
+                  {/* Document section - Add this section */}
+                  {selectedRequest.attachedDocumentPath && (
+                    <div className="mt-6 border-t border-gray-200 pt-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Attached Document</h4>
+                      <button
+                        onClick={() => handleViewAttachedDocument(selectedRequest.id)}
+                        className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                      >
+                        View Document
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1525,51 +1634,65 @@ const Services = () => {
             </div>
         )}
 
-        {/* Document Preview Modal */}
+        {/* Update the Document Preview Modal with PDFViewerComponent */}
         {showDocPreview && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75"
-               onClick={closeDocPreview}>
-            <div className="relative w-full max-w-4xl h-[80vh] bg-white rounded-lg shadow-xl overflow-hidden"
-                 onClick={(e) => e.stopPropagation()}>
-              <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-white border-b z-10">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                  <svg className="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  Document Preview
-                </h3>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleDownloadDocument(selectedRequest.id)}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    Download
-                  </button>
-                  <button
-                    onClick={closeDocPreview}
-                    className="text-gray-400 hover:text-gray-500"
-                  >
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div className="w-full h-full pt-16 px-2 overflow-auto bg-gray-100">
-                {docPreviewUrl ? (
-                  <iframe
-                    src={docPreviewUrl}
-                    title="Document Preview"
-                    className="w-full h-full border-none"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500">Loading document...</p>
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-75">
+            <div className="bg-white rounded-lg shadow-lg w-11/12 h-5/6 max-w-6xl max-h-screen flex flex-col">
+              <div className="h-full w-full">
+                {docPreviewError ? (
+                  <div className="flex flex-col items-center justify-center h-full bg-gray-100 p-6">
+                    <div className="text-red-600 mb-4">
+                      <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                      </svg>
+                      <h3 className="text-lg font-semibold text-center mt-2">Error Loading Document</h3>
+                    </div>
+                    <p className="text-gray-600 text-center mb-4">{docPreviewError}</p>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => handlePreviewDocument(selectedRequest.id)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Try Again
+                      </button>
+                      <button
+                        onClick={closeDocPreview}
+                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
+                ) : (
+                  <PDFViewerComponent
+                    url={docPreviewUrl}
+                    title="Document Preview"
+                    onClose={closeDocPreview}
+                  />
                 )}
+              </div>
+              <div className="p-2 bg-gray-800 flex justify-between items-center">
+                <button
+                  onClick={closeDocPreview}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Document Viewer Modal - Replace with our improved component */}
+        {showDocumentViewer && (
+          <div className="fixed inset-0 bg-gray-800 bg-opacity-90 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg w-full max-w-6xl h-[80vh] shadow-xl flex flex-col">
+              <div className="flex-1 overflow-hidden">
+                <PDFViewerComponent 
+                  url={documentViewerUrl}
+                  title="Document Viewer"
+                  onClose={handleCloseDocumentViewer}
+                />
               </div>
             </div>
           </div>
