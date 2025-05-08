@@ -777,7 +777,9 @@ const RequestsManagement = () => {
                       <div className="flex space-x-2">
                         {/* View Document Button */}
                         <button
-                          onClick={() => handlePreviewDocument(selectedRequest.id)}
+                          onClick={() => selectedRequest.attachedDocumentPath 
+                            ? handleViewAttachedDocument(selectedRequest.id) 
+                            : handlePreviewDocument(selectedRequest.id)}
                           disabled={isDocLoading}
                           className="inline-flex items-center px-3 py-1.5 border border-indigo-300 text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none"
                         >
@@ -815,19 +817,6 @@ const RequestsManagement = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Document section - Add this section */}
-              {selectedRequest.attachedDocumentPath && (
-                <div className="mt-6 border-t border-gray-200 pt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Attached Document</h4>
-                  <button
-                    onClick={() => handleViewAttachedDocument(selectedRequest.id)}
-                    className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                  >
-                    View Document
-                  </button>
-                </div>
-              )}
 
               {/* Action Buttons */}
               <div className="mt-6 flex flex-wrap justify-end gap-3">
@@ -1153,13 +1142,7 @@ const RequestsManagement = () => {
                 />
               )}
             </div>
-            <div className="bg-gray-800 rounded-b p-3 flex justify-between items-center">
-              <button
-                onClick={toggleViewerType}
-                className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-              >
-                Switch to {viewerType === 'advanced' ? 'Basic' : 'Advanced'} Viewer
-              </button>
+            <div className="bg-gray-800 rounded-b p-3 flex justify-end items-center">
               <button
                 onClick={closeDocPreview}
                 className="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700"
@@ -1175,18 +1158,6 @@ const RequestsManagement = () => {
       {showDocumentViewer && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-90 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg w-full max-w-6xl h-[80vh] shadow-xl flex flex-col">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Document Viewer</h3>
-              <button
-                onClick={handleCloseDocumentViewer}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <span className="sr-only">Close</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
             <div className="flex-1 overflow-hidden">
               {documentViewerUrl ? (
                 <PDFViewerComponent 

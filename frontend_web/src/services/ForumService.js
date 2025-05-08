@@ -6,6 +6,11 @@ const REPORTS_API_URL = 'http://localhost:8080/api/reports';
 class ForumService {
   constructor() {
     this.client = axios.create();
+    this.authContext = null;
+  }
+
+  setAuthContext(context) {
+    this.authContext = context;
   }
 
   // Get the proper JWT token from localStorage

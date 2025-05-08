@@ -37,7 +37,8 @@ const formatDateTime = (dateTimeStr) => {
 };
 
 const ResidentDashboard = () => {
-  const { user } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const { user } = authContext;
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [serviceType, setServiceType] = useState('');
   const [details, setDetails] = useState('');
@@ -54,6 +55,21 @@ const ResidentDashboard = () => {
   const [announcementsError, setAnnouncementsError] = useState(null);
 
   useEffect(() => {
+    // Set AuthContext in services - only if the service has setAuthContext method
+    if (eventService.setAuthContext) {
+      eventService.setAuthContext(authContext);
+    }
+    if (serviceRequestService.setAuthContext) {
+      serviceRequestService.setAuthContext(authContext);
+    }
+    // These services may not have setAuthContext implemented
+    if (typeof announcementService.setAuthContext === 'function') {
+      announcementService.setAuthContext(authContext);
+    }
+    if (typeof forumService.setAuthContext === 'function') {
+      forumService.setAuthContext(authContext);
+    }
+    
     // Connect to WebSocket
     webSocketService.connect();
 

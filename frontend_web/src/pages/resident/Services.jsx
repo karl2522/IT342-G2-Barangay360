@@ -1432,7 +1432,9 @@ const Services = () => {
                               </div>
                               <div className="flex space-x-2">
                                 <button
-                                  onClick={() => handlePreviewDocument(selectedRequest.id)}
+                                  onClick={() => selectedRequest.attachedDocumentPath 
+                                    ? handleViewAttachedDocument(selectedRequest.id) 
+                                    : handlePreviewDocument(selectedRequest.id)}
                                   disabled={isDocLoading}
                                   className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none"
                                 >
@@ -1515,19 +1517,6 @@ const Services = () => {
                       Close
                     </button>
                   </div>
-
-                  {/* Document section - Add this section */}
-                  {selectedRequest.attachedDocumentPath && (
-                    <div className="mt-6 border-t border-gray-200 pt-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Attached Document</h4>
-                      <button
-                        onClick={() => handleViewAttachedDocument(selectedRequest.id)}
-                        className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                      >
-                        View Document
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

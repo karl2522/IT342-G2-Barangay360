@@ -100,7 +100,21 @@ class EventService {
             }
         } else {
             try {
-                const response = await fetch(`${API_URL}/events`);
+                // Add token to the request
+                const token = this.getToken();
+                if (!token) {
+                    await this.ensureValidToken();
+                    const newToken = this.getToken();
+                    if (!newToken) {
+                        throw new Error('No authentication token found');
+                    }
+                }
+
+                const response = await fetch(`${API_URL}/events`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.getToken()}`
+                    }
+                });
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
