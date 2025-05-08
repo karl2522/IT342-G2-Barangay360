@@ -6,6 +6,7 @@ import org.backend.model.User;
 import org.backend.repository.UserRepository;
 import org.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public List<User> getAllUsers() {
@@ -57,5 +61,22 @@ public class UserServiceImpl implements UserService {
         user.setWarnings(0);
         user.setLastWarningDate(null);
         userRepository.save(user);
+    }
+    
+    @Override
+    public boolean changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false;
+        }
+        
+        // Encode and update with new password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        return true;
     }
 } 

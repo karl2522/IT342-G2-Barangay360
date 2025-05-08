@@ -11,4 +11,5 @@ public interface UserService {
     void deleteUser(Long id);
     List<User> getUsersByRoleId(int roleId);
     void activateUser(Long userId);
+    boolean changePassword(Long userId, String currentPassword, String newPassword);
 } 

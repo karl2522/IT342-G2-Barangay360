@@ -23,6 +23,7 @@ import CommunityForum from './pages/resident/CommunityForum.jsx';
 import AppealForm from './pages/resident/AppealForm';
 import EventsManagement from './pages/official/EventsManagement.jsx';
 import ResidentProfile from "./pages/resident/ResidentProfile.jsx";
+import ChangePassword from './pages/auth/ChangePassword.jsx';
 
 // Define a placeholder component for routes that haven't been fully implemented
 const PlaceholderPage = ({ title }) => (
@@ -49,6 +50,16 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            
+            {/* Shared Routes */}
+            <Route 
+              path="/change-password"
+              element={
+                <ProtectedRoute requiredRoles={['ROLE_USER', 'ROLE_OFFICIAL']}>
+                  <ChangePassword />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Resident User Routes */}
             <Route 
