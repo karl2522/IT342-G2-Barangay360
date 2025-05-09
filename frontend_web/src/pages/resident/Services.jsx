@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
 import { DateTime } from 'luxon';
-import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation.jsx';
+import PDFViewerComponent from '../../components/PDFViewerComponent';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext';
 import { serviceRequestService } from '../../services/ServiceRequestService';
-import PDFViewerComponent from '../../components/PDFViewerComponent';
-import { isEdgeBrowser, createViewerUrl } from '../../utils/documentViewerUtils.jsx';
+import { createViewerUrl, isEdgeBrowser } from '../../utils/documentViewerUtils.jsx';
 
 
 const Services = () => {
@@ -867,8 +866,8 @@ const Services = () => {
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
             <div ref={serviceFormModalRef} className="bg-white rounded-lg max-w-xl w-full shadow-xl">
               {/* Original content of the modal */}
-            </div>
-          </div>
+                </div>
+                    </div>
         )}
 
         {/* Request Details Modal */}

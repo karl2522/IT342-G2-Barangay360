@@ -1,7 +1,8 @@
 package org.backend.service;
 
-import org.backend.model.User;
 import java.util.List;
+
+import org.backend.model.User;
 
 public interface UserService {
     List<User> getAllUsers();
@@ -12,4 +13,5 @@ public interface UserService {
     List<User> getUsersByRoleId(int roleId);
     void activateUser(Long userId);
     boolean changePassword(Long userId, String currentPassword, String newPassword);
+    void resetPassword(Long userId, String newPassword);
 } 

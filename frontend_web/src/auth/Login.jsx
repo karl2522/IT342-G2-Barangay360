@@ -24,8 +24,9 @@ const Login = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   
-  // Check if user is already logged in
+  // Check if user is already logged in - only on initial component load
   useEffect(() => {
+    // Initial authentication check, only on component mount
     if (isAuthenticated()) {
       // If already logged in, check user roles directly from localStorage
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -39,7 +40,7 @@ const Login = () => {
         navigate('/resident/dashboard');
       }
     }
-  }, [isAuthenticated, navigate]);
+  }, []); // Empty dependency array means this only runs once on component mount
 
   // Generate QR code login session when QR login is shown
   useEffect(() => {
@@ -406,6 +407,11 @@ const Login = () => {
                       onChange={handleChange}
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#861A2D] focus:border-[#861A2D] sm:text-sm bg-white text-gray-900"
                     />
+                  </div>
+                  <div className="flex justify-end mt-1">
+                    <Link to="/forgot-password" className="text-xs text-[#861A2D] hover:text-[#9b3747] font-medium">
+                      Forgot your password?
+                    </Link>
                   </div>
                 </div>
                 
