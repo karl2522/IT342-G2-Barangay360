@@ -36,15 +36,15 @@
                         android:layout_marginBottom="16dp"/>
 
                 <!-- Community Posts List Header -->
-                <TextView
-                        android:id="@+id/communities_header"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Recent Posts"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="8dp"/>
+<!--                <TextView-->
+<!--                        android:id="@+id/communities_header"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="Recent Posts"-->
+<!--                        android:textSize="18sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        android:textColor="@color/text_primary"-->
+<!--                        android:layout_marginBottom="8dp"/>-->
 
                 <!-- Empty State -->
                 <LinearLayout

@@ -1,6 +1,7 @@
 package com.example.barangay360_mobile.api
 
 import android.content.Context
+import android.util.Log
 import com.example.barangay360_mobile.util.SessionManager
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
@@ -24,18 +25,26 @@ object ApiClient {
     //http://192.168.254.181:8080/
     private const val BASE_URL = "https://barangay360-nja7q.ondigitalocean.app/"
     private lateinit var sessionManager: SessionManager
-    
+
     // Create a proper instance of the logging interceptor (outside of any function)
     private val loggingInterceptor by lazy {
         HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
     }
-    
+
+    val communityFeedService: CommunityFeedService
+        get() = try {
+            retrofit.create(CommunityFeedService::class.java)
+        } catch (e: Exception) {
+            // Fall back to basic retrofit if there's an error
+            createBasicRetrofit().create(CommunityFeedService::class.java)
+        }
+
     // Initialize retrofit with a basic implementation
     // This will be replaced with the authenticated version in init()
     private var retrofit: Retrofit = createBasicRetrofit()
-    
+
     // Service for token refresh operations (using a basic retrofit without auth interceptor)
     private val tokenRefreshService: AuthService by lazy {
         val tempRetrofit = createBasicRetrofit()
@@ -67,11 +76,12 @@ object ApiClient {
                 // Convert to OffsetDateTime using system default zone
                 localDateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime()
             } catch (e: Exception) {
-                null
+                Log.e("ApiClient", "Failed to parse date: ${json.asString}", e) // Add this log
+                null // This will cause dates to be null if parsing fails
             }
         }
     }
-    
+
     // Custom deserializer for Instant
     private class InstantDeserializer : JsonDeserializer<Instant> {
         override fun deserialize(
@@ -92,7 +102,7 @@ object ApiClient {
             }
         }
     }
-    
+
     private fun createBasicRetrofit(): Retrofit {
         try {
             val httpClient = OkHttpClient.Builder()
@@ -124,11 +134,11 @@ object ApiClient {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .build()
-                
+
             val gson = GsonBuilder()
                 .setLenient()
                 .create()
-                
+
             return Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(basicClient)
@@ -136,20 +146,20 @@ object ApiClient {
                 .build()
         }
     }
-    
+
     private fun createAuthenticatedRetrofit(): Retrofit {
         try {
             // Make sure sessionManager is initialized before using it
             if (!::sessionManager.isInitialized) {
                 throw IllegalStateException("ApiClient must be initialized with init() before using authenticated services")
             }
-            
+
             // Create a separate instance of TokenAuthenticator for token refresh
             val tokenAuthenticator = TokenAuthenticator(sessionManager, tokenRefreshService)
-            
+
             // Create a separate instance of AuthInterceptor for adding token to requests
             val authInterceptor = AuthInterceptor(sessionManager)
-            
+
             val httpClient = OkHttpClient.Builder()
                 .apply {
                     // Only add interceptors if they're initialized
@@ -181,7 +191,7 @@ object ApiClient {
     }
 
     // Service interfaces - use the authenticated retrofit instance
-    val authService: AuthService 
+    val authService: AuthService
         get() = try {
             retrofit.create(AuthService::class.java)
         } catch (e: Exception) {
@@ -189,21 +199,21 @@ object ApiClient {
             createBasicRetrofit().create(AuthService::class.java)
         }
 
-    val userService: UserService 
+    val userService: UserService
         get() = try {
             retrofit.create(UserService::class.java)
         } catch (e: Exception) {
             createBasicRetrofit().create(UserService::class.java)
         }
 
-    val announcementService: AnnouncementService 
+    val announcementService: AnnouncementService
         get() = try {
             retrofit.create(AnnouncementService::class.java)
         } catch (e: Exception) {
             createBasicRetrofit().create(AnnouncementService::class.java)
         }
 
-    val serviceRequestService: ServiceRequestService 
+    val serviceRequestService: ServiceRequestService
         get() = try {
             retrofit.create(ServiceRequestService::class.java)
         } catch (e: Exception) {
