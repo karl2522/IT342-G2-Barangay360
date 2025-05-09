@@ -3,38 +3,38 @@
 @tailwind components;
 
 :root {
-  font-family: Inter, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    font-family: Inter, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
 
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom scrollbar styles */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+    width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+    background: #f1f1f1;
+    border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 10px;
+    background: #d1d5db;
+    border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+    background: #9ca3af;
 }
 
 /* Firefox scrollbar */
 .custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #d1d5db #f1f1f1;
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f1f1f1;
 }

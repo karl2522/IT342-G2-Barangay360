@@ -46,6 +46,9 @@ public class ServiceRequest {
     private String generatedDocumentPath; // Path to the generated PDF file
 
     @Column
+    private String attachedDocumentPath; // Path to the attached document file
+
+    @Column
     private LocalDateTime documentGeneratedAt; // When the document was generated
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -63,7 +66,7 @@ public class ServiceRequest {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         status = "PENDING";
-        documentStatus = "NOT_GENERATED";
+        documentStatus = "NOT_GENERATED"; // Initial status: NOT_GENERATED, ATTACHED, GENERATED, DELIVERED
         trackingNumber = generateTrackingNumber();
     }
 
@@ -90,6 +93,14 @@ public class ServiceRequest {
         this.documentStatus = "GENERATED";
         this.approvedBy = official;
         this.status = "APPROVED";
+    }
+
+    // Method to mark document as attached by an official
+    public void markDocumentAsAttached(User official, String attachedDocumentPath) {
+        this.documentStatus = "ATTACHED";
+        this.approvedBy = official;
+        this.attachedDocumentPath = attachedDocumentPath;
+        // Status remains PENDING until the document is generated
     }
 
     // Method to mark document as delivered
@@ -200,6 +211,14 @@ public class ServiceRequest {
 
     public void setGeneratedDocumentPath(String generatedDocumentPath) {
         this.generatedDocumentPath = generatedDocumentPath;
+    }
+
+    public String getAttachedDocumentPath() {
+        return attachedDocumentPath;
+    }
+
+    public void setAttachedDocumentPath(String attachedDocumentPath) {
+        this.attachedDocumentPath = attachedDocumentPath;
     }
 
     public LocalDateTime getDocumentGeneratedAt() {

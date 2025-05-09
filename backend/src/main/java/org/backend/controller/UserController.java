@@ -1,21 +1,25 @@
 package org.backend.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.backend.model.User;
-import org.backend.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.backend.payload.response.MessageResponse;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.backend.security.services.UserDetailsImpl;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import org.backend.model.User;
+import org.backend.payload.request.ChangePasswordRequest;
+import org.backend.payload.response.MessageResponse;
+import org.backend.security.services.UserDetailsImpl;
+import org.backend.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:8080"}, maxAge = 3600)
 @RestController
@@ -203,6 +207,54 @@ public class UserController {
             return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error retrieving profile: " + e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Change user password", description = "Allows users to change their password")
+    @PostMapping("/{userId}/change-password")
+    @PreAuthorize("hasRole('USER') or hasRole('OFFICIAL') or hasRole('ADMIN')")
+    public ResponseEntity<?> changePassword(
+            @PathVariable Long userId,
+            @Valid @RequestBody ChangePasswordRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        // Check if user is updating their own password or is an admin
+        if (!userDetails.getId().equals(userId) && !userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("You can only change your own password"));
+        }
+        
+        try {
+            boolean success = userService.changePassword(
+                    userId,
+                    request.getCurrentPassword(),
+                    request.getNewPassword()
+            );
+            
+            if (success) {
+                return ResponseEntity.ok(new MessageResponse("Password changed successfully"));
+            } else {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(new MessageResponse("Current password is incorrect"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse("Error changing password: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{userId}/reset-password")
+    @PreAuthorize("hasRole('OFFICIAL') or hasRole('ADMIN')")
+    public ResponseEntity<?> resetPassword(@PathVariable Long userId) {
+        try {
+            userService.resetPassword(userId, "123456");
+            return ResponseEntity.ok(new MessageResponse("Password reset to default (123456)"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error resetting password: " + e.getMessage()));
         }
     }
 } 

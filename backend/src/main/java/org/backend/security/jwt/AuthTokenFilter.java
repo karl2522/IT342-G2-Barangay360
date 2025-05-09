@@ -30,7 +30,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
+            // First check for Authorization header
             String jwt = jwtUtils.parseJwt(request);
+            
+            // If no header token found and this is a document viewing endpoint, check for token parameter
+            if (jwt == null && request.getRequestURI().contains("/view-attached-document")) {
+                jwt = request.getParameter("token");
+            }
+            
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
 
