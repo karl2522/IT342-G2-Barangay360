@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.barangay360_mobile.adapter.CommunityPostAdapter
 import com.example.barangay360_mobile.api.ApiClient
 import com.example.barangay360_mobile.api.models.CommunityPostResponse
+import com.example.barangay360_mobile.api.models.UserLikeStub
 import com.example.barangay360_mobile.databinding.FragmentCommunityBinding
 import com.example.barangay360_mobile.util.SessionManager
 import kotlinx.coroutines.launch
@@ -54,16 +55,16 @@ class CommunityFragment : Fragment() {
         communityPostAdapter = CommunityPostAdapter(
             onItemClicked = { post ->
                 Toast.makeText(context, "Clicked on: ${post.title}", Toast.LENGTH_SHORT).show()
+                // Potentially navigate to post details screen
             },
             onLikeClicked = { post ->
-                Toast.makeText(context, "Liked: ${post.title}", Toast.LENGTH_SHORT).show()
+                handleLikeClicked(post)
             },
             onCommentClicked = { post ->
                 Toast.makeText(context, "Comment on: ${post.title}", Toast.LENGTH_SHORT).show()
-            },
-//            onShareClicked = { post ->
-//                sharePost(post)
-//            }
+                // Potentially open a comment dialog or screen
+            }
+            // Share functionality removed
         )
         binding.communitiesRecyclerView.adapter = communityPostAdapter
         binding.communitiesRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -92,9 +93,6 @@ class CommunityFragment : Fragment() {
     private fun loadInitialCommunityPosts() {
         currentPage = 0
         isLastPage = false
-        // It's good practice to clear the adapter or show a loading state for the adapter itself
-        // if your submitList doesn't immediately clear previous items on a new initial load.
-        // However, ListAdapter's submitList should handle replacing the list.
         communityPostAdapter.submitList(emptyList())
         loadCommunityPosts(currentPage)
     }
@@ -102,6 +100,16 @@ class CommunityFragment : Fragment() {
     private fun loadMoreCommunityPosts() {
         currentPage++
         loadCommunityPosts(currentPage)
+    }
+
+    private fun processFetchedPosts(posts: List<CommunityPostResponse>): List<CommunityPostResponse> {
+        val currentUserId = sessionManager.getUserId()?.toLongOrNull()
+        return posts.map { post ->
+            post.isLikedByCurrentUser = currentUserId?.let { userId ->
+                post.likes?.any { it.id == userId }
+            } ?: false
+            post
+        }
     }
 
     private fun loadCommunityPosts(pageToLoad: Int) {
@@ -122,36 +130,33 @@ class CommunityFragment : Fragment() {
 
                 if (response.isSuccessful) {
                     val pageResponse = response.body()
-                    val posts = pageResponse?.content ?: emptyList()
+                    val rawPosts = pageResponse?.content ?: emptyList()
+                    val processedPosts = processFetchedPosts(rawPosts) // Process for liked status
 
-                    Log.d("CommunityFragment", "Fetched ${posts.size} posts. Page: $pageToLoad. Is last page: ${pageResponse?.last}")
-                    posts.forEachIndexed { index, post ->
-                        Log.d("CommunityFragment", "Post $index ID: ${post.id}, Title: ${post.title}, Author: ${post.author?.username}, Likes: ${post.likes?.size}, Comments: ${post.comments?.size}")
+                    Log.d("CommunityFragment", "Fetched ${processedPosts.size} posts. Page: $pageToLoad. Is last page: ${pageResponse?.last}")
+                    processedPosts.forEachIndexed { index, post ->
+                        Log.d("CommunityFragment", "Post $index ID: ${post.id}, Title: ${post.title}, Author: ${post.author?.username}, Likes: ${post.actualLikesCount}, Comments: ${post.actualCommentsCount}, LikedByMe: ${post.isLikedByCurrentUser}")
                     }
 
                     isLastPage = pageResponse?.last ?: true
 
                     val completionCallback = Runnable {
-                        // This code runs after submitList has finished processing
                         Log.d("CommunityFragment", "submitList completed. Adapter itemCount: ${communityPostAdapter.itemCount}")
                         updateEmptyStateVisibility(communityPostAdapter.itemCount == 0, pageToLoad == 0)
                     }
 
                     if (pageToLoad == 0) {
-                        communityPostAdapter.submitList(posts, completionCallback) // Pass the callback
+                        communityPostAdapter.submitList(processedPosts, completionCallback)
                     } else {
                         val currentList = communityPostAdapter.currentList.toMutableList()
-                        currentList.addAll(posts)
-                        communityPostAdapter.submitList(currentList, completionCallback) // Pass the callback
+                        currentList.addAll(processedPosts)
+                        communityPostAdapter.submitList(currentList, completionCallback)
                     }
-                    updateEmptyStateVisibility(communityPostAdapter.itemCount == 0, pageToLoad == 0)
-                    // *******************************************************************
-
                 } else {
                     Log.e("CommunityFragment", "API Error: ${response.code()} - ${response.message()}")
                     if(isAdded) Toast.makeText(requireContext(), "Failed to load posts: ${response.code()}", Toast.LENGTH_SHORT).show()
                     if (pageToLoad == 0) {
-                        communityPostAdapter.submitList(emptyList()) // Ensure list is cleared on error for initial load
+                        communityPostAdapter.submitList(emptyList())
                         updateEmptyStateVisibility(true, true)
                     }
                 }
@@ -162,7 +167,7 @@ class CommunityFragment : Fragment() {
                         if(isAdded) Toast.makeText(requireContext(), "Error loading posts: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
                     if (pageToLoad == 0) {
-                        communityPostAdapter.submitList(emptyList()) // Ensure list is cleared on error for initial load
+                        communityPostAdapter.submitList(emptyList())
                         updateEmptyStateVisibility(true, true)
                     }
                 }
@@ -173,6 +178,75 @@ class CommunityFragment : Fragment() {
             }
         }
     }
+
+    private fun handleLikeClicked(postToLike: CommunityPostResponse) {
+        if (!sessionManager.isLoggedIn()) {
+            Toast.makeText(context, "Please log in to like posts.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        // Optimistic UI update (optional, but makes UI feel responsive)
+        // val originalLikedState = postToLike.isLikedByCurrentUser
+        // val originalLikes = postToLike.likes?.toMutableList() ?: mutableListOf()
+        // val currentUserId = sessionManager.getUserId()?.toLongOrNull()
+
+        // if (originalLikedState) { // If liked, unlike
+        //     postToLike.isLikedByCurrentUser = false
+        //     currentUserId?.let { uid -> originalLikes.removeAll { it.id == uid } }
+        // } else { // If not liked, like
+        //     postToLike.isLikedByCurrentUser = true
+        //     currentUserId?.let { uid -> originalLikes.add(UserLikeStub(id = uid, username = sessionManager.getFirstName())) } // Add basic stub
+        // }
+        // postToLike.likes = originalLikes // Update the list
+        // updatePostInAdapter(postToLike)
+
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.communityFeedService.toggleLikePost(postToLike.id)
+                if (!isAdded) return@launch
+
+                if (response.isSuccessful) {
+                    response.body()?.let { updatedPostFromServer ->
+                        // Process the updated post to set isLikedByCurrentUser correctly
+                        val currentUserId = sessionManager.getUserId()?.toLongOrNull()
+                        updatedPostFromServer.isLikedByCurrentUser = currentUserId?.let { userId ->
+                            updatedPostFromServer.likes?.any { it.id == userId }
+                        } ?: false
+                        Log.d("CommunityFragment", "Like successful. Post ${updatedPostFromServer.id}, LikedByMe: ${updatedPostFromServer.isLikedByCurrentUser}, Likes: ${updatedPostFromServer.actualLikesCount}")
+                        updatePostInAdapter(updatedPostFromServer)
+                    }
+                } else {
+                    // Revert optimistic update if it failed
+                    // postToLike.isLikedByCurrentUser = originalLikedState
+                    // postToLike.likes = originalLikes // Revert the list
+                    // updatePostInAdapter(postToLike)
+                    Log.e("CommunityFragment", "Failed to like post ${postToLike.id}: ${response.code()} - ${response.message()}")
+                    if (isAdded) Toast.makeText(context, "Failed to update like.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                if (isAdded) {
+                    // Revert optimistic update
+                    // postToLike.isLikedByCurrentUser = originalLikedState
+                    // postToLike.likes = originalLikes // Revert the list
+                    // updatePostInAdapter(postToLike)
+                    Log.e("CommunityFragment", "Exception liking post ${postToLike.id}: ${e.message}", e)
+                    Toast.makeText(context, "Error updating like.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun updatePostInAdapter(updatedPost: CommunityPostResponse) {
+        val currentList = communityPostAdapter.currentList.toMutableList()
+        val index = currentList.indexOfFirst { it.id == updatedPost.id }
+        if (index != -1) {
+            currentList[index] = updatedPost
+            communityPostAdapter.submitList(currentList)
+            // No need to call notifyItemChanged explicitly if submitList with a new list is used.
+            // If you were to modify the item in place, you'd use notifyItemChanged(index).
+        }
+    }
+
 
     private fun setLoadingState(loading: Boolean, isInitialLoad: Boolean) {
         if (!isAdded || _binding == null) return
@@ -187,51 +261,24 @@ class CommunityFragment : Fragment() {
 
     private fun updateEmptyStateVisibility(isEmpty: Boolean, isInitialLoad: Boolean) {
         if (!isAdded || _binding == null) return
-
-        if (isInitialLoad) { // Only show/hide empty state on initial load or full refresh
+        Log.d("CommunityFragment", "updateEmptyStateVisibility: isEmpty=$isEmpty, isInitialLoad=$isInitialLoad, adapterItemCount=${communityPostAdapter.itemCount}")
+        if (isInitialLoad) {
             binding.communitiesRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
             binding.emptyStateContainer.visibility = if (isEmpty) View.VISIBLE else View.GONE
-            // Add the log I suggested here if it's not already there:
-            Log.d("CommunityFragment", "updateEmptyStateVisibility (InitialLoad): isEmpty=$isEmpty. RecyclerView Visible: ${binding.communitiesRecyclerView.visibility == View.VISIBLE}, EmptyState Visible: ${binding.emptyStateContainer.visibility == View.VISIBLE}")
+            Log.d("CommunityFragment", "RecyclerView visible: ${binding.communitiesRecyclerView.visibility == View.VISIBLE}, EmptyState visible: ${binding.emptyStateContainer.visibility == View.VISIBLE}")
         } else if (!isEmpty && binding.communitiesRecyclerView.visibility == View.GONE) {
-            // If loading more and it's not empty, and recycler was previously hidden, show it.
             binding.communitiesRecyclerView.visibility = View.VISIBLE
             binding.emptyStateContainer.visibility = View.GONE
-            Log.d("CommunityFragment", "updateEmptyStateVisibility (LoadMore, NotEmpty, RecyclerHidden): RecyclerView Visible: ${binding.communitiesRecyclerView.visibility == View.VISIBLE}, EmptyState Visible: ${binding.emptyStateContainer.visibility == View.VISIBLE}")
+            Log.d("CommunityFragment", "Loading more - RecyclerView visible: ${binding.communitiesRecyclerView.visibility == View.VISIBLE}, EmptyState visible: ${binding.emptyStateContainer.visibility == View.VISIBLE}")
         }
-        // Consider what happens if it's NOT an initial load AND isEmpty IS true
-        // (e.g., user scrolls to load more, but the next page is empty - though isLastPage should prevent this call)
     }
 
-    private fun sharePost(post: CommunityPostResponse) {
-        if (!isAdded) return
-        val shareIntent = Intent(Intent.ACTION_SEND)
-        shareIntent.type = "text/plain"
-
-        val authorName = post.author?.let { "${it.firstName ?: ""} ${it.lastName ?: ""}".trim() }
-            ?: post.author?.username
-            ?: "Anonymous"
-        val displayDate = (post.updatedAt ?: post.createdAt)?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "N/A"
-
-        val shareContent = """
-            Check out this post from the Barangay360 Community!
-            
-            Title: ${post.title ?: "No Title"}
-            By: $authorName
-            Date: $displayDate
-
-            ${post.content ?: ""}
-
-            - Shared from Barangay360 App
-        """.trimIndent()
-        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "[Barangay360 Community] ${post.title ?: "Post"}")
-        shareIntent.putExtra(Intent.EXTRA_TEXT, shareContent)
-        startActivity(Intent.createChooser(shareIntent, "Share Post"))
-    }
+    // SharePost function removed as per user request to remove share button.
+    // If you re-add share, make sure to define this function again.
 
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.communitiesRecyclerView.adapter = null // Clear adapter reference
+        binding.communitiesRecyclerView.adapter = null
         _binding = null
     }
 
