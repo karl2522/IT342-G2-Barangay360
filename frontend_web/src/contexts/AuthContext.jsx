@@ -212,7 +212,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/signin', {
+      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -338,7 +338,7 @@ export const AuthProvider = ({ children }) => {
         roles: userData.role === 'official' ? ['official'] : ['resident']
       };
 
-      const response = await fetch('http://localhost:8080/api/auth/signup', {
+      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -365,7 +365,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Call logout endpoint if user is logged in
       if (user && user.id) {
-        await fetch('http://localhost:8080/api/auth/signout', {
+        await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/signout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
