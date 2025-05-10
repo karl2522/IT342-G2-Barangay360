@@ -62,7 +62,7 @@ class CommunityFragment : Fragment() {
         communityPostAdapter = CommunityPostAdapter(
             lifecycleOwner = viewLifecycleOwner,
             onItemClicked = { post ->
-                Toast.makeText(context, "Clicked on post: ${post.title}", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "Clicked on post: ${post.title}", Toast.LENGTH_SHORT).show()
             },
             onLikePostClicked = { post ->
                 handleLikePost(post)

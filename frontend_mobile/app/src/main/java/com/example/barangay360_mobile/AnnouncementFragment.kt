@@ -72,7 +72,7 @@ class AnnouncementFragment : Fragment() {
     private fun setupRecyclerView() {
         recyclerView.layoutManager = LinearLayoutManager(context)
         announcementsAdapter = AnnouncementAdapter { announcement ->
-            viewAnnouncementDetails(announcement)
+//            viewAnnouncementDetails(announcement)
         }
         recyclerView.adapter = announcementsAdapter
     }
@@ -218,10 +218,10 @@ class AnnouncementFragment : Fragment() {
         startActivity(Intent.createChooser(shareIntent, "Share Announcement"))
     }
 
-    private fun viewAnnouncementDetails(announcement: AnnouncementResponse) {
-        if (!isAdded) return
-        Toast.makeText(requireContext(), "Viewing announcement: ${announcement.title ?: "N/A"}", Toast.LENGTH_SHORT).show()
-    }
+//    private fun viewAnnouncementDetails(announcement: AnnouncementResponse) {
+//        if (!isAdded) return
+//        Toast.makeText(requireContext(), "Viewing announcement: ${announcement.title ?: "N/A"}", Toast.LENGTH_SHORT).show()
+//    }
 
     // ======== ADD THIS COMPANION OBJECT ========
     companion object {
