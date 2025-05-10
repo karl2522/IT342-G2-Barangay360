@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/tv_comment_author"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Commenter Name"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/tv_comment_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Just now"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+        </LinearLayout>
+
+        <ImageButton
+                android:id="@+id/btn_like_comment_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_thumb_up"
+                app:tint="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="6dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Like comment"/>
+
+        <TextView
+                android:id="@+id/tv_comment_like_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="0"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginStart="4dp"/>
+
+    </LinearLayout>
+
+    <TextView
+            android:id="@+id/tv_comment_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            tools:text="This is a sample comment. It can be a bit longer to see how it wraps."
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+</LinearLayout>

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -29,7 +28,8 @@
                     android:layout_height="wrap_content"
                     tools:text="Juan Dela Cruz"
                     android:textColor="@color/text_primary"
-                    android:textSize="14sp"  android:textStyle="bold" />
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
             <TextView
                     android:id="@+id/community_post_date"
@@ -37,16 +37,20 @@
                     android:layout_height="wrap_content"
                     tools:text="Posted 2 hours ago"
                     android:textColor="@color/text_secondary"
-                    android:textSize="10sp" tools:ignore="SmallSp" />
+                    android:textSize="10sp"
+                    tools:ignore="SmallSp" />
         </LinearLayout>
 
         <TextView
                 android:id="@+id/community_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/community_post_header" android:layout_marginTop="8dp" tools:text="Suggestion for Basketball Court Schedule"
+                android:layout_below="@id/community_post_header"
+                android:layout_marginTop="8dp"
+                tools:text="Suggestion for Basketball Court Schedule"
                 android:textColor="@color/maroon"
-                android:textSize="18sp" android:textStyle="bold" />
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
         <TextView
                 android:id="@+id/community_description"
@@ -106,7 +110,6 @@
                 android:layout_marginTop="8dp"
                 android:background="@color/card_stroke" />
 
-
         <LinearLayout
                 android:id="@+id/community_reaction_buttons"
                 android:layout_width="match_parent"
@@ -135,7 +138,6 @@
                     android:layout_marginStart="4dp"
                     android:layout_marginEnd="24dp"/>
 
-
             <ImageButton
                     android:id="@+id/btn_comment_icon"
                     android:layout_width="wrap_content"
@@ -154,5 +156,70 @@
                     android:textSize="14sp"
                     android:layout_marginStart="4dp"/>
         </LinearLayout>
+
+        <View
+                android:id="@+id/divider_before_comments"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/community_reaction_buttons"
+                android:layout_marginTop="12dp"
+                android:background="@color/card_stroke"
+                android:visibility="gone"/>
+
+        <TextView
+                android:id="@+id/tv_comments_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/divider_before_comments"
+                android:text="Comments"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"
+                android:visibility="gone"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_comments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_comments_header"
+                android:layout_marginTop="4dp"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_comment"
+                tools:itemCount="2"
+                android:visibility="gone"/>
+
+        <LinearLayout
+                android:id="@+id/layout_add_comment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_below="@id/rv_comments"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+            <EditText
+                    android:id="@+id/et_comment_input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Add a comment..."
+                    android:textSize="14sp"
+                    android:padding="10dp"
+                    android:background="@drawable/rounded_edittext_background_shape"/>
+
+            <ImageButton
+                    android:id="@+id/btn_send_comment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@android:drawable/ic_menu_send"
+                    app:tint="@color/maroon"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="8dp"
+                    android:contentDescription="Send comment"/>
+        </LinearLayout>
+
     </RelativeLayout>
 </androidx.cardview.widget.CardView>

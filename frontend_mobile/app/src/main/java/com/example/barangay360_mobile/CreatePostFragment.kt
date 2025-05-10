@@ -150,9 +150,9 @@ class CreatePostFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.toolbarCreatePost.setNavigationOnClickListener {
-            findNavController().popBackStack()
-        }
+//        binding.toolbarCreatePost.setNavigationOnClickListener {
+//            findNavController().popBackStack()
+//        }
 
         binding.btnAddImage.setOnClickListener {
             showImageSourceDialog()
