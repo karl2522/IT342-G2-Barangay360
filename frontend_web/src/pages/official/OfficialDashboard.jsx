@@ -21,7 +21,7 @@ const OfficialDashboard = () => {
   const [error, setError] = useState(null);
 
   // API URL
-  const API_URL = 'http://localhost:8080/api';
+  const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api';
 
   // Get token from localStorage
   const getToken = () => {
