@@ -448,6 +448,34 @@
                                 android:background="@color/card_stroke" />
                         </LinearLayout>
 
+                        <!-- Dark Mode Toggle -->
+                        <RelativeLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="16dp"
+                                android:paddingTop="8dp"
+                                android:paddingBottom="8dp"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:background="?attr/selectableItemBackground">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_centerVertical="true"
+                                    android:text="Dark Mode"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="16sp"/>
+
+                            <androidx.appcompat.widget.SwitchCompat
+                                    android:id="@+id/switch_dark_mode_profile"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentEnd="true"
+                                    android:layout_centerVertical="true"/>
+                        </RelativeLayout>
+
 <!--                        <Button-->
 <!--                            android:id="@+id/btn_change_password"-->
 <!--                            style="@style/Widget.MaterialComponents.Button.TextButton"-->

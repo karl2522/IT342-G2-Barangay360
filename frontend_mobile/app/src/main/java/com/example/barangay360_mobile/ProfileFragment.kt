@@ -1,4 +1,3 @@
-// File: com/example/barangay360_mobile/ProfileFragment.kt
 package com.example.barangay360_mobile
 
 import android.content.Intent
@@ -11,15 +10,15 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-// import androidx.core.content.ContextCompat // Keep if used for role badge styling
+import androidx.appcompat.widget.SwitchCompat // Added import
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-// import androidx.swiperefreshlayout.widget.SwipeRefreshLayout // Not directly used via binding if root is SwipeRefresh
 import com.example.barangay360_mobile.api.ApiClient
 import com.example.barangay360_mobile.api.models.ServiceRequestResponse
 import com.example.barangay360_mobile.api.models.UserProfile
 import com.example.barangay360_mobile.databinding.FragmentProfileBinding // Using ViewBinding
 import com.example.barangay360_mobile.util.SessionManager
+import com.example.barangay360_mobile.util.ThemeManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import java.util.Locale // For toLowerCase
@@ -30,6 +29,7 @@ class ProfileFragment : Fragment() {
     private val binding get() = _binding!! // Property delegate to access binding
 
     private lateinit var sessionManager: SessionManager
+    private lateinit var darkModeSwitch: SwitchCompat // Declare SwitchCompat
 
     // TextViews for service request counts - Initialized in onCreateView
     private lateinit var pendingCountTextView: TextView
@@ -47,13 +47,14 @@ class ProfileFragment : Fragment() {
         // Initialize views for service request counts from binding
         // CRITICAL: Ensure these IDs exist in your fragment_profile.xml
         try {
-            pendingCountTextView = binding.pendingCount   // e.g., android:id="@+id/pending_count"
-            approvedCountTextView = binding.approvedCount // e.g., android:id="@+id/approved_count"
-            rejectedCountTextView = binding.rejectedCount // e.g., android:id="@+id/rejected_count"
-            btnViewDocuments = binding.btnViewDocuments     // e.g., android:id="@+id/btn_view_documents"
+            pendingCountTextView = binding.pendingCount
+            approvedCountTextView = binding.approvedCount
+            rejectedCountTextView = binding.rejectedCount
+            btnViewDocuments = binding.btnViewDocuments
+            darkModeSwitch = binding.switchDarkModeProfile // Initialize the switch
         } catch (e: Exception) {
-            Log.e("ProfileFragment", "CRITICAL: Service count TextViews or btnViewDocuments not found. Check fragment_profile.xml IDs.", e)
-            Toast.makeText(context, "Layout error: Profile service count views missing.", Toast.LENGTH_LONG).show()
+            Log.e("ProfileFragment", "CRITICAL: One or more views (pendingCount, approvedCount, rejectedCount, btnViewDocuments, switchDarkModeProfile) not found. Check fragment_profile.xml IDs.", e)
+            Toast.makeText(context, "Layout error: Profile views missing.", Toast.LENGTH_LONG).show()
         }
 
         return binding.root
@@ -65,9 +66,11 @@ class ProfileFragment : Fragment() {
         // Setup UI listeners and initial data load
         setupSwipeRefresh()
         setupButtonListeners() // Consolidated button setup
+        setupDarkModeSwitch() // Setup for the dark mode switch
 
         fetchProfileDataAndServiceRequests() // Fetches both profile and service requests
     }
+
 
     private fun setupSwipeRefresh() {
         binding.swipeRefreshLayout.setColorSchemeResources(
@@ -80,15 +83,40 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun setupDarkModeSwitch() {
+        if (!::darkModeSwitch.isInitialized) {
+            Log.e("ProfileFragment", "darkModeSwitch was not initialized. Cannot set up dark mode toggle.")
+            return
+        }
+        // Set switch initial state based on current theme
+        darkModeSwitch.isChecked = ThemeManager.isDarkModeEnabled(requireContext())
+
+        // Set up switch listener
+        darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            ThemeManager.toggleDarkMode(requireContext(), isChecked)
+
+            // Optional: Show a toast message
+            val message = if (isChecked) "Dark mode enabled" else "Light mode enabled"
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+
+            // It's good practice to recreate the activity to apply theme changes thoroughly,
+            // especially if not all UI elements update dynamically.
+            // However, ThemeManager.toggleDarkMode already calls AppCompatDelegate.setDefaultNightMode,
+            // which should trigger a configuration change.
+            // If you find inconsistencies, you might need:
+            // activity?.recreate()
+        }
+    }
+
     private fun setupButtonListeners() {
         // Edit Profile Button
         binding.btnEditProfile.setOnClickListener {
             navigateToEditProfile()
         }
 
-        // Back Button
+        // Back Button - Modified to go to HomeFragment
         binding.profileBtnBack.setOnClickListener {
-            activity?.onBackPressedDispatcher?.onBackPressed()
+            navigateToHomeFragment()
         }
 
         // "View Document History" Button
@@ -101,12 +129,13 @@ class ProfileFragment : Fragment() {
             Log.e("ProfileFragment", "btnViewDocuments was not initialized. Check its ID in fragment_profile.xml.")
         }
 
-
         // Other Account Buttons (Logout, Change Password, Help)
         // These are assumed to be part of your existing layout and binding
         binding.btnLogout.setOnClickListener {
             logout()
         }
+
+
 //        binding.btnChangePassword?.setOnClickListener { // Optional chaining if not always present
 //            Toast.makeText(context, "Change Password clicked", Toast.LENGTH_SHORT).show()
 //        }
@@ -124,6 +153,16 @@ class ProfileFragment : Fragment() {
         //        Toast.makeText(context, "System Settings clicked", Toast.LENGTH_SHORT).show()
         //    }
         // }
+    }
+
+    private fun navigateToHomeFragment() {
+        // Replace current fragment with HomeFragment
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, HomeFragment.newInstance()) // Assuming HomeFragment has newInstance()
+            .commit()
+
+        // Update BottomNavigationView to select the "Home" tab
+        (activity as? HomeActivity)?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)?.selectedItemId = R.id.home // Ensure R.id.home is correct
     }
 
     private fun navigateToServicesFragment() {
