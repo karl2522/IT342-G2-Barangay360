@@ -39,7 +39,7 @@ const ReportManagement = () => {
       }
 
       // Use the combined all reports endpoint instead of separate endpoints
-      let url = `http://localhost:8080/api/reports/all?page=${currentPage}&size=10`;
+      let url = `https://barangay360-nja7q.ondigitalocean.app/api/reports/all?page=${currentPage}&size=10`;
 
       // Apply filters
       if (statusFilter !== 'ALL') {

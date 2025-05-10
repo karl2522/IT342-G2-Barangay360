@@ -106,7 +106,7 @@ const Login = () => {
   // Function to generate a new QR login session
   const generateQRLoginSession = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/qr/create', {
+      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/qr/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

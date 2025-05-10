@@ -49,7 +49,7 @@ const AppealsManagement = () => {
   const fetchAppeals = async () => {
     try {
       setLoading(true);
-      const response = await handleApiRequest('http://localhost:8080/api/appeals', {
+      const response = await handleApiRequest('https://barangay360-nja7q.ondigitalocean.app/api/appeals', {
         method: 'GET',
       });
 
@@ -108,7 +108,7 @@ const AppealsManagement = () => {
     const appealId = selectedAppeal.id;
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`http://localhost:8080/api/appeals/${appealId}/approve`, {
+      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/appeals/${appealId}/approve`, {
         method: 'POST',
       });
       if (response.ok) {
@@ -133,7 +133,7 @@ const AppealsManagement = () => {
     const appealId = selectedAppeal.id;
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`http://localhost:8080/api/appeals/${appealId}/reject`, {
+      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/appeals/${appealId}/reject`, {
         method: 'POST',
       });
 

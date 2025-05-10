@@ -80,10 +80,10 @@ export const getProxyUrl = (originalUrl) => {
   }
   
   // Check if the API URL includes our backend domain
-  if (originalUrl.includes('localhost:8080/api')) {
+  if (originalUrl.includes('https://barangay360-nja7q.ondigitalocean.app/api')) {
     // Use a relative URL approach to avoid CORS
     // This works if properly configured in vite.config.js
-    return originalUrl.replace('http://localhost:8080/api', '/api');
+    return originalUrl.replace('https://barangay360-nja7q.ondigitalocean.app/api', '/api');
   }
   
   return originalUrl;
