@@ -26,7 +26,7 @@ const AppealForm = () => {
       // TODO: Update API endpoint if necessary. Assuming a new endpoint /api/appeals or similar
       // that accepts username in the body instead of ID in the path.
       // For now, demonstrating sending username in the body.
-      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/appeals`, { // Changed endpoint
+      const response = await fetch(`http://localhost:8080/api/appeals`, { // Changed endpoint
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

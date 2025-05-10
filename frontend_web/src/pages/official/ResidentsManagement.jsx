@@ -1,11 +1,11 @@
-import { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useContext, useEffect, useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
-import { useToast } from '../../contexts/ToastContext';
 import TopNavigation from '../../components/layout/TopNavigation';
+import { AuthContext } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 
 const ResidentsManagement = () => {
-  const { handleApiRequest, hasRole } = useContext(AuthContext);
+  const { handleApiRequest } = useContext(AuthContext);
   const { showToast } = useToast();
   const [residents, setResidents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,7 @@ const ResidentsManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [warningReason, setWarningReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
 
   useEffect(() => {
     fetchResidents();
@@ -30,7 +31,7 @@ const ResidentsManagement = () => {
       const token = JSON.parse(localStorage.getItem('token'));
       console.log('Fetching residents with token:', token); // Debug log
 
-      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/users/residents', {
+      const response = await fetch('http://localhost:8080/api/users/residents', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token.token}`,
@@ -90,7 +91,7 @@ const ResidentsManagement = () => {
     try {
       setIsSubmitting(true);
       const token = JSON.parse(localStorage.getItem('token'));
-      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/warn`, {
+      const response = await fetch(`http://localhost:8080/api/users/${userId}/warn`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token.token}`,
@@ -118,7 +119,7 @@ const ResidentsManagement = () => {
   const handleActivateUser = async (userId) => {
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/activate`, {
+      const response = await handleApiRequest(`http://localhost:8080/api/users/${userId}/activate`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ const ResidentsManagement = () => {
   const handleDeactivateUser = async (userId) => {
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/deactivate`, {
+      const response = await handleApiRequest(`http://localhost:8080/api/users/${userId}/deactivate`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -171,7 +172,7 @@ const ResidentsManagement = () => {
     try {
       setIsSubmitting(true);
       const token = JSON.parse(localStorage.getItem('token'));
-      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}`, {
+      const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token.token}`,
@@ -193,37 +194,32 @@ const ResidentsManagement = () => {
     }
   };
 
-  // Activate Modal (Keep for potential future use or reference, but button is removed)
-  const ActivateConfirmationModal = ({ show, onClose, onConfirm, userName, isSubmitting }) => {
-    // ... (modal implementation)
+  const handleResetPassword = async (userId) => {
+    try {
+      setIsSubmitting(true);
+      const token = JSON.parse(localStorage.getItem('token'));
+      const response = await fetch(`http://localhost:8080/api/users/${userId}/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token.token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to reset password');
+      }
+
+      showToast('Password reset to default (123456)', 'success');
+      setShowResetPasswordModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      showToast('Failed to reset password: ' + error.message, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  // Deactivate Modal
-  const DeactivateConfirmationModal = ({ show, onClose, onConfirm, userName, isSubmitting }) => (
-    // ... (modal implementation - using &apos; for apostrophe)
-    <p className="text-sm text-gray-600">
-      Are you sure you want to deactivate {userName}&apos;s account? They will need to submit an appeal to regain access.
-    </p>
-    // ... (rest of modal)
-  );
-
-  // Warn Modal
-  const WarnConfirmationModal = ({ show, onClose, onConfirm, userName, isSubmitting }) => (
-    // ... (modal implementation - using &apos; for apostrophe)
-    <p className="text-sm text-gray-600">
-      Are you sure you want to issue a warning to {userName}&apos;s account? This may lead to deactivation if they reach 3 warnings.
-    </p>
-    // ... (rest of modal)
-  );
-
-  // Delete Modal
-  const DeleteConfirmationModal = ({ show, onClose, onConfirm, userName, isSubmitting }) => (
-    // ... (modal implementation - using &apos; for apostrophe)
-    <p className="text-sm text-gray-600">
-      Are you sure you want to permanently delete {userName}&apos;s account? This action cannot be undone.
-    </p>
-    // ... (rest of modal)
-  );
 
   return (
     <div className="min-h-screen bg-gray-100 flex w-full">
@@ -363,6 +359,19 @@ const ResidentsManagement = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                               Delete
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedUser(resident);
+                                setShowResetPasswordModal(true);
+                              }}
+                              className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150"
+                              title="Reset Password"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0-1.104.896-2 2-2s2 .896 2 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2c0-1.104.896-2 2-2z" />
+                              </svg>
+                              Reset Password
                             </button>
                           </div>
                         </td>
@@ -509,7 +518,7 @@ const ResidentsManagement = () => {
               
               <div className="mt-2">
                 <p className="text-sm text-gray-600">
-                  Are you sure you want to activate {selectedUser.firstName} {selectedUser.lastName}'s account? This will allow them to access the system again.
+                  Are you sure you want to activate {selectedUser.firstName} {selectedUser.lastName}&apos;s account? This will allow them to access the system again.
                 </p>
               </div>
               
@@ -550,7 +559,7 @@ const ResidentsManagement = () => {
               
               <div className="mt-2">
                 <p className="text-sm text-gray-600">
-                  Are you sure you want to deactivate {selectedUser.firstName} {selectedUser.lastName}'s account? This will prevent them from accessing the system.
+                  Are you sure you want to deactivate {selectedUser.firstName} {selectedUser.lastName}&apos;s account? This will prevent them from accessing the system.
                 </p>
               </div>
               
@@ -591,7 +600,7 @@ const ResidentsManagement = () => {
               
               <div className="mt-2">
                 <p className="text-sm text-gray-600">
-                  Are you sure you want to permanently delete {selectedUser.firstName} {selectedUser.lastName}'s account? This action cannot be undone and all associated data will be permanently removed.
+                  Are you sure you want to permanently delete {selectedUser.firstName} {selectedUser.lastName}&apos;s account? This action cannot be undone and all associated data will be permanently removed.
                 </p>
               </div>
               
@@ -612,6 +621,45 @@ const ResidentsManagement = () => {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Deleting...' : 'Delete Account'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {showResetPasswordModal && selectedUser && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="text-center">
+              <svg className="mx-auto h-12 w-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0-1.104.896-2 2-2s2 .896 2 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2c0-1.104.896-2 2-2z" />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-900 mt-4">Reset Password</h3>
+              <div className="mt-2">
+                <p className="text-sm text-gray-600">
+                  Are you sure you want to reset the password for {selectedUser.firstName} {selectedUser.lastName}?<br />
+                  The new password will be <span className="font-bold">123456</span>.
+                </p>
+              </div>
+              <div className="mt-6 flex justify-center space-x-3">
+                <button
+                  onClick={() => {
+                    setShowResetPasswordModal(false);
+                    setSelectedUser(null);
+                  }}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleResetPassword(selectedUser.id)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Resetting...' : 'Reset Password'}
                 </button>
               </div>
             </div>

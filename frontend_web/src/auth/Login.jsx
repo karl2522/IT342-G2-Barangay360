@@ -24,8 +24,9 @@ const Login = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   
-  // Check if user is already logged in
+  // Check if user is already logged in - only on initial component load
   useEffect(() => {
+    // Initial authentication check, only on component mount
     if (isAuthenticated()) {
       // If already logged in, check user roles directly from localStorage
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -39,7 +40,7 @@ const Login = () => {
         navigate('/resident/dashboard');
       }
     }
-  }, [isAuthenticated, navigate]);
+  }, []); // Empty dependency array means this only runs once on component mount
 
   // Generate QR code login session when QR login is shown
   useEffect(() => {
@@ -105,7 +106,7 @@ const Login = () => {
   // Function to generate a new QR login session
   const generateQRLoginSession = async () => {
     try {
-      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/qr/create', {
+      const response = await fetch('http://localhost:8080/api/auth/qr/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -138,7 +139,7 @@ const Login = () => {
   // Function to check if mobile device has authenticated the QR login
   const checkQRLoginStatus = async () => {
     try {
-      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/auth/qr/status/${qrLoginSessionId}`, {
+      const response = await fetch(`http://localhost:8080/api/auth/qr/status/${qrLoginSessionId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -406,6 +407,11 @@ const Login = () => {
                       onChange={handleChange}
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#861A2D] focus:border-[#861A2D] sm:text-sm bg-white text-gray-900"
                     />
+                  </div>
+                  <div className="flex justify-end mt-1">
+                    <Link to="/forgot-password" className="text-xs text-[#861A2D] hover:text-[#9b3747] font-medium">
+                      Forgot your password?
+                    </Link>
                   </div>
                 </div>
                 

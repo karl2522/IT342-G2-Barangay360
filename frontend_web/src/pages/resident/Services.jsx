@@ -1,11 +1,13 @@
-import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { DateTime } from 'luxon';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar.jsx';
 import TopNavigation from '../../components/layout/TopNavigation.jsx';
+import PDFViewerComponent from '../../components/PDFViewerComponent';
 import { AuthContext } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext';
 import { serviceRequestService } from '../../services/ServiceRequestService';
-import { DateTime } from 'luxon';
+import { createViewerUrl, isEdgeBrowser } from '../../utils/documentViewerUtils.jsx';
+
 
 const Services = () => {
   const authContext = useContext(AuthContext);
@@ -41,6 +43,70 @@ const Services = () => {
   // Pagination states for service requests
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsPerPage] = useState(8);
+  const [documentViewerUrl, setDocumentViewerUrl] = useState('');
+  const [showDocumentViewer, setShowDocumentViewer] = useState(false);
+  
+  // Add document preview functionality - MOVED UP before the useEffect that uses these
+  const [showDocPreview, setShowDocPreview] = useState(false);
+  const [docPreviewUrl, setDocPreviewUrl] = useState('');
+  const [isDocLoading, setIsDocLoading] = useState(false);
+  const [docPreviewError, setDocPreviewError] = useState(null);
+
+  // Add refs for detecting clicks outside modals
+  const requestDetailsModalRef = useRef(null);
+  const documentViewerModalRef = useRef(null);
+  const docPreviewModalRef = useRef(null);
+  const cancelModalRef = useRef(null);
+  const serviceFormModalRef = useRef(null);
+  
+  // Handle clicks outside modal
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // For Request Details Modal
+      if (selectedRequest && 
+          requestDetailsModalRef.current && 
+          !requestDetailsModalRef.current.contains(event.target)) {
+        handleCloseRequest();
+      }
+      
+      // For Document Viewer Modal
+      if (showDocumentViewer && 
+          documentViewerModalRef.current && 
+          !documentViewerModalRef.current.contains(event.target)) {
+        handleCloseDocumentViewer();
+      }
+      
+      // For Document Preview Modal
+      if (showDocPreview && 
+          docPreviewModalRef.current && 
+          !docPreviewModalRef.current.contains(event.target)) {
+        closeDocPreview();
+      }
+      
+      // For Cancel Confirmation Modal
+      if (showCancelModal && 
+          cancelModalRef.current && 
+          !cancelModalRef.current.contains(event.target) &&
+          !isCancelling) {
+        setShowCancelModal(false);
+        setCancelReason('');
+        setRequestToCancel(null);
+      }
+      
+      // For Service Request Form Modal
+      if (showModal && 
+          serviceFormModalRef.current && 
+          !serviceFormModalRef.current.contains(event.target) && 
+          !isSubmitting) {
+        closeModal();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedRequest, showDocumentViewer, showDocPreview, showCancelModal, isCancelling, showModal, isSubmitting]);
 
   // Load user's requests from the database on component mount
   useEffect(() => {
@@ -287,6 +353,97 @@ const Services = () => {
     setSelectedRequest(null);
   };
 
+  // Add document download functionality for residents
+  const handleDownloadDocument = async (requestId) => {
+    try {
+      showToast('Preparing document for download...', 'info');
+      const blob = await serviceRequestService.downloadDocument(requestId);
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      
+      // Set filename with timestamp for uniqueness
+      const date = new Date().toISOString().split('T')[0];
+      a.download = `document_${requestId}_${date}.pdf`;
+      
+      // Trigger download
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+      
+      showToast('Document downloaded successfully', 'success');
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      showToast(`Failed to download document: ${error.message || 'Unknown error'}`, 'error');
+    }
+  };
+
+  const handlePreviewDocument = async (requestId) => {
+    setIsDocLoading(true);
+    setDocPreviewError(null);
+    
+    try {
+      console.log(`Starting document preview process for request ID: ${requestId}`);
+      
+      // Check for Edge browser
+      const isEdge = isEdgeBrowser();
+      if (isEdge) {
+        console.log('Microsoft Edge detected - using compatible viewing mode');
+      }
+      
+      // Get the document URL
+      const docUrl = await serviceRequestService.getDocumentPreviewUrl(requestId);
+      
+      // For Microsoft Edge, try to create a specialized URL
+      if (isEdge && !docUrl.startsWith('blob:')) {
+        try {
+          const token = serviceRequestService.getToken();
+          const edgeUrl = await createViewerUrl(docUrl, token);
+          setDocPreviewUrl(edgeUrl);
+        } catch (edgeError) {
+          console.warn('Failed to create Edge-compatible URL:', edgeError);
+          setDocPreviewUrl(docUrl);
+        }
+      } else {
+        setDocPreviewUrl(docUrl);
+      }
+      
+      setShowDocPreview(true);
+    } catch (error) {
+      console.error('Error setting up document preview:', error);
+      setDocPreviewError(`Error loading document: ${error.message || 'Unknown error'}`);
+      setError('Could not load document preview. Please try again later.');
+    } finally {
+      setIsDocLoading(false);
+    }
+  };
+
+  // Close document preview
+  const closeDocPreview = () => {
+    // If we have a blob URL, revoke it to free up memory
+    if (docPreviewUrl && docPreviewUrl.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(docPreviewUrl);
+        console.log('Successfully revoked blob URL');
+      } catch (err) {
+        console.warn('Error revoking URL:', err);
+      }
+    }
+    
+    // Reset all state related to document preview
+    setShowDocPreview(false);
+    setDocPreviewUrl('');
+    setDocPreviewError(null);
+  };
+
   const handleEditRequest = (request) => {
     setFormData({
       serviceType: request.serviceType,
@@ -374,6 +531,49 @@ const Services = () => {
       setQrValue(''); // Clear QR value
       setErrors({}); // Clear errors
     }
+  };
+
+  // Handle viewing the attached document
+  const handleViewAttachedDocument = async (requestId) => {
+    try {
+      setIsLoading(true);
+      
+      // Check if we're running in Edge and log a message
+      const isEdge = isEdgeBrowser();
+      if (isEdge) {
+        console.log('Microsoft Edge detected - using Edge-compatible viewing mode for request ID:', requestId);
+      }
+      
+      const documentUrl = await serviceRequestService.getAttachedDocument(requestId);
+      
+      // For Edge, we'll try to create a blob URL which can help bypass some restrictions
+      let displayUrl = documentUrl;
+      if (isEdge && !documentUrl.startsWith('blob:')) {
+        try {
+          // Get token for authenticated fetch
+          const token = serviceRequestService.getToken();
+          displayUrl = await createViewerUrl(documentUrl, token);
+          console.log('Created Edge-compatible document URL');
+        } catch (edgeError) {
+          console.warn('Failed to create Edge-compatible URL:', edgeError);
+          // Continue with original URL
+        }
+      }
+      
+      setDocumentViewerUrl(displayUrl);
+      setShowDocumentViewer(true);
+    } catch (error) {
+      console.error('Error viewing attached document:', error);
+      setError('Failed to load attached document: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Close document viewer
+  const handleCloseDocumentViewer = () => {
+    setShowDocumentViewer(false);
+    setDocumentViewerUrl('');
   };
 
   return (
@@ -649,7 +849,7 @@ const Services = () => {
                           >
                             <span className="sr-only">Next</span>
                             <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10l-3.293-3.293a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                             </svg>
                           </button>
                         </nav>
@@ -663,543 +863,17 @@ const Services = () => {
 
         {/* Modal for New Service Request */}
         {showModal && (
-            <div className="fixed inset-0 z-50 overflow-y-auto">
-              <div className="flex items-center justify-center min-h-screen px-4 py-6 text-center">
-                <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={closeModal}>
-                  <div className="absolute inset-0 bg-gray-900 opacity-75"></div>
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div ref={serviceFormModalRef} className="bg-white rounded-lg max-w-xl w-full shadow-xl">
+              {/* Original content of the modal */}
                 </div>
-
-                {/* Modal content */}
-                <div className="inline-block w-full max-w-md overflow-hidden text-left align-middle transition-all transform bg-white shadow-2xl rounded-xl">
-                  <div className="bg-[#861A2D]/5 px-6 py-4 border-b border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-xl font-semibold text-[#861A2D]">
-                        {isEditing ? 'Edit Service Request' : 'Request Barangay Service'}
-                      </h3>
-                      <button
-                          onClick={closeModal}
-                          className="text-gray-400 hover:text-[#861A2D] focus:outline-none transition-colors"
-                          disabled={isSubmitting}
-                      >
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
                     </div>
-                    {/* Dynamic Instructions */}
-                    <p className="mt-1 text-sm text-gray-600">
-                      {isEditing
-                          ? 'You can edit this request within 24 hours of submission.'
-                          : !formData.serviceType
-                              ? 'Select a service type to begin your request.'
-                              : requestMethod === null
-                                  ? 'Choose how you want to submit your request.'
-                                  : requestMethod === 'qr'
-                                      ? 'Scan the QR code with the Barangay360 mobile app to complete your request.'
-                                      : 'Please fill out the form below to submit your request.'}
-                    </p>
-                  </div>
-
-                  <div className="px-6 py-5">
-                    {isEditing ? (
-                        // EDITING FORM (Keep existing code)
-                        <form onSubmit={handleSubmit}>
-                          {/* Service Type */}
-                          <div className="mb-5">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Service Type <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <select
-                                  name="serviceType"
-                                  value={formData.serviceType}
-                                  onChange={handleChange}
-                                  className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors appearance-none ${
-                                      errors.serviceType ? 'border-red-500' : 'border-gray-300'
-                                  }`}
-                              >
-                                <option value="">Select a service type</option>
-                                {serviceTypes.map((service) => (
-                                    <option key={service.value} value={service.value}>
-                                      {service.label}
-                                    </option>
-                                ))}
-                              </select>
-                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                              </div>
-                            </div>
-                            {errors.serviceType && (
-                                <p className="mt-1 text-xs text-red-500">{errors.serviceType}</p>
-                            )}
-                            {formData.serviceType && (
-                                <p className="mt-2 text-sm text-gray-500 bg-gray-50 p-2 rounded-md italic">
-                                  {serviceTypes.find(s => s.value === formData.serviceType)?.description}
-                                </p>
-                            )}
-                          </div>
-
-                          {/* Purpose */}
-                          <div className="mb-5">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Purpose <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="purpose"
-                                value={formData.purpose}
-                                onChange={handleChange}
-                                placeholder="e.g., Employment, School Requirement, etc."
-                                className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                                    errors.purpose ? 'border-red-500' : 'border-gray-300'
-                                }`}
-                            />
-                            {errors.purpose && (
-                                <p className="mt-1 text-xs text-red-500">{errors.purpose}</p>
-                            )}
-                          </div>
-
-                          {/* Details */}
-                          <div className="mb-5">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Additional Details <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                                name="details"
-                                value={formData.details}
-                                onChange={handleChange}
-                                rows="3"
-                                placeholder="Provide any additional information regarding your request"
-                                className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                                    errors.details ? 'border-red-500' : 'border-gray-300'
-                                }`}
-                            ></textarea>
-                            {errors.details && (
-                                <p className="mt-1 text-xs text-red-500">{errors.details}</p>
-                            )}
-                          </div>
-
-                          <div className="mb-5">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Contact Number <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 002-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                </svg>
-                              </div>
-                              <input
-                                  type="text"
-                                  name="contactNumber"
-                                  value={formData.contactNumber}
-                                  onChange={handleChange}
-                                  placeholder="+63 912 345 6789"
-                                  className={`w-full pl-10 p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                                      errors.contactNumber ? 'border-red-500' : 'border-gray-300'
-                                  }`}
-                              />
-                            </div>
-                            {errors.contactNumber && (
-                                <p className="mt-1 text-xs text-red-500">{errors.contactNumber}</p>
-                            )}
-                          </div>
-
-                          <div className="mb-5">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Address <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <div className="absolute top-3 left-0 flex items-start pl-3 pointer-events-none">
-                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                              <textarea
-                                  name="address"
-                                  value={formData.address}
-                                  onChange={handleChange}
-                                  rows="3"
-                                  placeholder="Your complete address within the barangay"
-                                  className={`w-full pl-10 p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                                      errors.address ? 'border-red-500' : 'border-gray-300'
-                                  }`}
-                              ></textarea>
-                            </div>
-                            {errors.address && (
-                                <p className="mt-1 text-xs text-red-500">{errors.address}</p>
-                            )}
-                          </div>
-
-                          {/* Submit Button */}
-                          <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
-                            <button
-                                type="button"
-                                onClick={closeModal}
-                                className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                              {isSubmitting ? (
-                                  <span className="flex items-center justify-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Updating...
-                          </span>
-                              ) : (
-                                  'Update Request'
-                              )}
-                            </button>
-                          </div>
-                        </form>
-                    ) : (
-                        // NEW REQUEST FLOW
-                        <div>
-                          {/* 1. Service Type Selection (Always show first) */}
-                          <div className="mb-5">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Select Service Type <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <select
-                                  name="serviceType"
-                                  value={formData.serviceType}
-                                  onChange={handleChange}
-                                  className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors appearance-none"
-                              >
-                                <option value="">Select a service type</option>
-                                {serviceTypes.map((service) => (
-                                    <option key={service.value} value={service.value}>
-                                      {service.label}
-                                    </option>
-                                ))}
-                              </select>
-                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                              </div>
-                            </div>
-                            {formData.serviceType && (
-                                <p className="mt-2 text-sm text-gray-500 bg-gray-50 p-2 rounded-md italic">
-                                  {serviceTypes.find(s => s.value === formData.serviceType)?.description}
-                                </p>
-                            )}
-                          </div>
-
-                          {/* 2. Method Choice (Show if serviceType is selected and method not chosen) */}
-                          {formData.serviceType && requestMethod === null && (
-                              <div className="mt-6 pt-4 border-t border-gray-200">
-                                <h4 className="text-md font-medium text-gray-800 mb-4 text-center">Choose Submission Method:</h4>
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                  <button
-                                      onClick={() => setRequestMethod('qr')}
-                                      className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
-                                  >
-                                    <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                    Continue via QR Scan
-                                  </button>
-                                  <button
-                                      onClick={() => setRequestMethod('form')}
-                                      className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
-                                  >
-                                    <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                    Fill Form Online
-                                  </button>
-                                </div>
-                                {/* Back/Cancel button for method choice */}
-                                <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
-                                  <button
-                                      type="button"
-                                      onClick={closeModal} // Or just reset service type: () => setFormData({...formData, serviceType: ''})
-                                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                          )}
-
-                          {/* 3a. Show QR Code if method 'qr' is chosen */}
-                          {formData.serviceType && requestMethod === 'qr' && (
-                              <div className="mt-6 flex flex-col items-center">
-                                {/* Service Title */}
-                                <div className="bg-[#861A2D]/10 p-3 rounded-md mb-6 text-center w-full max-w-sm">
-                                  <p className="font-medium text-lg text-[#861A2D] mb-1">
-                                    {formData.serviceType}
-                                  </p>
-                                  <p className="text-sm text-gray-600">
-                                    {user ? `For ${user.firstName} ${user.lastName}` : ''}
-                                  </p>
-                                </div>
-
-                                {/* QR Code Section - Full Width and Larger */}
-                                <div className="hidden">
-                                  <QRCodeCanvas
-                                      ref={qrCodeRef}
-                                      value={qrValue}
-                                      size={250}
-                                      bgColor={"#ffffff"}
-                                      fgColor={"#000000"}
-                                      level={"H"}
-                                      includeMargin={true}
-                                  />
-                                </div>
-
-                                <div className="relative mb-8">
-                                  <div className="bg-white p-6 rounded-lg border-4 border-[#861A2D]/20 shadow-md relative group">
-                                    <div className="relative">
-                                      <QRCodeSVG
-                                          value={qrValue}
-                                          size={250}
-                                          bgColor={"#ffffff"}
-                                          fgColor={"#000000"}
-                                          level={"H"}
-                                          includeMargin={true}
-                                      />
-                                      {/* Remove the logo overlay to ensure reliable scanning */}
-                                    </div>
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                                      <button
-                                          onClick={downloadQRCode}
-                                          className="bg-white text-[#861A2D] px-4 py-2 rounded-md font-medium text-sm flex items-center"
-                                      >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        Download QR Code
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <div className="text-xs text-center text-gray-500 mt-2">
-                                    Hover over QR code to download
-                                  </div>
-                                </div>
-
-                                {/* Instructions Cards - Simplified and Spaced */}
-                                <div className="max-w-md w-full space-y-4 mt-2">
-                                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-md">
-                                    <div className="flex">
-                                      <div className="flex-shrink-0">
-                                        <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                        </svg>
-                                      </div>
-                                      <div className="ml-3">
-                                        <p className="text-sm text-blue-700 font-medium mb-1">
-                                          How to use:
-                                        </p>
-                                        <ol className="list-decimal pl-5 text-sm text-blue-700 space-y-1">
-                                          <li>Open the Barangay360 mobile app</li>
-                                          <li>Go to &quot;Services&quot; section</li>
-                                          <li>Tap the &quot;Scan QR&quot; button</li>
-                                          <li>Point your camera at this QR code</li>
-                                          <li>Complete the form on your mobile device</li>
-                                        </ol>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-md">
-                                    <div className="flex">
-                                      <div className="flex-shrink-0">
-                                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                      </div>
-                                      <div className="ml-3">
-                                        <p className="text-sm text-yellow-700">
-                                          <span className="font-medium">Important:</span> This QR code is valid for 24 hours. You&apos;ll need to complete and submit the form on your mobile device.
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Back/Close Buttons for QR view */}
-                                <div className="mt-6 pt-4 border-t border-gray-200 w-full flex justify-between">
-                                  <button
-                                      type="button"
-                                      onClick={() => setRequestMethod(null)} // Go back to method choice
-                                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
-                                  >
-                                    Back
-                                  </button>
-                                  <button
-                                      type="button"
-                                      onClick={closeModal}
-                                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
-                                  >
-                                    Close
-                                  </button>
-                                </div>
-                              </div>
-                          )}
-
-                          {/* 3b. Show Web Form if method 'form' is chosen */}
-                          {formData.serviceType && requestMethod === 'form' && (
-                              <form onSubmit={handleSubmit} className="mt-6">
-                                {/* Purpose */}
-                                <div className="mb-5">
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Purpose <span className="text-red-500">*</span>
-                                  </label>
-                                  <input
-                                      type="text"
-                                      name="purpose"
-                                      value={formData.purpose}
-                                      onChange={handleChange}
-                                      placeholder="e.g., Employment, School Requirement, etc."
-                                      className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                                          errors.purpose ? 'border-red-500' : 'border-gray-300'
-                                      }`}
-                                  />
-                                  {errors.purpose && (
-                                      <p className="mt-1 text-xs text-red-500">{errors.purpose}</p>
-                                  )}
-                                </div>
-                                {/* Details */}
-                                <div className="mb-5">
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Additional Details <span className="text-red-500">*</span>
-                                  </label>
-                                  <textarea
-                                      name="details"
-                                      value={formData.details}
-                                      onChange={handleChange}
-                                      rows="3"
-                                      placeholder="Provide any additional information regarding your request"
-                                      className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                                          errors.details ? 'border-red-500' : 'border-gray-300'
-                                      }`}
-                                  ></textarea>
-                                  {errors.details && (
-                                      <p className="mt-1 text-xs text-red-500">{errors.details}</p>
-                                  )}
-                                </div>
-                                {/* Contact Number */}
-                                <div className="mb-5">
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Contact Number <span className="text-red-500">*</span>
-                                  </label>
-                                  <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 002-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                      </svg>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="contactNumber"
-                                        value={formData.contactNumber}
-                                        onChange={handleChange}
-                                        placeholder="+63 912 345 6789"
-                                        className={`w-full pl-10 p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                                            errors.contactNumber ? 'border-red-500' : 'border-gray-300'
-                                        }`}
-                                    />
-                                  </div>
-                                  {errors.contactNumber && (
-                                      <p className="mt-1 text-xs text-red-500">{errors.contactNumber}</p>
-                                  )}
-                                </div>
-
-                                <div className="mb-5">
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Address <span className="text-red-500">*</span>
-                                  </label>
-                                  <div className="relative">
-                                    <div className="absolute top-3 left-0 flex items-start pl-3 pointer-events-none">
-                                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                      </svg>
-                                    </div>
-                                    <textarea
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleChange}
-                                        rows="3"
-                                        placeholder="Your complete address within the barangay"
-                                        className={`w-full pl-10 p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[#861A2D] focus:border-[#861A2D] transition-colors ${
-                                            errors.address ? 'border-red-500' : 'border-gray-300'
-                                        }`}
-                                    ></textarea>
-                                  </div>
-                                  {errors.address && (
-                                      <p className="mt-1 text-xs text-red-500">{errors.address}</p>
-                                  )}
-                                </div>
-
-                                {/* Submit/Back Buttons for Web Form */}
-                                <div className="flex justify-between space-x-3 mt-6 pt-4 border-t border-gray-200">
-                                  <button
-                                      type="button"
-                                      onClick={() => setRequestMethod(null)} // Go back to method choice
-                                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] transition-colors"
-                                  >
-                                    Back
-                                  </button>
-                                  <button
-                                      type="submit"
-                                      disabled={isSubmitting}
-                                      className="px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#861A2D] hover:bg-[#9b3747] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                  >
-                                    {isSubmitting ? (
-                                        <span className="flex items-center justify-center">
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Submitting...
-                              </span>
-                                    ) : (
-                                        'Submit Request'
-                                    )}
-                                  </button>
-                                </div>
-                              </form>
-                          )}
-
-                          {/* Placeholder when no service type is selected */}
-                          {!formData.serviceType && (
-                              <div className="flex flex-col items-center justify-center py-8 text-center">
-                                <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                </svg>
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Service Type</h3>
-                                <p className="text-gray-500 max-w-sm">
-                                  Choose a service type from the dropdown above to generate a QR code for mobile scanning
-                                </p>
-                              </div>
-                          )}
-                        </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
         )}
 
         {/* Request Details Modal */}
         {selectedRequest && !isEditing && !showModal && (
-            <div
-                className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
-                onClick={handleCloseRequest} // Close modal when clicking outside
-            >
-              <div
-                  className="bg-white rounded-lg max-w-2xl w-full shadow-xl"
-                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
-              >
+            <div ref={requestDetailsModalRef} className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-2xl w-full shadow-xl">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium text-[#861A2D]">Service Request Details</h3>
@@ -1254,6 +928,74 @@ const Services = () => {
                       <h4 className="text-sm font-medium text-gray-500">Address</h4>
                       <p className="mt-1 text-sm text-gray-900">{selectedRequest.address}</p>
                     </div>
+
+                    {/* Document Section */}
+                    {selectedRequest.documentStatus && selectedRequest.documentStatus !== 'NOT_GENERATED' && (
+                      <div className="md:col-span-2 mt-2">
+                        <div className="border-t border-gray-200 pt-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg className="h-5 w-5 text-gray-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Document
+                          </h4>
+                          <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                              <div className="mb-3 sm:mb-0">
+                                <p className="text-sm font-medium text-gray-900 mb-1">
+                                  {selectedRequest.serviceType} Document
+                                </p>
+                                <div className="flex items-center">
+                                  <span className={`px-2 py-1 text-xs font-medium rounded-full 
+                                    ${selectedRequest.documentStatus === 'ATTACHED' ? 'bg-blue-100 text-blue-800' : 
+                                      selectedRequest.documentStatus === 'GENERATED' ? 'bg-green-100 text-green-800' : 
+                                      'bg-purple-100 text-purple-800'}`}>
+                                    {selectedRequest.documentStatus}
+                                  </span>
+                                  {selectedRequest.documentStatus === 'DELIVERED' && (
+                                    <span className="ml-2 text-xs text-gray-500">
+                                      Document is ready for pickup
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => selectedRequest.attachedDocumentPath 
+                                    ? handleViewAttachedDocument(selectedRequest.id) 
+                                    : handlePreviewDocument(selectedRequest.id)}
+                                  disabled={isDocLoading}
+                                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none"
+                                >
+                                  {isDocLoading ? (
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                  ) : (
+                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                  )}
+                                  {isDocLoading ? "Loading..." : "View"}
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadDocument(selectedRequest.id)}
+                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+                                >
+                                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                  </svg>
+                                  Download
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {selectedRequest.status === 'REJECTED' && selectedRequest.rejectionReason && (
                         <div className="md:col-span-2 bg-red-50 p-3 rounded-md">
                           <h4 className="text-sm font-medium text-red-800">Reason for Rejection</h4>
@@ -1312,7 +1054,7 @@ const Services = () => {
         {/* Cancel Request Confirmation Modal */}
         {showCancelModal && (
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-              <div className="bg-white roundedlg max-w-md w-full shadow-xl">
+              <div ref={cancelModalRef} className="bg-white roundedlg max-w-md w-full shadow-xl">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium text-red-600">Cancel Service Request</h3>
@@ -1408,6 +1150,84 @@ const Services = () => {
                 </div>
               </div>
             </div>
+        )}
+
+        {/* Update the Document Preview Modal with PDFViewerComponent */}
+        {showDocPreview && (
+          <div 
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-75"
+            onClick={closeDocPreview}
+          >
+            <div 
+              ref={docPreviewModalRef} 
+              className="bg-white rounded-lg shadow-lg w-11/12 h-5/6 max-w-6xl max-h-screen flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="h-full w-full">
+                {docPreviewError ? (
+                  <div className="flex flex-col items-center justify-center h-full bg-gray-100 p-6">
+                    <div className="text-red-600 mb-4">
+                      <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                      </svg>
+                      <h3 className="text-lg font-semibold text-center mt-2">Error Loading Document</h3>
+                    </div>
+                    <p className="text-gray-600 text-center mb-4">{docPreviewError}</p>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => handlePreviewDocument(selectedRequest.id)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Try Again
+                      </button>
+                      <button
+                        onClick={closeDocPreview}
+                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <PDFViewerComponent
+                    url={docPreviewUrl}
+                    title="Document Preview"
+                    onClose={closeDocPreview}
+                  />
+                )}
+              </div>
+              <div className="p-2 bg-gray-800 flex justify-between items-center">
+                <button
+                  onClick={closeDocPreview}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Document Viewer Modal - Replace with our improved component */}
+        {showDocumentViewer && (
+          <div 
+            className="fixed inset-0 bg-gray-800 bg-opacity-90 flex items-center justify-center p-4 z-50"
+            onClick={handleCloseDocumentViewer}
+          >
+            <div 
+              ref={documentViewerModalRef} 
+              className="bg-white rounded-lg w-full max-w-6xl h-[80vh] shadow-xl flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex-1 overflow-hidden">
+                <PDFViewerComponent 
+                  url={documentViewerUrl}
+                  title="Document Viewer"
+                  onClose={handleCloseDocumentViewer}
+                />
+              </div>
+            </div>
+          </div>
         )}
       </div>
   );

@@ -1,6 +1,14 @@
-const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api';
+const API_URL = 'http://localhost:8080/api';
 
 class AnnouncementService {
+    constructor() {
+        this.authContext = null;
+    }
+
+    setAuthContext(context) {
+        this.authContext = context;
+    }
+
     getToken() {
         const tokenData = localStorage.getItem('token');
         if (!tokenData) return null;

@@ -1,11 +1,16 @@
 import axios from 'axios';
 
-const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api/forum';
-const REPORTS_API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api/reports';
+const API_URL = 'http://localhost:8080/api/forum';
+const REPORTS_API_URL = 'http://localhost:8080/api/reports';
 
 class ForumService {
   constructor() {
     this.client = axios.create();
+    this.authContext = null;
+  }
+
+  setAuthContext(context) {
+    this.authContext = context;
   }
 
   // Get the proper JWT token from localStorage
