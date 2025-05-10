@@ -66,13 +66,13 @@
                     android:text="Share"
                     android:textColor="@color/maroon" />
 
-            <Button
-                    android:id="@+id/btn_view_details"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="View Details"
-                    android:textColor="@color/maroon" />
+<!--            <Button-->
+<!--                    android:id="@+id/btn_view_details"-->
+<!--                    style="@style/Widget.MaterialComponents.Button.TextButton"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="View Details"-->
+<!--                    android:textColor="@color/maroon" />-->
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
