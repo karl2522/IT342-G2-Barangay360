@@ -17,7 +17,8 @@
                 android:id="@+id/toolbar_create_post"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                app:navigationIcon="@drawable/ic_back" app:navigationIconTint="@android:color/white"
+                app:navigationIcon="@drawable/ic_back"
+                app:navigationIconTint="@android:color/white"
                 android:background="@color/maroon"
                 app:title="Create Post"
                 app:titleTextColor="@android:color/white" />
@@ -69,6 +70,24 @@
                         android:maxLength="1000"/>
             </com.google.android.material.textfield.TextInputLayout>
 
+            <Button
+                    android:id="@+id/btn_add_image"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Add Photo"
+                    app:icon="@android:drawable/ic_menu_gallery" /> <ImageView
+                android:id="@+id/iv_selected_image_preview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="8dp"
+                android:scaleType="centerInside"
+                android:visibility="gone"
+                android:background="#E0E0E0"
+                android:contentDescription="Selected image preview"
+                tools:srcCompat="@tools:sample/backgrounds/scenic"
+                tools:visibility="visible"/>
             <Button
                     android:id="@+id/btn_submit_post"
                     android:layout_width="match_parent"

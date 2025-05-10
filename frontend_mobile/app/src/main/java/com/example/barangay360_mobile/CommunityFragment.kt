@@ -1,6 +1,6 @@
 package com.example.barangay360_mobile
 
-import android.content.Intent
+import android.content.Intent // Keep this if you had sharePost or other intent usage
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,10 +11,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide // Add this if you use Glide for the mini profile pic
 import com.example.barangay360_mobile.adapter.CommunityPostAdapter
 import com.example.barangay360_mobile.api.ApiClient
 import com.example.barangay360_mobile.api.models.CommunityPostResponse
-import com.example.barangay360_mobile.api.models.UserLikeStub
+import com.example.barangay360_mobile.api.models.UserLikeStub // Keep if used by Like functionality
 import com.example.barangay360_mobile.databinding.FragmentCommunityBinding
 import com.example.barangay360_mobile.util.SessionManager
 import kotlinx.coroutines.launch
@@ -44,10 +45,20 @@ class CommunityFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        sessionManager = SessionManager.getInstance()
-        setupRecyclerView()
-        setupListeners()
-        loadInitialCommunityPosts()
+        sessionManager = SessionManager.getInstance() // Initialize SessionManager
+
+        setupRecyclerView()         // Sets up the RecyclerView and its adapter
+        setupListeners()            // Sets up SwipeRefreshLayout listener
+        setupCreatePostPrompt()     // Sets up the "What's on your mind?" card and its click listeners
+
+        // Listen for a result from CreatePostFragment (if a post was successfully created)
+        // This allows the CommunityFragment to refresh its list.
+        parentFragmentManager.setFragmentResultListener("postCreated", viewLifecycleOwner) { _, _ ->
+            Log.d("CommunityFragment", "Received postCreated result, refreshing list.")
+            loadInitialCommunityPosts() // Refresh the list of posts
+        }
+
+        loadInitialCommunityPosts() // Perform the initial load of community posts
     }
 
     private fun setupRecyclerView() {
@@ -55,16 +66,14 @@ class CommunityFragment : Fragment() {
         communityPostAdapter = CommunityPostAdapter(
             onItemClicked = { post ->
                 Toast.makeText(context, "Clicked on: ${post.title}", Toast.LENGTH_SHORT).show()
-                // Potentially navigate to post details screen
             },
             onLikeClicked = { post ->
                 handleLikeClicked(post)
             },
             onCommentClicked = { post ->
                 Toast.makeText(context, "Comment on: ${post.title}", Toast.LENGTH_SHORT).show()
-                // Potentially open a comment dialog or screen
             }
-            // Share functionality removed
+            // Share functionality removed from adapter instantiation
         )
         binding.communitiesRecyclerView.adapter = communityPostAdapter
         binding.communitiesRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -89,6 +98,47 @@ class CommunityFragment : Fragment() {
             loadInitialCommunityPosts()
         }
     }
+
+    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    // RE-ADD THIS METHOD
+    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    private fun setupCreatePostPrompt() {
+        // Update prompt text with user's name
+        val firstName = sessionManager.getFirstName()
+        if (!firstName.isNullOrEmpty()) {
+            binding.tvCreatePostPromptText.text = "What's on your mind, $firstName?"
+        } else {
+            binding.tvCreatePostPromptText.text = "What's on your mind?"
+        }
+
+        binding.cardCreatePostPrompt.setOnClickListener {
+            navigateToCreatePost()
+        }
+
+        // Optional: If you want the add photo button to also navigate
+        binding.btnAddPhotoPrompt.setOnClickListener {
+            navigateToCreatePost(launchImagePicker = true)
+        }
+    }
+
+    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    // RE-ADD THIS METHOD
+    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    private fun navigateToCreatePost(launchImagePicker: Boolean = false) {
+        if (sessionManager.isLoggedIn()) {
+            val args = Bundle().apply {
+                putBoolean("launchImagePicker", launchImagePicker)
+            }
+            // Using manual transaction as per previous discussions for your setup
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, CreatePostFragment().apply { arguments = args }) // Ensure R.id.fragment_container is correct
+                .addToBackStack(null)
+                .commit()
+        } else {
+            Toast.makeText(context, "Please log in to create a post.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     private fun loadInitialCommunityPosts() {
         currentPage = 0
@@ -131,7 +181,7 @@ class CommunityFragment : Fragment() {
                 if (response.isSuccessful) {
                     val pageResponse = response.body()
                     val rawPosts = pageResponse?.content ?: emptyList()
-                    val processedPosts = processFetchedPosts(rawPosts) // Process for liked status
+                    val processedPosts = processFetchedPosts(rawPosts)
 
                     Log.d("CommunityFragment", "Fetched ${processedPosts.size} posts. Page: $pageToLoad. Is last page: ${pageResponse?.last}")
                     processedPosts.forEachIndexed { index, post ->
@@ -184,21 +234,6 @@ class CommunityFragment : Fragment() {
             Toast.makeText(context, "Please log in to like posts.", Toast.LENGTH_SHORT).show()
             return
         }
-        // Optimistic UI update (optional, but makes UI feel responsive)
-        // val originalLikedState = postToLike.isLikedByCurrentUser
-        // val originalLikes = postToLike.likes?.toMutableList() ?: mutableListOf()
-        // val currentUserId = sessionManager.getUserId()?.toLongOrNull()
-
-        // if (originalLikedState) { // If liked, unlike
-        //     postToLike.isLikedByCurrentUser = false
-        //     currentUserId?.let { uid -> originalLikes.removeAll { it.id == uid } }
-        // } else { // If not liked, like
-        //     postToLike.isLikedByCurrentUser = true
-        //     currentUserId?.let { uid -> originalLikes.add(UserLikeStub(id = uid, username = sessionManager.getFirstName())) } // Add basic stub
-        // }
-        // postToLike.likes = originalLikes // Update the list
-        // updatePostInAdapter(postToLike)
-
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -207,7 +242,6 @@ class CommunityFragment : Fragment() {
 
                 if (response.isSuccessful) {
                     response.body()?.let { updatedPostFromServer ->
-                        // Process the updated post to set isLikedByCurrentUser correctly
                         val currentUserId = sessionManager.getUserId()?.toLongOrNull()
                         updatedPostFromServer.isLikedByCurrentUser = currentUserId?.let { userId ->
                             updatedPostFromServer.likes?.any { it.id == userId }
@@ -216,19 +250,11 @@ class CommunityFragment : Fragment() {
                         updatePostInAdapter(updatedPostFromServer)
                     }
                 } else {
-                    // Revert optimistic update if it failed
-                    // postToLike.isLikedByCurrentUser = originalLikedState
-                    // postToLike.likes = originalLikes // Revert the list
-                    // updatePostInAdapter(postToLike)
                     Log.e("CommunityFragment", "Failed to like post ${postToLike.id}: ${response.code()} - ${response.message()}")
                     if (isAdded) Toast.makeText(context, "Failed to update like.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 if (isAdded) {
-                    // Revert optimistic update
-                    // postToLike.isLikedByCurrentUser = originalLikedState
-                    // postToLike.likes = originalLikes // Revert the list
-                    // updatePostInAdapter(postToLike)
                     Log.e("CommunityFragment", "Exception liking post ${postToLike.id}: ${e.message}", e)
                     Toast.makeText(context, "Error updating like.", Toast.LENGTH_SHORT).show()
                 }
@@ -242,8 +268,6 @@ class CommunityFragment : Fragment() {
         if (index != -1) {
             currentList[index] = updatedPost
             communityPostAdapter.submitList(currentList)
-            // No need to call notifyItemChanged explicitly if submitList with a new list is used.
-            // If you were to modify the item in place, you'd use notifyItemChanged(index).
         }
     }
 
@@ -272,9 +296,6 @@ class CommunityFragment : Fragment() {
             Log.d("CommunityFragment", "Loading more - RecyclerView visible: ${binding.communitiesRecyclerView.visibility == View.VISIBLE}, EmptyState visible: ${binding.emptyStateContainer.visibility == View.VISIBLE}")
         }
     }
-
-    // SharePost function removed as per user request to remove share button.
-    // If you re-add share, make sure to define this function again.
 
     override fun onDestroyView() {
         super.onDestroyView()

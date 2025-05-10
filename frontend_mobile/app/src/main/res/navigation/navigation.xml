@@ -59,6 +59,13 @@
             android:defaultValue="-1L" />
     </fragment>
 
+
+    <fragment
+            android:id="@+id/createPostFragment"
+            android:name="com.example.barangay360_mobile.CreatePostFragment"
+            android:label="Create Post"
+            tools:layout="@layout/fragment_create_post" />
+
     <!-- Other fragments... -->
 
 </navigation>
