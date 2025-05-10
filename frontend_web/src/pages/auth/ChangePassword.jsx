@@ -151,7 +151,7 @@ const ChangePassword = () => {
     
     try {
       const response = await handleApiRequest(
-        `http://localhost:8080/api/users/${user.id}/change-password`,
+        `https://barangay360-nja7q.ondigitalocean.app/api/users/${user.id}/change-password`,
         {
           method: 'POST',
           headers: {

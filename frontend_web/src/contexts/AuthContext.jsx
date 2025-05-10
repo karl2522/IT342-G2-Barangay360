@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
       // Log the refresh token being used (first few chars only for security)
       console.log(`Using refresh token: ${refreshToken.token.substring(0, 10)}...`);
 
-      const response = await fetch('http://localhost:8080/api/auth/refreshtoken', {
+      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/refreshtoken', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
