@@ -58,16 +58,16 @@
                         android:fontFamily="sans-serif-light" />
 
                     <!-- Notification icon on the right -->
-                    <ImageButton
-                        android:id="@+id/toolbar_notifications"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:layout_marginEnd="8dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@drawable/ic_notifications"
-                        android:contentDescription="Notifications" />
+<!--                    <ImageButton-->
+<!--                        android:id="@+id/toolbar_notifications"-->
+<!--                        android:layout_width="36dp"-->
+<!--                        android:layout_height="36dp"-->
+<!--                        android:layout_alignParentEnd="true"-->
+<!--                        android:layout_centerVertical="true"-->
+<!--                        android:layout_marginEnd="8dp"-->
+<!--                        android:background="?attr/selectableItemBackgroundBorderless"-->
+<!--                        android:src="@drawable/ic_notifications"-->
+<!--                        android:contentDescription="Notifications" />-->
 
                     <!-- Simple dot for notification indicator -->
                     <View

@@ -79,15 +79,15 @@
                                     android:text="View Profile"
                                     android:textColor="@color/maroon" />
 
-                            <Button
-                                    android:id="@+id/btn_edit_profile"
-                                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:layout_weight="1"
-                                    android:text="Edit Profile"
-                                    android:textColor="@color/maroon" />
+<!--                            <Button-->
+<!--                                    android:id="@+id/btn_edit_profile"-->
+<!--                                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"-->
+<!--                                    android:layout_width="0dp"-->
+<!--                                    android:layout_height="wrap_content"-->
+<!--                                    android:layout_marginStart="8dp"-->
+<!--                                    android:layout_weight="1"-->
+<!--                                    android:text="Edit Profile"-->
+<!--                                    android:textColor="@color/maroon" />-->
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -200,75 +200,94 @@
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
                         android:layout_marginEnd="16dp">
-
                     <androidx.cardview.widget.CardView
                             android:id="@+id/card_community"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="16dp"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:foreground="?attr/selectableItemBackground"
                             app:cardCornerRadius="12dp"
                             app:cardBackgroundColor="@color/surface_variant"
-                            app:cardElevation="2dp">
+                            app:cardElevation="2dp"
+                            tools:visibility="visible">
 
                         <RelativeLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:padding="12dp">
 
-                            <!-- Post Header (User Name and Date) -->
                             <LinearLayout
                                     android:id="@+id/community_post_header"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:orientation="vertical">
+                                    android:orientation="vertical"
+                                    android:layout_alignParentTop="true"> {/* Anchored to top */}
 
                                 <TextView
                                         android:id="@+id/community_user_name"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="Juan Dela Cruz"
+                                        tools:text="Juan Dela Cruz"
                                         android:textColor="@color/text_primary"
-                                        android:textSize="16sp"
+                                        android:textSize="14sp"
                                         android:textStyle="bold" />
 
                                 <TextView
                                         android:id="@+id/community_post_date"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="Posted 2 hours ago"
+                                        tools:text="Posted 2 hours ago"
                                         android:textColor="@color/text_secondary"
-                                        android:textSize="12sp" />
+                                        android:textSize="10sp" />
                             </LinearLayout>
 
-                            <!-- Post Content (Title and Description) -->
                             <TextView
                                     android:id="@+id/community_title"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_below="@id/community_post_header"
-                                    android:layout_marginTop="12dp"
-                                    android:text="Suggestion for Basketball Court Schedule"
+                                    android:layout_marginTop="8dp"
+                                    tools:text="Suggestion for Basketball Court Schedule"
                                     android:textColor="@color/maroon"
-                                    android:textSize="18sp"
-                                    android:textStyle="bold" />
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:maxLines="2"
+                                    android:ellipsize="end" />
 
                             <TextView
                                     android:id="@+id/community_description"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_below="@id/community_title"
-                                    android:layout_marginTop="8dp"
-                                    android:text="Maybe we can have a schedule for using the court? It gets crowded sometimes, especially on weekends. What do you guys think?"
+                                    android:layout_marginTop="4dp"
+                                    tools:text="Maybe we can have a schedule for using the court? It gets crowded sometimes, especially on weekends. What do you guys think?"
                                     android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
+                                    android:textSize="13sp"
+                                    android:maxLines="3"
+                                    android:ellipsize="end" />
 
-                            <!-- Reaction Stats (Likes and Comments) -->
+                            <ImageView
+                                    android:id="@+id/ivPostImageDashboard"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="120dp"
+                                    android:scaleType="centerCrop"
+                                    android:visibility="gone"
+                                    android:layout_below="@id/community_description"
+                                    android:layout_marginTop="10dp"
+                                    android:contentDescription="Post image on dashboard"
+                                    tools:srcCompat="@tools:sample/backgrounds/scenic"
+                                    tools:visibility="visible" />
+
                             <LinearLayout
                                     android:id="@+id/community_reaction_stats"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_below="@id/community_description"
-                                    android:layout_marginTop="12dp"
+                                    android:layout_below="@id/ivPostImageDashboard"
+                                    android:layout_marginTop="10dp"
                                     android:orientation="horizontal">
 
                                 <TextView
@@ -276,9 +295,9 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:drawableStart="@drawable/ic_thumb_up"
-                                        android:drawableTint="@color/maroon"
+                                        android:drawableTint="@color/text_secondary"
                                         android:drawablePadding="4dp"
-                                        android:text="15 likes"
+                                        tools:text="15 likes"
                                         android:textColor="@color/text_secondary"
                                         android:textSize="12sp" />
 
@@ -288,54 +307,23 @@
                                         android:layout_height="wrap_content"
                                         android:layout_marginStart="16dp"
                                         android:drawableStart="@drawable/ic_comment"
-                                        android:drawableTint="@color/maroon"
+                                        android:drawableTint="@color/text_secondary"
                                         android:drawablePadding="4dp"
-                                        android:text="4 comments"
+                                        tools:text="4 comments"
                                         android:textColor="@color/text_secondary"
                                         android:textSize="12sp" />
                             </LinearLayout>
 
-                            <!-- Reaction Buttons (Like, Comment, Share) -->
                             <LinearLayout
                                     android:id="@+id/community_reaction_buttons"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_below="@id/community_reaction_stats"
                                     android:layout_marginTop="8dp"
+                                    android:visibility="gone"
                                     android:orientation="horizontal">
 
-                                <Button
-                                        android:id="@+id/btn_like"
-                                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                                        android:layout_width="0dp"
-                                        android:layout_height="wrap_content"
-                                        android:layout_weight="1"
-                                        android:drawableStart="@drawable/ic_thumb_up"
-                                        android:drawableTint="@color/maroon"
-                                        android:text="Like"
-                                        android:textColor="@color/text_primary" />
-
-                                <Button
-                                        android:id="@+id/btn_comment"
-                                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                                        android:layout_width="0dp"
-                                        android:layout_height="wrap_content"
-                                        android:layout_weight="1"
-                                        android:drawableStart="@drawable/ic_comment"
-                                        android:drawableTint="@color/maroon"
-                                        android:text="Comment"
-                                        android:textColor="@color/text_primary" />
-
-                                <Button
-                                        android:id="@+id/btn_share"
-                                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                                        android:layout_width="0dp"
-                                        android:layout_height="wrap_content"
-                                        android:layout_weight="1"
-                                        android:drawableStart="@drawable/ic_share"
-                                        android:drawableTint="@color/maroon"
-                                        android:text="Share"
-                                        android:textColor="@color/text_primary" />
+                                {/* Buttons would go here, but are hidden for dashboard preview */}
                             </LinearLayout>
                         </RelativeLayout>
                     </androidx.cardview.widget.CardView>
@@ -352,73 +340,87 @@
                         android:textStyle="bold" />
 
                 <androidx.cardview.widget.CardView
-                        android:id="@+id/card_news"
-                        android:layout_width="match_parent"
+                        android:id="@+id/card_news" android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        app:cardCornerRadius="12dp"
+                        app:cardBackgroundColor="@color/surface_variant"
+                        app:cardElevation="2dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
                         android:layout_marginEnd="16dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardBackgroundColor="@color/surface_variant"
-                        app:cardElevation="2dp">
+                        android:visibility="visible"> <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                    <ImageView
+                            android:id="@+id/img_news"
+                            android:layout_width="match_parent"
+                            android:layout_height="180dp"
+                            android:scaleType="centerCrop"
+                            tools:src="@drawable/barangay360_logo" />
 
                     <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical">
+                            android:orientation="vertical"
+                            android:padding="16dp">
 
-                        <ImageView
-                                android:id="@+id/img_news"
-                                android:layout_width="match_parent"
-                                android:layout_height="180dp"
-                                android:scaleType="centerCrop"
-                                android:src="@drawable/barangay360_logo" />
-
-                        <LinearLayout
+                        <TextView
+                                android:id="@+id/txt_news_title"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="16dp">
+                                tools:text="Event Title"
+                                android:textColor="@color/text_primary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
 
-                            <TextView
-                                    android:id="@+id/txt_news_title"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="Barangay Cleanup Drive"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold" />
+                        <TextView
+                                android:id="@+id/txt_news_date"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                tools:text="Event Date and Time"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="14sp" />
 
-                            <TextView
-                                    android:id="@+id/txt_news_date"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="4dp"
-                                    android:text="April 5, 2025"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="14sp" />
-
-                            <TextView
-                                    android:id="@+id/txt_news_summary"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="Join us for our monthly community cleanup drive. Together, we can make our barangay clean and green!"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
-
-                            <Button
-                                    android:id="@+id/btn_view_all_news"
-                                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="end"
-                                    android:text="View All News"
-                                    android:textColor="@color/maroon" />
-                        </LinearLayout>
+                        <TextView
+                                android:id="@+id/txt_news_summary"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:maxLines="3"
+                                android:ellipsize="end"
+                                tools:text="Event summary goes here..."
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp" />
+                        <Button
+                                android:id="@+id/btn_view_all_news"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="end"
+                                android:text="View All Events"
+                                android:textColor="@color/maroon" />
                     </LinearLayout>
+                </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <TextView
+                        android:id="@+id/txt_no_upcoming_event"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No upcoming events!"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:visibility="gone"
+                        app:layout_constraintTop_toBottomOf="@+id/some_header_above_event_card" app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"/>
 
                 <TextView
                         android:layout_width="wrap_content"

@@ -190,37 +190,45 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         when (item.itemId) {
             R.id.nav_home -> {
-                selectedFragment = HomeFragment()
+                selectedFragment = HomeFragment.newInstance() // Use newInstance if you defined it
                 selectedBottomNavId = R.id.home
             }
             R.id.nav_services -> {
-                selectedFragment = ServicesFragment()
-                selectedBottomNavId = R.id.services // Select services bottom nav item
+                selectedFragment = ServicesFragment() // Assuming newInstance if needed
+                selectedBottomNavId = R.id.services
             }
             R.id.nav_announcements -> {
-                selectedFragment = AnnouncementFragment()
+                selectedFragment = AnnouncementFragment.newInstance() // Use newInstance
                 selectedBottomNavId = R.id.announcements
             }
-
             R.id.nav_community -> {
-                selectedFragment = CommunityFragment()
+                selectedFragment = CommunityFragment.newInstance() // Use newInstance
+                // If Community is a bottom nav item, set selectedBottomNavId
+                // Example: selectedBottomNavId = R.id.community_bottom_nav_id
             }
+            // ======== ADD THIS CASE FOR EVENTS ========
+            R.id.nav_events -> {
+                selectedFragment = EventFragment.newInstance() // Use the newInstance method
+                // If you add Events to your BottomNavigationView later, you'd set selectedBottomNavId here
+                // Example: selectedBottomNavId = R.id.events_bottom_nav // (if you add it to bottom_menu.xml)
+            }
+            // =======================================
             R.id.nav_profile -> {
-                selectedFragment = ProfileFragment()
+                selectedFragment = ProfileFragment() // Assuming newInstance if needed
                 selectedBottomNavId = R.id.profile
             }
-            R.id.nav_settings -> {
-                selectedFragment = SettingsFragment()
-                // No direct bottom nav item for settings, keep selection as is or default to home?
-                // Keep current selection: selectedBottomNavId = bottomNavigationView.selectedItemId
-                // Or default to home: selectedBottomNavId = R.id.home
-            }
+//            R.id.nav_settings -> {
+//                selectedFragment = SettingsFragment() // Assuming newInstance if needed
+//                // No direct bottom nav item for settings
+//            }
             R.id.nav_about -> {
-                selectedFragment = AboutFragment()
+                selectedFragment = AboutFragment() // Assuming newInstance if needed
                 // No direct bottom nav item for about
             }
             R.id.nav_logout -> {
                 logout()
+                // No fragment to select, logout handles activity finish
+                return true // Return true because the item selection was handled
             }
         }
 
@@ -230,14 +238,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Update bottom nav selection if a corresponding item exists
         selectedBottomNavId?.let {
-            bottomNavigationView.selectedItemId = it
+            if (::bottomNavigationView.isInitialized) { // Check if initialized
+                bottomNavigationView.selectedItemId = it
+            }
         }
-
 
         drawerLayout.closeDrawer(GravityCompat.START)
         return true // Return true to display the item as selected
     }
-
 
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction().replace(

@@ -1,71 +1,66 @@
-<?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/homeFragment">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/mobile_navigation"
+        app:startDestination="@+id/homeFragment">
 
     <fragment
-        android:id="@+id/homeFragment"
-        android:name="com.example.barangay360_mobile.HomeFragment"
-        android:label="fragment_home"
-        tools:layout="@layout/fragment_home">
-        <!-- Other actions... -->
-    </fragment>
-
-    <!-- Add your profile fragments here -->
-    <fragment
-        android:id="@+id/profileFragment"
-        android:name="com.example.barangay360_mobile.ProfileFragment"
-        android:label="fragment_profile"
-        tools:layout="@layout/fragment_profile">
+            android:id="@+id/homeFragment"
+            android:name="com.example.barangay360_mobile.HomeFragment"
+            android:label="fragment_home"
+            tools:layout="@layout/fragment_home">
         <action
-            android:id="@+id/action_profileFragment_to_profileEditFragment"
-            app:destination="@id/profileEditFragment" />
-
-        <!-- This property will hide the bottom navigation -->
-        <argument
-            android:name="hideBottomNav"
-            android:defaultValue="true"
-            app:argType="boolean" />
+                android:id="@+id/action_homeFragment_to_profileEditFragment"
+                app:destination="@id/profileEditFragment" />
     </fragment>
 
     <fragment
-        android:id="@+id/profileEditFragment"
-        android:name="com.example.barangay360_mobile.ProfileEditFragment"
-        android:label="fragment_profile_edit"
-        tools:layout="@layout/fragment_profile_edit" />
-
-    <fragment
-        android:id="@+id/requestServicesFragment"
-        android:name="com.example.barangay360_mobile.RequestServicesFragment"
-        android:label="fragment_request_services"
-        tools:layout="@layout/fragment_request_services">
-        <argument
-            android:name="service_type"
-            app:argType="string"
-            android:defaultValue="" />
-        <argument
-            android:name="purpose"
-            app:argType="string"
-            android:defaultValue="" />
-        <argument
-            android:name="mode"
-            app:argType="string"
-            android:defaultValue="form" />
-        <argument
-            android:name="user_id"
-            app:argType="long"
-            android:defaultValue="-1L" />
+            android:id="@+id/profileFragment"
+            android:name="com.example.barangay360_mobile.ProfileFragment"
+            android:label="fragment_profile"
+            tools:layout="@layout/fragment_profile">
+        <action
+                android:id="@+id/action_profileFragment_to_profileEditFragment"
+                app:destination="@id/profileEditFragment" />
     </fragment>
 
+    <fragment
+            android:id="@+id/eventFragment"
+            android:name="com.example.barangay360_mobile.EventFragment"
+            android:label="Events"
+            tools:layout="@layout/fragment_event" />
 
+    <fragment
+            android:id="@+id/profileEditFragment"
+            android:name="com.example.barangay360_mobile.ProfileEditFragment"
+            android:label="fragment_profile_edit"
+            tools:layout="@layout/fragment_profile_edit" />
+
+    <fragment
+            android:id="@+id/communityFragment"
+            android:name="com.example.barangay360_mobile.CommunityFragment"
+            android:label="Community"
+            tools:layout="@layout/fragment_community" />
+    <fragment
+            android:id="@+id/announcementFragment"
+            android:name="com.example.barangay360_mobile.AnnouncementFragment"
+            android:label="Announcements"
+            tools:layout="@layout/fragment_announcement" />
+    <fragment
+            android:id="@+id/servicesFragment"
+            android:name="com.example.barangay360_mobile.ServicesFragment"
+            android:label="Services"
+            tools:layout="@layout/fragment_services" />
     <fragment
             android:id="@+id/createPostFragment"
             android:name="com.example.barangay360_mobile.CreatePostFragment"
             android:label="Create Post"
             tools:layout="@layout/fragment_create_post" />
+    <fragment
+            android:id="@+id/requestServicesFragment"
+            android:name="com.example.barangay360_mobile.RequestServicesFragment"
+            android:label="Request Services"
+            tools:layout="@layout/fragment_request_services" />
 
-    <!-- Other fragments... -->
 
 </navigation>

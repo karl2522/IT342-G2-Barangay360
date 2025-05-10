@@ -94,19 +94,19 @@
                         android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Forget password text -->
-            <TextView
-                    android:id="@+id/forget_password"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginTop="8dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="Forget Password"
-                    android:textColor="@color/maroon"
-                    android:textSize="14sp" />
+<!--            &lt;!&ndash; Forget password text &ndash;&gt;-->
+<!--            <TextView-->
+<!--                    android:id="@+id/forget_password"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_gravity="end"-->
+<!--                    android:layout_marginTop="8dp"-->
+<!--                    android:clickable="true"-->
+<!--                    android:focusable="true"-->
+<!--                    android:fontFamily="sans-serif-medium"-->
+<!--                    android:text="Forget Password"-->
+<!--                    android:textColor="@color/maroon"-->
+<!--                    android:textSize="14sp" />-->
 
             <!-- Sign In button -->
             <Button
