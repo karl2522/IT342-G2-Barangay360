@@ -7,10 +7,10 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
-// import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class ServicesFragment : Fragment() {
-    // private lateinit var fab: FloatingActionButton
+    private lateinit var fab: FloatingActionButton
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -18,12 +18,12 @@ class ServicesFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_services, container, false)
-        // fab = view.findViewById(R.id.fab_new_request)
+        fab = view.findViewById(R.id.fab_new_request)
 
-        // Set up FAB click listener
-        // fab.setOnClickListener {
-        //     navigateToRequestForm()
-        // }
+        //Set up FAB click listener
+        fab.setOnClickListener {
+            navigateToRequestForm()
+        }
 
         // Replace the ViewPager with MyServicesFragment directly
         childFragmentManager.beginTransaction()
@@ -37,7 +37,10 @@ class ServicesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Set up fragment result listener for QR code data
-        parentFragmentManager.setFragmentResultListener("qrServiceData", viewLifecycleOwner) { _, bundle ->
+        parentFragmentManager.setFragmentResultListener(
+            "qrServiceData",
+            viewLifecycleOwner
+        ) { _, bundle ->
             // Navigate directly to RequestServicesFragment with the QR data
             val fragment = RequestServicesFragment().apply {
                 arguments = bundle
@@ -45,17 +48,23 @@ class ServicesFragment : Fragment() {
 
             // Replace current fragment with RequestServicesFragment
             parentFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, fragment) // Assuming R.id.fragment_container is the main container in HomeActivity
+                .replace(
+                    R.id.fragment_container,
+                    fragment
+                ) // Assuming R.id.fragment_container is the main container in HomeActivity
                 .addToBackStack(null)
                 .commit()
         }
     }
 
-    // private fun navigateToRequestForm() {
-    //     val fragment = RequestServicesFragment()
-    //     parentFragmentManager.beginTransaction()
-    //         .replace(R.id.fragment_container, fragment) // Assuming R.id.fragment_container is the main container in HomeActivity
-    //         .addToBackStack(null)
-    //         .commit()
-    // }
+    private fun navigateToRequestForm() {
+        val fragment = RequestServicesFragment()
+        parentFragmentManager.beginTransaction()
+            .replace(
+                R.id.fragment_container,
+                fragment
+            ) // Assuming R.id.fragment_container is the main container in HomeActivity
+            .addToBackStack(null)
+            .commit()
+    }
 }
