@@ -124,7 +124,7 @@ const ReportManagement = () => {
     try {
       console.log('Fetching comment details for comment ID:', commentId);
       // Make the request without authentication header since this endpoint is configured to be public
-      const response = await axios.get(`http://localhost:8080/api/comments/${commentId}`);
+      const response = await axios.get(`https://barangay360-nja7q.ondigitalocean.app/api/comments/${commentId}`);
 
       console.log('Comment details response:', response.data);
       return response.data;
@@ -435,7 +435,7 @@ const ReportManagement = () => {
     if (!token) return null;
 
     const encodedToken = encodeURIComponent(token);
-    return `http://localhost:8080/api/admin/${contentType}s/delete/${contentId}?token=${encodedToken}`;
+    return `https://barangay360-nja7q.ondigitalocean.app/api/admin/${contentType}s/delete/${contentId}?token=${encodedToken}`;
   };
 
   return (

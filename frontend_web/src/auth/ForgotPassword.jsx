@@ -68,7 +68,7 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:8080/api/password/verify', {
+      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/password/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:8080/api/password/reset', {
+      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/password/reset', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:8080/api/password/forgot', {
+      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/password/forgot', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
