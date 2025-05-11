@@ -49,8 +49,19 @@ const AppealsManagement = () => {
   const fetchAppeals = async () => {
     try {
       setLoading(true);
-      const response = await handleApiRequest('https://barangay360-nja7q.ondigitalocean.app/api/appeals', {
+      // Get token directly to prevent automatic logout
+      const tokenData = JSON.parse(localStorage.getItem('token'));
+      
+      if (!tokenData || !tokenData.token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/appeals', {
         method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${tokenData.token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.ok) {
@@ -108,9 +119,21 @@ const AppealsManagement = () => {
     const appealId = selectedAppeal.id;
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/appeals/${appealId}/approve`, {
+      // Get token directly to prevent automatic logout
+      const tokenData = JSON.parse(localStorage.getItem('token'));
+      
+      if (!tokenData || !tokenData.token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/appeals/${appealId}/approve`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${tokenData.token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
       if (response.ok) {
         showToast('Appeal approved successfully', 'success');
         fetchAppeals();
@@ -133,8 +156,19 @@ const AppealsManagement = () => {
     const appealId = selectedAppeal.id;
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/appeals/${appealId}/reject`, {
+      // Get token directly to prevent automatic logout
+      const tokenData = JSON.parse(localStorage.getItem('token'));
+      
+      if (!tokenData || !tokenData.token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/appeals/${appealId}/reject`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${tokenData.token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.ok) {

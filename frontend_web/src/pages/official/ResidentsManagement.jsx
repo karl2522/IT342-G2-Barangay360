@@ -1,85 +1,82 @@
-import { useContext, useEffect, useState } from 'react';
-import Sidebar from '../../components/layout/Sidebar';
-import TopNavigation from '../../components/layout/TopNavigation';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import Sidebar from '../../components/layout/Sidebar.jsx';
+import TopNavigation from '../../components/layout/TopNavigation.jsx';
 import { useToast } from '../../contexts/ToastContext';
 
 const ResidentsManagement = () => {
-  const { handleApiRequest } = useContext(AuthContext);
   const { showToast } = useToast();
   const [residents, setResidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 10;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [showWarnModal, setShowWarnModal] = useState(false);
   const [showActivateModal, setShowActivateModal] = useState(false);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [warningReason, setWarningReason] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [warnReason, setWarnReason] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     fetchResidents();
   }, []);
 
+  // Filter residents based on search term
+  const filteredResidents = residents.filter((resident) => {
+    const fullName = `${resident.firstName || ''} ${resident.lastName || ''}`.toLowerCase();
+    const email = (resident.email || '').toLowerCase();
+    const username = (resident.username || '').toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    
+    return fullName.includes(searchLower) || 
+           email.includes(searchLower) || 
+           username.includes(searchLower);
+  });
+
+  useEffect(() => {
+    // Calculate total pages
+    if (residents.length > 0) {
+      setTotalPages(Math.ceil(filteredResidents.length / itemsPerPage));
+    }
+  }, [residents, searchTerm, itemsPerPage, filteredResidents.length]);
+
   const fetchResidents = async () => {
     try {
-      const token = JSON.parse(localStorage.getItem('token'));
-      console.log('Fetching residents with token:', token); // Debug log
-
+      setLoading(true);
+      // Get token directly to prevent automatic logout
+      const tokenData = JSON.parse(localStorage.getItem('token'));
+      
+      if (!tokenData || !tokenData.token) {
+        throw new Error('Authentication token not found');
+      }
+      
       const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/users/residents', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token.token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include'
+          'Authorization': `Bearer ${tokenData.token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
-      console.log('Response status:', response.status); // Debug log
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Error response:', errorData); // Debug log
-        throw new Error(`Failed to fetch residents: ${response.status} ${response.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Sort users with most recently created ones first
+        const sortedUsers = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setResidents(sortedUsers);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch residents');
       }
-
-      const data = await response.json();
-      // Sort residents by creation date, newest first
-      const sortedData = [...data].sort((a, b) => {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
-      
-      // Debug log to check isActive values
-      console.log('Raw resident data:', data);
-      console.log('First resident isActive:', data[0]?.active);
-      console.log('First resident:', data[0]);
-      
-      setResidents(sortedData);
-      setTotalPages(Math.ceil(sortedData.length / itemsPerPage));
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching residents:', error);
-      showToast('Failed to load residents data: ' + error.message, 'error');
+      showToast(error.message || 'Failed to fetch residents', 'error');
+    } finally {
       setLoading(false);
     }
   };
-
-  // Filter residents based on search term
-  const filteredResidents = residents.filter(resident => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      resident.firstName?.toLowerCase().includes(searchLower) ||
-      resident.lastName?.toLowerCase().includes(searchLower) ||
-      resident.email?.toLowerCase().includes(searchLower) ||
-      resident.address?.toLowerCase().includes(searchLower)
-    );
-  });
 
   // Get current page items
   const currentResidents = filteredResidents.slice(
@@ -90,27 +87,35 @@ const ResidentsManagement = () => {
   const handleWarnUser = async (userId) => {
     try {
       setIsSubmitting(true);
-      const token = JSON.parse(localStorage.getItem('token'));
+      // Get token directly to prevent automatic logout
+      const tokenData = JSON.parse(localStorage.getItem('token'));
+      
+      if (!tokenData || !tokenData.token) {
+        throw new Error('Authentication token not found');
+      }
+      
       const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/warn`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token.token}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenData.token}`
         },
-        body: JSON.stringify({ reason: warningReason })
+        body: JSON.stringify({ reason: warnReason })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to warn user');
-      }
+      const data = await response.json();
 
-      showToast('User warned successfully', 'success');
-      setShowWarnModal(false);
-      setWarningReason('');
-      fetchResidents();
+      if (response.ok) {
+        showToast('User warned successfully', 'success');
+        setShowWarnModal(false);
+        setWarnReason('');
+        fetchResidents();
+      } else {
+        throw new Error(data.message || 'Failed to warn user');
+      }
     } catch (error) {
       console.error('Error warning user:', error);
-      showToast('Failed to warn user: ' + error.message, 'error');
+      showToast(error.message || 'Failed to warn user', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -119,18 +124,27 @@ const ResidentsManagement = () => {
   const handleActivateUser = async (userId) => {
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/activate`, {
-        method: 'PUT',
+      // Get token directly to prevent automatic logout from handleApiRequest
+      const tokenData = JSON.parse(localStorage.getItem('token'));
+      
+      if (!tokenData || !tokenData.token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/activate`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenData.token}`
         },
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         showToast('User activated successfully', 'success');
         fetchResidents();
       } else {
-        const data = await response.json();
         throw new Error(data.message || 'Failed to activate user');
       }
     } catch (error) {
@@ -145,18 +159,27 @@ const ResidentsManagement = () => {
   const handleDeactivateUser = async (userId) => {
     try {
       setIsSubmitting(true);
-      const response = await handleApiRequest(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/deactivate`, {
-        method: 'PUT',
+      // Get token directly to prevent automatic logout from handleApiRequest
+      const tokenData = JSON.parse(localStorage.getItem('token'));
+      
+      if (!tokenData || !tokenData.token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      const response = await fetch(`https://barangay360-nja7q.ondigitalocean.app/api/users/${userId}/deactivate`, {
+        method: 'POST', // Changed from PUT to POST to match backend endpoint
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenData.token}`
         },
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         showToast('User deactivated successfully', 'success');
         fetchResidents();
       } else {
-        const data = await response.json();
         throw new Error(data.message || 'Failed to deactivate user');
       }
     } catch (error) {
@@ -471,8 +494,8 @@ const ResidentsManagement = () => {
                   Are you sure you want to warn {selectedUser.firstName} {selectedUser.lastName}? This will count as a warning against their account.
                 </p>
                 <textarea
-                  value={warningReason}
-                  onChange={(e) => setWarningReason(e.target.value)}
+                  value={warnReason}
+                  onChange={(e) => setWarnReason(e.target.value)}
                   placeholder="Please provide a reason for the warning..."
                   rows="3"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
@@ -484,7 +507,7 @@ const ResidentsManagement = () => {
                 <button
                   onClick={() => {
                     setShowWarnModal(false);
-                    setWarningReason('');
+                    setWarnReason('');
                     setSelectedUser(null);
                   }}
                   className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#861A2D]"
@@ -495,7 +518,7 @@ const ResidentsManagement = () => {
                 <button
                   onClick={() => handleWarnUser(selectedUser.id)}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                  disabled={isSubmitting || !warningReason.trim()}
+                  disabled={isSubmitting || !warnReason.trim()}
                 >
                   {isSubmitting ? 'Warning...' : 'Warn User'}
                 </button>
