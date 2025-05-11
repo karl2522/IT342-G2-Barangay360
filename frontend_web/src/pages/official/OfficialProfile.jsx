@@ -69,7 +69,7 @@ const OfficialProfile = () => {
       };
       
       const response = await handleApiRequest(
-        `https://barangay360-nja7q.ondigitalocean.app/api/users/${user.id}`,
+        `http://localhost:8080/api/users/${user.id}`,
         {
           method: 'PUT',
           headers: {

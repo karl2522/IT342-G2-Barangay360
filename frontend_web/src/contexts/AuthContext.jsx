@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
       // Log the refresh token being used (first few chars only for security)
       console.log(`Using refresh token: ${refreshToken.token.substring(0, 10)}...`);
 
-      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/refreshtoken', {
+      const response = await fetch('http://localhost:8080/api/auth/refreshtoken', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -212,7 +212,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/signin', {
+      const response = await fetch('http://localhost:8080/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -338,7 +338,7 @@ export const AuthProvider = ({ children }) => {
         roles: userData.role === 'official' ? ['official'] : ['resident']
       };
 
-      const response = await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/signup', {
+      const response = await fetch('http://localhost:8080/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -365,7 +365,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Call logout endpoint if user is logged in
       if (user && user.id) {
-        await fetch('https://barangay360-nja7q.ondigitalocean.app/api/auth/signout', {
+        await fetch('http://localhost:8080/api/auth/signout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

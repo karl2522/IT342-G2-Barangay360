@@ -7,7 +7,7 @@ import { AuthContext } from '../../contexts/AuthContext';
 import PDFViewerComponent from '../../components/PDFViewerComponent';
 import { isEdgeBrowser, createViewerUrl } from '../../utils/documentViewerUtils.jsx';
 
-const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api';
+const API_URL = 'http://localhost:8080/api';
 
 const RequestsManagement = () => {
   const { showToast } = useToast();

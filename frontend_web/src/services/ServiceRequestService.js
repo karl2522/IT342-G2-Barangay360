@@ -1,6 +1,6 @@
 import { fetchPDFWithRetry, createFallbackPdf, getReliablePdfUrl } from '../utils/pdfFetchUtility';
 
-const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/';
+const API_URL = 'http://localhost:8080/api';
 
 class ServiceRequestService {
     constructor() {
