@@ -1,4 +1,4 @@
-const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/';
+const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api';
 
 class AnnouncementService {
     constructor() {
