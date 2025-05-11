@@ -105,7 +105,7 @@ class ServiceRequestService {
         const token = this.getToken();
         if (!token) throw new Error('No authentication token found');
 
-        const response = await fetch(`${API_URL}api/service-requests`, {
+        const response = await fetch(`${API_URL}/service-requests`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ class ServiceRequestService {
         const token = this.getToken();
         if (!token) throw new Error('No authentication token found');
 
-        const response = await fetch(`${API_URL}api/service-requests/${requestId}/status?status=${status}`, {
+        const response = await fetch(`${API_URL}/service-requests/${requestId}/status?status=${status}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`
