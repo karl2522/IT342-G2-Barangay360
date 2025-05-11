@@ -13,7 +13,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"}, maxAge = 3600)
+@CrossOrigin(origins = {"https://barangay360.vercel.app","http://localhost:5173", "http://localhost:5174"}, maxAge = 3600)
 public class CommentController {
     private static final Logger logger = LoggerFactory.getLogger(CommentController.class);
 

@@ -51,7 +51,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:8080"}, maxAge = 3600)
+@CrossOrigin(origins = {"https://barangay360.vercel.app","http://localhost:5173", "http://localhost:5174", "http://localhost:8080"}, maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "Authentication API endpoints for login, signup, and token management")

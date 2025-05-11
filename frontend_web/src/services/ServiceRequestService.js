@@ -1,6 +1,6 @@
 import { fetchPDFWithRetry, createFallbackPdf, getReliablePdfUrl } from '../utils/pdfFetchUtility';
 
-const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/';
+const API_URL = 'https://barangay360-nja7q.ondigitalocean.app/api';
 
 class ServiceRequestService {
     constructor() {
@@ -105,7 +105,7 @@ class ServiceRequestService {
         const token = this.getToken();
         if (!token) throw new Error('No authentication token found');
 
-        const response = await fetch(`${API_URL}/service-requests`, {
+        const response = await fetch(`${API_URL}api/service-requests`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ class ServiceRequestService {
         const token = this.getToken();
         if (!token) throw new Error('No authentication token found');
 
-        const response = await fetch(`${API_URL}/service-requests/${requestId}/status?status=${status}`, {
+        const response = await fetch(`${API_URL}api/service-requests/${requestId}/status?status=${status}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`

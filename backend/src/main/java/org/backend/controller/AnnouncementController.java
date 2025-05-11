@@ -27,6 +27,7 @@ import java.util.List;
 @RequestMapping("/api/announcements")
 @RequiredArgsConstructor
 @Tag(name = "Announcements", description = "Barangay announcements management API")
+@CrossOrigin(origins = {"https://barangay360.vercel.app","http://localhost:5173", "http://localhost:5174"}, maxAge = 3600) // Adjust CORS as needed
 public class AnnouncementController {
 
     private final AnnouncementService announcementService;

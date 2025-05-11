@@ -26,6 +26,7 @@ import java.util.Map;
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
 @Tag(name = "File Storage", description = "File storage operations API")
+@CrossOrigin(origins = {"https://barangay360.vercel.app","http://localhost:5173", "http://localhost:5174"}, maxAge = 3600) // Adjust CORS as needed
 public class FileStorageController {
 
     private final StorageService storageService;
