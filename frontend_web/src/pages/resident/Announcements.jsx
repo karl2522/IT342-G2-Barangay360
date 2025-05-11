@@ -87,8 +87,8 @@ const Announcements = () => {
                   {announcement.thumbnailUrl && (
                     <div className="h-48 w-full relative">
                       <img 
-                        src={announcement.thumbnailUrl} 
-                        alt={announcement.title} 
+                        src={announcement.thumbnailUrl || "/images/default_image.png"} // Ensure default image is used
+                        alt={announcement.title || "Default Announcement Image"} // Add alt text fallback
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -126,7 +126,7 @@ const Announcements = () => {
               {selectedAnnouncement.thumbnailUrl && (
                 <div className="h-64 w-full">
                   <img 
-                    src={selectedAnnouncement.thumbnailUrl} 
+                    src={selectedAnnouncement.thumbnailUrl || "/images/default_image.png"} 
                     alt={selectedAnnouncement.title} 
                     className="w-full h-full object-cover"
                   />
